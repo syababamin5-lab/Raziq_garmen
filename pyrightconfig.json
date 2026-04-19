@@ -1,0 +1,19 @@
+{
+  "pythonVersion": "3.12",
+  "pythonPlatform": "Windows",
+  "pythonPath": "C:/Users/LENOVO/AppData/Local/Programs/Python/Python312/python.exe",
+  "venvPath": ".",
+  "include": [
+    "."
+  ],
+  "extraPaths": [
+    ".",
+    "C:/Users/LENOVO/AppData/Local/Programs/Python/Python312/Lib/site-packages",
+    "C:/Users/LENOVO/AppData/Local/Programs/Python/Python312"
+  ],
+  "typeCheckingMode": "off",
+  "useLibraryCodeForTypes": true,
+  "reportMissingImports": false,
+  "reportMissingModuleSource": false,
+  "reportUndefinedVariable": false
+}

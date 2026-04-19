@@ -1,0 +1,15 @@
+{
+  "python.pythonPath": "C:\\Users\\LENOVO\\AppData\\Local\\Programs\\Python\\Python312\\python.exe",
+  "python.defaultInterpreterPath": "C:\\Users\\LENOVO\\AppData\\Local\\Programs\\Python\\Python312\\python.exe",
+  "python.analysis.extraPaths": [
+    ".",
+    "C:\\Users\\LENOVO\\AppData\\Local\\Programs\\Python\\Python312\\Lib\\site-packages"
+  ],
+  "python.analysis.autoSearchPaths": true,
+  "python.analysis.useImportHeuristic": true,
+  "python.analysis.typeCheckingMode": "off",
+  "python.analysis.diagnosticMode": "workspace",
+  "python.linting.enabled": false,
+  "python.linting.pyre2Enabled": false,
+  "python.languageServer": "Pylance"
+}

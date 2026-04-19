@@ -1,0 +1,16 @@
+{
+  "site_package_search_strategy": "all",
+  "source_directories": [
+    {
+      "import_root": "."
+    }
+  ],
+  "search_path": [
+    ".",
+    "C:/Users/LENOVO/AppData/Local/Programs/Python/Python312/Lib/site-packages",
+    "C:/Users/LENOVO/AppData/Local/Programs/Python/Python312/Lib",
+    "C:/Users/LENOVO/AppData/Local/Programs/Python/Python312"
+  ],
+  "python_version": "3.12",
+  "strict_dependencies": false
+}
