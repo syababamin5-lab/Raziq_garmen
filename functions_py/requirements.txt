@@ -1,6 +1,5 @@
-firebase-functions
-firebase-admin
 fastapi
+uvicorn
 sqlalchemy
 fpdf
 pandas
