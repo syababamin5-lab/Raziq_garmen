@@ -13,10 +13,23 @@ from sqlalchemy.ext.declarative import declarative_base
 # Konfigurasi Database Lokal (SQLite)
 BASE_DIR = os.path.dirname(os.path.abspath(__file__))
 DB_PATH = os.path.join(BASE_DIR, "garmen.db")
-SQLALCHEMY_DATABASE_URL = f"sqlite:///{DB_PATH}"
 
-engine = create_engine(SQLALCHEMY_DATABASE_URL, connect_args={"check_same_thread": False})
-SessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=engine)
+# Deteksi Vercel atau Lingkungan Read-Only
+if not os.path.exists(DB_PATH) and os.environ.get('VERCEL'):
+    SQLALCHEMY_DATABASE_URL = "sqlite:///:memory:"
+    print("WARNING: Using In-Memory Database for Vercel Demo")
+else:
+    SQLALCHEMY_DATABASE_URL = f"sqlite:///{DB_PATH}"
+
+# Buat Engine dengan penanganan error lebih baik
+try:
+    engine = create_engine(SQLALCHEMY_DATABASE_URL, connect_args={"check_same_thread": False})
+    SessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=engine)
+except Exception as e:
+    # Fallback Terakhir ke Memory
+    engine = create_engine("sqlite:///:memory:", connect_args={"check_same_thread": False})
+    SessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=engine)
+
 Base = declarative_base()
 
 # Dependency untuk FastAPI

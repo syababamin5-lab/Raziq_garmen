@@ -22,6 +22,34 @@ from routers import (
 
 app = FastAPI()
 
+@app.on_event("startup")
+async def startup_event():
+    # Buat tabel jika belum ada
+    models.Base.metadata.create_all(bind=models.engine)
+    
+    # Seed User jika database kosong (Memory DB di Vercel)
+    db = models.SessionLocal()
+    try:
+        user = db.query(models.User).filter(models.User.username == "superadmin").first()
+        if not user:
+            # Hash password 'admin123' untuk superadmin
+            from passlib.context import CryptContext
+            pwd_context = CryptContext(schemes=["pbkdf2_sha256"], deprecated="auto")
+            hashed = pwd_context.hash("admin123")
+            
+            new_user = models.User(
+                username="superadmin",
+                password_hash=hashed,
+                nama_lengkap="Super Admin (Vercel Demo)",
+                role="super_admin",
+                is_active=1
+            )
+            db.add(new_user)
+            db.commit()
+            print("Seeded default user for Vercel")
+    finally:
+        db.close()
+
 app.add_middleware(
     CORSMiddleware,
     allow_origins=["*"],
