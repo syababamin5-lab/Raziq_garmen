@@ -1,0 +1,10 @@
+firebase-functions
+firebase-admin
+fastapi
+sqlalchemy
+fpdf
+pandas
+openpyxl
+python-multipart
+jinja2
+python-dotenv
