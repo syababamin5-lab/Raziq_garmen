@@ -30,5 +30,5 @@ def jalankan():
             
             db.commit()
             st.success(f"Berhasil! Stok {pilih_sku.kode_sku} bertambah {stok_awal} pcs dan dicatat sebagai Modal Awal.")
-   
+            
     db.close()

@@ -1,23 +1,25 @@
-/**
- * AppLayout.jsx — Shell utama aplikasi
- * Sidebar kiri (fixed 224px) + Topbar atas + Konten kanan
- */
+import React, { useState } from 'react'
 import { Outlet } from 'react-router-dom'
 import Sidebar from './Sidebar'
 import Topbar from './Topbar'
 
 export default function AppLayout() {
-  return (
-    <div className="min-h-screen bg-surface flex">
-      {/* Sidebar fixed kiri */}
-      <Sidebar />
+  const [isSidebarOpen, setSidebarOpen] = useState(true);
 
-      {/* Area konten: offset kiri 224px (w-56), offset atas 56px (h-14) */}
-      <div className="flex-1 ml-56 flex flex-col min-h-screen">
-        <Topbar title="The Sartorial Archive" />
+  return (
+    <div className="min-h-screen bg-slate-50 flex overflow-hidden">
+      {/* Sidebar Component */}
+      <Sidebar isOpen={isSidebarOpen} />
+
+      {/* Main Content Area */}
+      <div className={`flex-1 flex flex-col min-h-screen transition-all duration-300 ease-in-out ${isSidebarOpen ? 'ml-56' : 'ml-0 md:ml-20'}`}>
+        <Topbar 
+            title="Raziq Garment | Enterprise" 
+            onToggleSidebar={() => setSidebarOpen(!isSidebarOpen)} 
+            isSidebarOpen={isSidebarOpen}
+        />
         
-        <main className="flex-1 mt-14 p-6 bg-surface overflow-auto">
-          {/* Outlet diisi oleh halaman aktif (Dashboard, Master, dll) */}
+        <main className="flex-1 mt-14 p-6 bg-slate-50 overflow-auto">
           <Outlet />
         </main>
       </div>

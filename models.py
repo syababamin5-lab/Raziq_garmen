@@ -79,7 +79,7 @@ class HeaderPenjualan(Base):
     diskon = Column(Float, default=0.0) 
     pajak = Column(Float, default=0.0)  
     total_tagihan = Column(Float, default=0.0)
-    
+    status = Column(String, default="BELUM LUNAS")
 class DetailPenjualan(Base): 
     __tablename__ = "detail_penjualan"
     id = Column(Integer, primary_key=True, index=True)

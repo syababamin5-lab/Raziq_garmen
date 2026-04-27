@@ -66,8 +66,8 @@ def jalankan():
         col_kiri, col_kanan = st.columns([1, 2])
         
         with col_kiri:
-            st.markdown("### 1. Detail Barang")
-            mode_input = st.radio("Mode Input", ["Pilih Barang Lama (Rekomendasi)", "➕ Input Barang Baru"], horizontal=True)
+            st.markdown("### :material/expand_circle_right: Detail Barang")
+            mode_input = st.radio("Mode Input", ["Pilih Barang Lama (Rekomendasi)", " :material/add_circle: Input Barang Baru"], horizontal=True)
             
             if mode_input == "Pilih Barang Lama (Rekomendasi)":
                 if bahan_existing:
@@ -80,7 +80,7 @@ def jalankan():
                 sku_val, nama_val, kat_val, hrg_default = "", "", KategoriBarang.BAHAN_BAKU, 0
 
             with st.form("form_add_cart_beli", clear_on_submit=True):
-                if mode_input == "➕ Input Barang Baru":
+                if mode_input == " :material/add: Input Barang Baru":
                     sku = st.text_input("SKU / Kode Unik Baru")
                     nama = st.text_input("Nama Bahan Baru")
                     kat = st.selectbox("Kategori Bahan", [k for k in KategoriBarang if k != KategoriBarang.BARANG_JADI], format_func=lambda x: x.value)
@@ -99,7 +99,7 @@ def jalankan():
                         st.rerun()
 
         with col_kanan:
-            st.markdown("### 2. Ringkasan Nota")
+            st.markdown("###  Ringkasan Nota :material/resume:")
             if st.session_state.cart_beli:
                 df_tampil = pd.DataFrame(st.session_state.cart_beli)
                 df_tampil['qty'] = df_tampil['qty'].apply(lambda x: f"{x:g}") 
@@ -123,6 +123,8 @@ def jalankan():
                     if st.form_submit_button(":material/save: Simpan & Update Gudang"):
                         if not vendor:
                             st.error("Supplier wajib dipilih!")
+                        elif not st.session_state.cart_beli:
+                            st.error("🚨 Keranjang belanja masih kosong! Silakan tambah barang dulu.")
                         else:
                             try:
                                 
@@ -179,7 +181,7 @@ def jalankan():
     # TAB 2: OPEX (BIAYA OPERASIONAL PABRIK)
     # ========================================================
     with t2:
-        st.subheader("💸 Pencatatan Biaya Pabrik (BTKL, BOP & OPEX)")
+        st.subheader(":material/account_balance_wallet: Pencatatan Biaya Pabrik (BTKL, BOP & OPEX)")
         
         daftar_akun_biaya = get_opsi_akun(db, kategori_filter="Beban")
 
@@ -322,33 +324,36 @@ def jalankan():
             if st.button("🚀 Catat Semua Penyusutan (Bulan Ini) ke Laporan"):
                 bulan_ini = datetime.date.today().strftime("%b %Y")
                 waktu_susut = datetime.datetime.combine(datetime.date.today(), datetime.datetime.now().time())
-                
-                try:
-                    if susut_bangunan > 0:
-                        db.add(JurnalUmum(tanggal=waktu_susut, kode_akun="51350", nama_akun="BOP - Penyusutan Gedung Produksi", keterangan=f"Susut Otomatis {bulan_ini}", debit=susut_bangunan, kredit=0))
-                        db.add(JurnalUmum(tanggal=waktu_susut, kode_akun="13120", nama_akun="Akumulasi Penyusutan Bangunan", keterangan=f"Susut Otomatis {bulan_ini}", debit=0, kredit=susut_bangunan))
+                cek_susut = db.query(JurnalUmum).filter(JurnalUmum.keterangan == f"Susut Otomatis {bulan_ini}").first()
+                if cek_susut:
+                    st.error(f"🚨 DITOLAK! Beban penyusutan untuk bulan **{bulan_ini}** SUDAH TERCATAT. Anda hanya bisa menyusutkan aset 1 kali dalam sebulan untuk menjaga keakuratan Laba Rugi.")
+                else:
+                    try:
+                        if susut_bangunan > 0:
+                            db.add(JurnalUmum(tanggal=waktu_susut, kode_akun="51350", nama_akun="BOP - Penyusutan Gedung Produksi", keterangan=f"Susut Otomatis {bulan_ini}", debit=susut_bangunan, kredit=0))
+                            db.add(JurnalUmum(tanggal=waktu_susut, kode_akun="13120", nama_akun="Akumulasi Penyusutan Bangunan", keterangan=f"Susut Otomatis {bulan_ini}", debit=0, kredit=susut_bangunan))
                     
-                    if susut_mesin > 0:
-                        db.add(JurnalUmum(tanggal=waktu_susut, kode_akun="51350", nama_akun="BOP - Penyusutan Mesin Produksi", keterangan=f"Susut Otomatis {bulan_ini}", debit=susut_mesin, kredit=0))
-                        db.add(JurnalUmum(tanggal=waktu_susut, kode_akun="13220", nama_akun="Akumulasi Penyusutan Mesin", keterangan=f"Susut Otomatis {bulan_ini}", debit=0, kredit=susut_mesin))
+                        if susut_mesin > 0:
+                            db.add(JurnalUmum(tanggal=waktu_susut, kode_akun="51350", nama_akun="BOP - Penyusutan Mesin Produksi", keterangan=f"Susut Otomatis {bulan_ini}", debit=susut_mesin, kredit=0))
+                            db.add(JurnalUmum(tanggal=waktu_susut, kode_akun="13220", nama_akun="Akumulasi Penyusutan Mesin", keterangan=f"Susut Otomatis {bulan_ini}", debit=0, kredit=susut_mesin))
                         
-                    if susut_kendaraan > 0:
-                        db.add(JurnalUmum(tanggal=waktu_susut, kode_akun="62170", nama_akun="Beban Penyusutan Kendaraan Kantor", keterangan=f"Susut Otomatis {bulan_ini}", debit=susut_kendaraan, kredit=0))
-                        db.add(JurnalUmum(tanggal=waktu_susut, kode_akun="13320", nama_akun="Akumulasi Penyusutan Kendaraan", keterangan=f"Susut Otomatis {bulan_ini}", debit=0, kredit=susut_kendaraan))
+                        if susut_kendaraan > 0:
+                            db.add(JurnalUmum(tanggal=waktu_susut, kode_akun="62170", nama_akun="Beban Penyusutan Kendaraan Kantor", keterangan=f"Susut Otomatis {bulan_ini}", debit=susut_kendaraan, kredit=0))
+                            db.add(JurnalUmum(tanggal=waktu_susut, kode_akun="13320", nama_akun="Akumulasi Penyusutan Kendaraan", keterangan=f"Susut Otomatis {bulan_ini}", debit=0, kredit=susut_kendaraan))
                         
-                    if susut_inventaris > 0:
-                        db.add(JurnalUmum(tanggal=waktu_susut, kode_akun="62170", nama_akun="Beban Penyusutan Furniture Kantor", keterangan=f"Susut Otomatis {bulan_ini}", debit=susut_inventaris, kredit=0))
-                        db.add(JurnalUmum(tanggal=waktu_susut, kode_akun="13420", nama_akun="Akumulasi Penyusutan Furniture", keterangan=f"Susut Otomatis {bulan_ini}", debit=0, kredit=susut_inventaris))
+                        if susut_inventaris > 0:
+                            db.add(JurnalUmum(tanggal=waktu_susut, kode_akun="62170", nama_akun="Beban Penyusutan Furniture Kantor", keterangan=f"Susut Otomatis {bulan_ini}", debit=susut_inventaris, kredit=0))
+                            db.add(JurnalUmum(tanggal=waktu_susut, kode_akun="13420", nama_akun="Akumulasi Penyusutan Furniture", keterangan=f"Susut Otomatis {bulan_ini}", debit=0, kredit=susut_inventaris))
                     
-                    db.commit()
-                    st.success("✅ Sukses! Laporan Neraca & Laba Rugi sudah diperbarui otomatis.")
-                    time.sleep(2)
-                    st.rerun()
-                except Exception as e:
-                    db.rollback()
-                    st.error(f"🚨 Gagal mencatat penyusutan. Error: {str(e)}")
+                        db.commit()
+                        st.success("✅ Sukses! Laporan Neraca & Laba Rugi sudah diperbarui otomatis.")
+                        time.sleep(2)
+                        st.rerun()
+                    except Exception as e:
+                        db.rollback()
+                        st.error(f"🚨 Gagal mencatat penyusutan. Error: {str(e)}")
 
-        else:
-            st.info("Belum ada aset tetap yang dibeli.")
+            else:
+                st.info("Belum ada aset tetap yang dibeli.")
             
     db.close()

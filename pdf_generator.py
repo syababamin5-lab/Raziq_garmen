@@ -117,7 +117,9 @@ def export_dataframe_pdf(judul, periode, df, col_widths):
     # Daftarkan Print Title Dinamis sesuai nama kolom
     headers_data = []
     for i, col in enumerate(cols):
-        headers_data.append((actual_widths[i], col, 'C'))
+        # Membersihkan header dari emoji/karakter aneh
+        clean_col = str(col).encode('latin-1', 'replace').decode('latin-1')
+        headers_data.append((actual_widths[i], clean_col, 'C'))
     pdf.headers_data = headers_data
     
     pdf.add_page() # Cetak halaman pertama beserta tabel header
@@ -127,14 +129,154 @@ def export_dataframe_pdf(judul, periode, df, col_widths):
         pdf.check_page_break(7)
         for i, col in enumerate(cols):
             text = str(row[col])
+            
+            # FITUR KEAMANAN 1: Bersihkan teks dari emoji agar FPDF tidak Crash
+            text = text.encode('latin-1', 'replace').decode('latin-1')
+            
             align = 'R' if any(x in text for x in ['Rp', 'Pcs', 'LS']) or any(x in col for x in ['Debit', 'Kredit', 'Saldo', 'Harga']) else 'L'
             
-            # Karena kertas menyamping (lebar), pemotongan huruf kita perpanjang jadi 85 karakter
-            # Sehingga keterangan panjang tidak akan terpotong lagi
-            if len(text) > 85: text = text[:82] + "..."
+            # FITUR KEAMANAN 2: Pemotongan (Truncate) Teks Secara Dinamis
+            # Rata-rata 1 huruf Arial ukuran 9 memakan lebar sekitar 1.8mm - 2mm
+            # Kita batasi maksimal karakter berdasarkan lebar aktual sel tersebut
+            max_chars = int(actual_widths[i] / 1.9)
+            if len(text) > max_chars: 
+                # Potong teks dan tambahkan titik tiga (...) jika terlalu panjang
+                text = text[:max_chars - 3] + "..."
             
             pdf.cell(actual_widths[i], 7, text, 1, 0, align)
         pdf.ln()
 
     pdf.add_ttd()
+    return pdf.output(dest='S').encode('latin-1')
+# ====================================================================
+# 3. ENGINE INVOICE PROFESIONAL (MIRIP REFERENSI MINEARTH)
+# ====================================================================
+def export_invoice_pdf(header_inv, detail_items, terbilang_teks):
+    pdf = FPDF('P', 'mm', 'A4')
+    pdf.add_page()
+    
+    # KOP SURAT
+    pdf.set_font('Arial', 'B', 20)
+    pdf.set_text_color(41, 128, 185) # Warna Biru
+    pdf.cell(0, 10, 'RAZIQ GARMENT', 0, 1, 'L')
+    
+    pdf.set_font('Arial', '', 10)
+    pdf.set_text_color(50, 50, 50)
+    pdf.cell(0, 5, 'Pusat Produksi Konveksi & Garment Berkualitas', 0, 1, 'L')
+    pdf.cell(0, 5, 'Bandung - Jawa Barat', 0, 1, 'L')
+    pdf.cell(0, 5, 'No. Tlp : 0812-1491-4641 - Kode Pos 40237', 0, 1, 'L')
+    pdf.set_line_width(0.2)
+    pdf.line(10, 40, 200, 40) # Garis Pembatas
+    pdf.set_line_width(0.8)
+    pdf.line(10, 41, 200, 41) # Garis Pembatas
+    
+    pdf.ln(5)
+    pdf.set_line_width(0.2)    
+    # JUDUL INVOICE
+    pdf.set_font('Arial', 'BU', 16)
+    pdf.set_text_color(41, 128, 185)
+    pdf.cell(0, 10, 'INVOICE', 0, 1, 'C')
+    pdf.set_font('Arial', '', 10)
+    pdf.set_text_color(0, 0, 0)
+    pdf.cell(0, 5, f'No: {header_inv.no_invoice}', 0, 1, 'C')
+    
+    pdf.ln(5)
+    
+    # KOTAK INFO CUSTOMER & TANGGAL
+    # Posisi Kiri (Customer)
+    pdf.set_font('Arial', '', 10)
+    pdf.cell(25, 6, 'Tagihan Ke:', 0, 0)
+    pdf.set_font('Arial', 'B', 10)
+    pdf.cell(85, 6, str(header_inv.nama_customer).upper(), 0, 0)
+    
+    # Posisi Kanan (Tanggal)
+    pdf.set_font('Arial', '', 10)
+    pdf.cell(30, 6, 'Tanggal Invoice', 0, 0)
+    pdf.cell(5, 6, ':', 0, 0)
+    tgl_str = header_inv.tanggal.strftime('%d %b %Y') if hasattr(header_inv.tanggal, 'strftime') else str(header_inv.tanggal)
+    pdf.cell(40, 6, tgl_str, 0, 1)
+    
+    pdf.cell(110, 6, '', 0, 0) # Spacer
+    pdf.cell(30, 6, 'Metode Bayar', 0, 0)
+    pdf.cell(5, 6, ':', 0, 0)
+    pdf.cell(40, 6, header_inv.metode_bayar, 0, 1)
+    
+    pdf.ln(5)
+    
+    # HEADER TABEL
+    pdf.set_fill_color(41, 128, 185) # Header Biru
+    pdf.set_text_color(255, 255, 255)
+    pdf.set_font('Arial', 'B', 10)
+    pdf.cell(10, 8, 'No', 1, 0, 'C', 1)
+    pdf.cell(85, 8, 'Nama Barang / Model', 1, 0, 'C', 1)
+    pdf.cell(25, 8, 'Qty (Lusin)', 1, 0, 'C', 1)
+    pdf.cell(35, 8, 'Harga Satuan', 1, 0, 'C', 1)
+    pdf.cell(35, 8, 'Subtotal', 1, 1, 'C', 1)
+    
+    # ISI TABEL
+    pdf.set_text_color(0, 0, 0)
+    pdf.set_font('Arial', '', 10)
+    
+    for i, row in enumerate(detail_items):
+        nama = str(row.nama_barang).encode('latin-1', 'replace').decode('latin-1')
+        if len(nama) > 40: nama = nama[:37] + "..."
+        
+        pdf.cell(10, 8, str(i+1), 1, 0, 'C')
+        pdf.cell(85, 8, f" {nama}", 1, 0, 'L')
+        pdf.cell(25, 8, f"{row.qty_lusin:g}", 1, 0, 'C')
+        pdf.cell(35, 8, format_rp_pdf(row.harga_per_lusin), 1, 0, 'R')
+        pdf.cell(35, 8, format_rp_pdf(row.subtotal), 1, 1, 'R')
+    
+    # TOTALAN
+    pdf.set_font('Arial', 'B', 10)
+    total_sebelum = sum(r.subtotal for r in detail_items)
+    
+    pdf.cell(120, 8, '', 0, 0) # Kosong di kiri
+    pdf.cell(35, 8, 'Subtotal', 1, 0, 'R')
+    pdf.cell(35, 8, format_rp_pdf(total_sebelum), 1, 1, 'R')
+    
+    if header_inv.diskon > 0:
+        pdf.cell(120, 8, '', 0, 0) 
+        pdf.cell(35, 8, 'Diskon', 1, 0, 'R')
+        pdf.cell(35, 8, f"- {format_rp_pdf(header_inv.diskon)}", 1, 1, 'R')
+        
+    pdf.set_fill_color(41, 128, 185)
+    pdf.set_text_color(255, 255, 255)
+    pdf.cell(120, 8, '', 0, 0) 
+    pdf.cell(35, 8, 'TOTAL TAGIHAN', 1, 0, 'R', 1)
+    pdf.cell(35, 8, format_rp_pdf(header_inv.total_tagihan), 1, 1, 'R', 1)
+    
+    pdf.ln(5)
+    
+    # KOTAK TERBILANG (SEPERTI DI GAMBAR REFERENSI)
+    pdf.set_text_color(0, 0, 0)
+    pdf.set_font('Arial', 'I', 10)
+    pdf.set_fill_color(240, 240, 240)
+    pdf.multi_cell(120, 8, f"Terbilang: \n{terbilang_teks} Rupiah", 1, 'C', 1)
+    
+    pdf.ln(5)
+    
+    # KOTAK PEMBAYARAN & TTD
+    # Info Pembayaran Kiri
+    y_before = pdf.get_y()
+    pdf.set_font('Arial', 'B', 9)
+    pdf.cell(80, 5, 'Pembayaran ditujukan kepada:', 'LTR', 1, 'L')
+    pdf.set_font('Arial', '', 9)
+    pdf.cell(80, 5, 'Nama Bank : BCA', 'LR', 1, 'L')
+    pdf.cell(80, 5, 'Atas Nama : Raziq Garment / Yana', 'LR', 1, 'L')
+    pdf.cell(80, 5, 'No Rekening: 123-456-7890', 'LBR', 1, 'L')
+    
+    # TTD Kanan
+    pdf.set_y(y_before)
+    pdf.set_x(120)
+    pdf.set_font('Arial', '', 10)
+    pdf.cell(70, 5, 'Hormat Kami,', 0, 1, 'C')
+    pdf.ln(15)
+    pdf.set_x(120)
+    pdf.set_font('Arial', 'BU', 10)
+    pdf.cell(70, 5, 'Yana Taryana', 0, 1, 'C')
+    pdf.set_x(120)
+    pdf.set_font('Arial', '', 9)
+    pdf.cell(70, 5, 'Direktur Operasional', 0, 1, 'C')
+
     return pdf.output(dest='S').encode('latin-1')

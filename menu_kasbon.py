@@ -52,10 +52,10 @@ def jalankan():
                         nama_kredit = "Bank"
                         
                     # 4. Catat ke Jurnal Akuntansi (Double-Entry)
-                    # Debit: Piutang Karyawan bertambah (Kode: 11220 sesuai CoA baru)
+                    # Debit:  Karyawan bertambah (Kode: 11220 sesuai CoA baru)
                     db.add(JurnalUmum(
                         kode_akun="11220", 
-                        nama_akun="Piutang Karyawan", 
+                        nama_akun=" Karyawan", 
                         keterangan=f"Kasbon {karyawan_update.nama_karyawan}", 
                         debit=nom_kasbon, 
                         kredit=0

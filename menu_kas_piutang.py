@@ -15,28 +15,28 @@ desain_tab = """
     /* Tampilan Dasar Tab (Sedang Tidak Aktif) */
     .stTabs [data-baseweb="tab"] {
         background-color: #f0f2f6;
-        border-radius: 8px 8px 0px 0px; /* Ujung atas melengkung */
+        border-radius: 8px 8px 0px 0px; 
         color: #4a4a4a;
         font-weight: 600;
         padding: 10px 15px;
         border: 1px solid #d1d5db;
         border-bottom: none;
-        transition: all 0.3s ease-in-out; /* Animasi pergerakan smooth */
+        transition: all 0.3s ease-in-out; 
     }
 
     /* Animasi saat Mouse melewari Tab (Hover) */
     .stTabs [data-baseweb="tab"]:hover {
         background-color: #e2e8f0;
-        transform: translateY(-3px); /* Efek tombol terangkat ke atas */
+        transform: translateY(-3px); 
         color: #0b5345;
     }
 
     /* Tampilan Tab yang Sedang Aktif (Terpilih) */
     .stTabs [aria-selected="true"] {
-        background-color: #0b5345 !important; /* Warna hijau khas pabrik */
+        background-color: #0b5345 !important; 
         color: white !important;
         border: 1px solid #0b5345 !important;
-        box-shadow: 0px -3px 10px rgba(11, 83, 69, 0.3) !important; /* Efek cahaya di atas */
+        box-shadow: 0px -3px 10px rgba(11, 83, 69, 0.3) !important; 
     }
     
     /* Menyembunyikan garis bawah default biru dari Streamlit */
@@ -60,6 +60,7 @@ def jalankan():
         st.subheader("Penerimaan Pembayaran dari Pelanggan")
         st.write("Catat uang masuk dari pelunasan nota/bon pelanggan.")
         
+        # INI BARIS YANG TADI ERROR (Sekarang sudah diperbaiki ke saldo_piutang)
         customers = db.query(Mitra).filter(Mitra.kategori == KategoriMitra.CUSTOMER, Mitra.saldo_piutang > 0).all()
         
         if not customers:
@@ -193,12 +194,18 @@ def jalankan():
                 tgl_kasbon = st.date_input("📅 Tanggal Cicilan / Potongan", datetime.date.today())
                 
                 kar = st.selectbox("Pilih Karyawan", karyawans, format_func=lambda x: f"{x.nama_karyawan} (Sisa Kasbon: {format_rp(x.saldo_kasbon)})")
-                nominal_kasbon = st.number_input("Nominal Dibayar/Dipotong (Rp)", min_value=1000.0, max_value=float(kar.saldo_kasbon), step=50000.0)
+                
+                nominal_kasbon = st.number_input("Nominal Dibayar/Dipotong (Rp)", min_value=0.0, value=0.0, step=50000.0)
+                
                 masuk_ke_k = st.radio("Uang/Potongan Masuk ke Mana?", ["Kas Tunai", "Transfer Bank"], horizontal=True)
                 ket_kasbon = st.text_input("Keterangan (Contoh: Potong gaji minggu ke-3)")
                 
                 if st.form_submit_button(":material/save: Simpan Cicilan Kasbon"):
-                    if nominal_kasbon > 0:
+                    if nominal_kasbon <= 0:
+                        st.error("Nominal pembayaran harus lebih dari Rp 0!")
+                    elif nominal_kasbon > float(kar.saldo_kasbon):
+                        st.error(f"🚨 Gagal! Nominal yang Anda ketik melebihi sisa kasbon {kar.nama_karyawan}. (Maksimal: {format_rp(kar.saldo_kasbon)})")
+                    else:
                         try:
                             waktu_kasbon = datetime.datetime.combine(tgl_kasbon, datetime.datetime.now().time())
                             
@@ -212,7 +219,7 @@ def jalankan():
                             db.add(JurnalUmum(tanggal=waktu_kasbon, kode_akun="11220", nama_akun="Piutang Karyawan", keterangan=f"Pelunasan Kasbon: {kar.nama_karyawan} - {ket_kasbon}", debit=0, kredit=nominal_kasbon))
                             
                             db.commit()
-                            st.success(f"Berhasil! Cicilan tercatat untuk tanggal {tgl_kasbon.strftime('%d-%m-%Y')}.")
+                            st.success(f"Berhasil! Cicilan tercatat sebesar {format_rp(nominal_kasbon)} untuk tanggal {tgl_kasbon.strftime('%d-%m-%Y')}.")
                             time.sleep(1.5)
                             st.rerun()
                         except Exception as e:

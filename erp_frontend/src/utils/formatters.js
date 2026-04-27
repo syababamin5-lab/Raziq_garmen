@@ -39,3 +39,22 @@ export function getStatusClass(status) {
     default:             return 'badge-info'
   }
 }
+
+/**
+ * Format string untuk tampilan input (ribuan separator)
+ */
+export function formatInputNumber(val) {
+  if (val === null || val === undefined || val === '') return '';
+  const num = val.toString().replace(/[^0-9]/g, '');
+  if (!num) return '';
+  return parseInt(num).toLocaleString('id-ID');
+}
+
+/**
+ * Kembalikan angka murni dari string ber-separator
+ */
+export function parseNumber(val) {
+  if (!val) return 0;
+  const num = val.toString().replace(/[^0-9]/g, '');
+  return num ? parseInt(num) : 0;
+}

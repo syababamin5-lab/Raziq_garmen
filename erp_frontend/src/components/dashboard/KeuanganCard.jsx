@@ -43,8 +43,8 @@ export default function KeuanganCard({
       {/* ── Badge pojok kanan atas ─────────────────────── */}
       {badge && (
         <div className="flex justify-between items-start mb-3">
-          <span className="text-xl">{icon}</span>
-          <span className={`badge text-[10px] font-700 px-2 py-0.5 rounded-full ${badgeStyles[badgeType]}`}>
+          <span className="material-symbols-rounded text-[28px] text-emerald-600">{icon}</span>
+          <span className={`badge text-[10px] font-bold px-2 py-0.5 rounded-full ${badgeStyles[badgeType]}`}>
             {badgeType === 'live' && (
               <span className="inline-block w-1.5 h-1.5 bg-emerald-500 rounded-full mr-1 live-dot" />
             )}
@@ -57,7 +57,7 @@ export default function KeuanganCard({
       <p className="fin-label mb-1">{label}</p>
 
       {/* ── Value ────────────────────────────────────────── */}
-      <p className={`text-2xl font-900 leading-tight tracking-tight ${valueColor}`}>
+      <p className={`text-2xl font-black leading-tight tracking-tight ${valueColor}`}>
         {value}
       </p>
 

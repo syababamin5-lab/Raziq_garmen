@@ -1,56 +1,58 @@
 /**
- * Topbar.jsx — Header atas (search bar, judul, notifikasi, profile)
- * Meniru topbar dari gambar referensi.
+ * Topbar.jsx — Bar navigasi atas (Atelier Emerald Design)
+ * Menampilkan judul halaman, tombol toggle sidebar, dan status login.
  */
-export default function Topbar({ title = 'The Sartorial Archive' }) {
+import React from 'react'
+import { getCurrentUser, logout } from '../../api/authApi'
+
+export default function Topbar({ title, onToggleSidebar, isSidebarOpen }) {
+  const user = getCurrentUser();
+
   return (
     <header className="
-      fixed top-0 left-56 right-0 h-14 z-40
-      bg-white/90 backdrop-blur-sm
-      border-b border-surface-border
-      flex items-center justify-between
-      px-6
-    ">
-      {/* ── Search ──────────────────────────────────── */}
-      <div className="flex items-center gap-2 text-surface-muted">
-        <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2}
-            d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
-        </svg>
-        <input
-          type="text"
-          placeholder="Search records..."
-          className="bg-transparent text-sm text-slate-600 placeholder-slate-400 outline-none w-48"
-        />
+      fixed top-0 right-0 h-14 
+      bg-white/80 backdrop-blur-md border-b border-slate-100
+      flex items-center justify-between px-6 z-40
+      transition-all duration-300 ease-in-out
+    " style={{ left: isSidebarOpen ? '224px' : '80px' }}>
+      
+      <div className="flex items-center gap-4">
+        {/* Toggle Button */}
+        <button 
+            onClick={onToggleSidebar}
+            className="w-10 h-10 rounded-xl hover:bg-slate-100 flex items-center justify-center text-slate-500 transition-colors"
+        >
+            <span className="material-symbols-rounded">
+                {isSidebarOpen ? 'menu_open' : 'menu'}
+            </span>
+        </button>
+
+        <h2 className="text-slate-800 font-extrabold text-lg tracking-tight uppercase">
+          {title}
+        </h2>
       </div>
 
-      {/* ── Brand ───────────────────────────────────── */}
-      <span className="text-sm font-700 text-slate-500 tracking-wide uppercase">
-        {title}
-      </span>
-
-      {/* ── Actions ─────────────────────────────────── */}
-      <div className="flex items-center gap-3">
-        {/* Notifikasi */}
-        <button className="relative w-8 h-8 flex items-center justify-center rounded-xl hover:bg-slate-100 transition-colors">
-          <svg className="w-4 h-4 text-slate-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2}
-              d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6.002 6.002 0 00-4-5.659V5a2 2 0 10-4 0v.341C7.67 6.165 6 8.388 6 11v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9" />
-          </svg>
-          <span className="absolute -top-0.5 -right-0.5 w-2 h-2 bg-red-500 rounded-full"></span>
-        </button>
-
-        {/* Filter */}
-        <button className="w-8 h-8 flex items-center justify-center rounded-xl hover:bg-slate-100 transition-colors">
-          <svg className="w-4 h-4 text-slate-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2}
-              d="M3 4a1 1 0 011-1h16a1 1 0 011 1v2a1 1 0 01-.293.707L13 13.414V19a1 1 0 01-.553.894l-4 2A1 1 0 017 21v-7.586L3.293 6.707A1 1 0 013 6V4z" />
-          </svg>
-        </button>
-
-        {/* Avatar */}
-        <div className="w-8 h-8 rounded-full bg-emerald-800 flex items-center justify-center text-white text-xs font-700 cursor-pointer hover:ring-2 hover:ring-emerald-500 transition-all">
-          U
+      <div className="flex items-center gap-4">
+        <div className="flex items-center gap-3">
+          <div className="w-9 h-9 rounded-xl bg-emerald-50 border border-emerald-100 flex items-center justify-center text-emerald-700 font-black text-sm overflow-hidden shadow-sm">
+            {user?.foto_url ? (
+              <img src={`http://${window.location.hostname}:8000${user.foto_url}`} className="w-full h-full object-cover" alt="" />
+            ) : (
+              user?.nama_lengkap?.charAt(0).toUpperCase() || 'S'
+            )}
+          </div>
+          <div className="hidden md:flex flex-col items-end">
+            <p className="text-slate-900 font-bold text-xs uppercase tracking-tighter">{user?.nama_lengkap || 'Syabab Amin'}</p>
+            <p className="text-emerald-600 font-black text-[9px] uppercase tracking-widest">{user?.role?.replace('_', ' ') || 'Administrator'}</p>
+          </div>
+        </div>
+        
+        <div 
+          onClick={logout}
+          className="w-10 h-10 rounded-2xl bg-slate-100 border border-slate-200 flex items-center justify-center text-slate-400 group cursor-pointer hover:bg-red-50 hover:border-red-200 transition-all"
+          title="Logout"
+        >
+          <span className="material-symbols-rounded group-hover:text-red-600 transition-colors">logout</span>
         </div>
       </div>
     </header>

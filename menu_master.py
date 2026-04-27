@@ -59,78 +59,58 @@ def jalankan():
     
     with col_imp1:
         with st.expander(":material/apparel: Import Saldo Awal BAJU (Jadi)"):
-            st.write("Format Excel harus persis: Model Code, Product Name, SKU, Satuan, Harga Jual, Harga Modal, Stok Awal")
-            
-            template_baju = pd.DataFrame(columns=["Model Code", "Product Name", "SKU", "Satuan", "Harga Jual", "Harga Modal", "Stok Awal"])
+            st.write("Format: Model Code, Product Name, SKU, Satuan, Harga Jual, Harga Modal, Stok Awal")
+            template_baju = pd.DataFrame(columns=["Model Code", "Product Name", "SKU", "Satuan (Lusin/Pcs)", "Harga Jual", "Harga Modal", "Stok Awal"])
             buffer = io.BytesIO()
             with pd.ExcelWriter(buffer, engine='openpyxl') as writer:
                 template_baju.to_excel(writer, index=False)
             st.download_button("⬇️ Download Template Baju", data=buffer.getvalue(), file_name="Template_Baju_Jadi.xlsx")
             
             file_baju = st.file_uploader("Upload Excel Baju", type=["xlsx"], key="up_baju")
-            
             if file_baju and st.button("🚀 Proses Import Baju"):
                 df = pd.read_excel(file_baju)
-                total_aset_baju = 0
                 
-                try:
-                    for _, row in df.iterrows():
-                        sku = str(row['SKU']).strip()
+                # ==========================================================
+                # FITUR KEMBALI: HAPUS SEMUA DATA BAJU LAMA & JURNALNYA
+                # ==========================================================
+                barang_lama = db.query(Barang).filter(Barang.kategori == KategoriBarang.BARANG_JADI).all()
+                for b in barang_lama:
+                    db.query(JurnalUmum).filter(JurnalUmum.keterangan == f"Saldo Awal {b.kode_sku}").delete(synchronize_session=False)
+                    db.delete(b)
+                db.commit()
+                # ==========================================================
+                
+                for _, row in df.iterrows():
+                    sku = str(row['SKU']).strip()
+                    if not db.query(Barang).filter(Barang.kode_sku == sku).first():
+                        stok_excel = float(row['Stok Awal']) if pd.notna(row['Stok Awal']) else 0
+                        hrg_m = float(row['Harga Modal']) if pd.notna(row['Harga Modal']) else 0
+                        satuan = str(row['Satuan (Lusin/Pcs)']).strip().lower()
                         
-                        def bersihkan(nilai):
-                            try:
-                                return float(str(nilai).lower().replace('rp', '').replace(',', '').replace('.', '').strip())
-                            except:
-                                return 0.0
-                                
-                        stok_excel = bersihkan(row['Stok Awal'])
-                        harga_jual = bersihkan(row['Harga Jual'])
-                        harga_modal_excel = bersihkan(row['Harga Modal'])
-                        satuan_teks = str(row['Satuan']).strip().lower()
+                        # --- PERBAIKAN LOGIKA KONVERSI KE KEUANGAN ---
+                        # Database stok disimpan dalam Pcs, tapi Harga Modal dalam Lusin
+                        if "lusin" in satuan or "ls" in satuan:
+                            stok_pcs = stok_excel * 12
+                            qty_ls = stok_excel
+                        else: # Jika di excel satuannya Pcs
+                            stok_pcs = stok_excel
+                            qty_ls = stok_excel / 12.0
+
+                        db.add(Barang(
+                            model_code=row['Model Code'], nama_barang=row['Product Name'], kode_sku=sku,
+                            kategori=KategoriBarang.BARANG_JADI, satuan=row['Satuan (Lusin/Pcs)'],
+                            stok_saat_ini=stok_pcs, harga_jual=row['Harga Jual'], harga_modal=hrg_m
+                        ))
                         
-                        # --- OTOMATISASI KONVERSI LUSIN KE PCS ---
-                        stok_pcs_final = stok_excel
-                        harga_modal_pcs_final = harga_modal_excel
-                        
-                        # Jika di Excel satuannya Lusin, sistem otomatis mengalikan stok dan membagi harga modal
-                        if "lusin" in satuan_teks or "ls" in satuan_teks:
-                             stok_pcs_final = stok_excel * 12
-                             harga_modal_pcs_final = harga_modal_excel / 12
-                        
-                        barang_db = db.query(Barang).filter(Barang.kode_sku == sku).first()
-                        if not barang_db:
-                            barang_baru = Barang(
-                                model_code=row['Model Code'], 
-                                nama_barang=row['Product Name'], 
-                                kode_sku=sku,
-                                kategori=KategoriBarang.BARANG_JADI, 
-                                satuan="Pcs", 
-                                stok_saat_ini=stok_pcs_final, 
-                                harga_jual=harga_jual, 
-                                harga_modal=harga_modal_pcs_final # Simpan harga per Pcs ke database
-                            )
-                            db.add(barang_baru)
-                        else:
-                            barang_db.stok_saat_ini += stok_pcs_final
-                            barang_db.harga_modal = harga_modal_pcs_final 
-                            barang_db.harga_jual = harga_jual
-                        
-                        # Hitung Aset Uang (Pcs x Harga per Pcs)
-                        if stok_pcs_final > 0 and harga_modal_pcs_final > 0:
-                            total_aset_baju += (stok_pcs_final * harga_modal_pcs_final)
+                        # SINKRONISASI KODE ASET BARANG JADI (12150)
+                        if stok_pcs > 0 and hrg_m > 0:
+                            # PERBAIKAN: Hitung Nilai berdasarkan (Lusin * Harga per Lusin)
+                            nilai = qty_ls * hrg_m
                             
-                    # Tulis Jurnal Saja di Akhir
-                    if total_aset_baju > 0:
-                        tgl_sekarang = datetime.datetime.now()
-                        db.add(JurnalUmum(tanggal=tgl_sekarang, kode_akun="12150", nama_akun="Persediaan Barang Jadi", keterangan="Saldo Awal Baju (Import Massal)", debit=total_aset_baju, kredit=0))
-                        db.add(JurnalUmum(tanggal=tgl_sekarang, kode_akun="31100", nama_akun="Modal Saldo Awal", keterangan="Saldo Awal Baju (Import Massal)", debit=0, kredit=total_aset_baju))
-                    
-                    db.commit()
-                    st.success(f"✅ Import Baju Selesai! Aset senilai Rp {total_aset_baju:,.0f} telah dimasukkan ke Neraca.")
-                    
-                except Exception as e:
-                    db.rollback()
-                    st.error(f"🚨 Gagal! Terjadi kesalahan pada baris {sku}: {str(e)}")
+                            db.add(JurnalUmum(kode_akun="12150", nama_akun="Persediaan Barang Jadi", keterangan=f"Saldo Awal {sku}", debit=nilai, kredit=0))
+                            db.add(JurnalUmum(kode_akun="31110", nama_akun="Modal Disetor (Saldo Awal)", keterangan=f"Saldo Awal {sku}", debit=0, kredit=nilai))
+                db.commit()
+                st.success("Berhasil Import Stok Baju!")
 
     with col_imp2:
         with st.expander(":material/content_paste: Import Saldo Awal BAHAN (Baku/Kain)"):
@@ -144,6 +124,22 @@ def jalankan():
             file_bahan = st.file_uploader("Upload Excel Bahan", type=["xlsx"], key="up_bahan")
             if file_bahan and st.button("🚀 Proses Import Bahan Baku"):
                 df_b = pd.read_excel(file_bahan)
+                
+                # ==========================================================
+                # FITUR KEMBALI: HAPUS SEMUA DATA BAHAN LAMA & JURNALNYA
+                # ==========================================================
+                bahan_lama = db.query(Barang).filter(Barang.kategori.in_([
+                    KategoriBarang.BAHAN_BAKU, 
+                    KategoriBarang.BAHAN_PEMBANTU, 
+                    KategoriBarang.BAHAN_PENOLONG
+                ])).all()
+                
+                for b in bahan_lama:
+                    db.query(JurnalUmum).filter(JurnalUmum.keterangan == f"Saldo Awal {b.kode_sku}").delete(synchronize_session=False)
+                    db.delete(b)
+                db.commit()
+                # ==========================================================
+                
                 for _, row in df_b.iterrows():
                     sku = str(row['SKU']).strip()
                     if not db.query(Barang).filter(Barang.kode_sku == sku).first():
@@ -247,8 +243,8 @@ def jalankan():
                 e_sku = c4.text_input("SKU", value=pilih_edit.kode_sku, key=f"sku_qe_{pilih_edit.id}")
                 
                 c5, c6 = st.columns(2)
-                e_harga = c5.number_input("Harga Jual (Rp)", min_value=0, value=int(pilih_edit.harga_jual), step=1000, key=f"harga_qe_{pilih_edit.id}")
-                e_stok = c6.number_input(f"Stok Fisik Asli (Pcs untuk Baju / Kg untuk Kain)", min_value=0.0, step=0.5, value=float(pilih_edit.stok_saat_ini), key=f"stok_qe_{pilih_edit.id}")
+                e_harga = c5.number_input("Harga Jual (Rp)", min_value=0, value=int(pilih_edit.harga_jual or 0), step=1000, key=f"harga_qe_{pilih_edit.id}")
+                e_stok = c6.number_input(f"Stok Fisik Asli (Pcs untuk Baju / Kg untuk Kain)", min_value=0.0, step=0.5, value=float(pilih_edit.stok_saat_ini or 0.0), key=f"stok_qe_{pilih_edit.id}")
                 
                 col_btn1, col_btn2 = st.columns(2)
                 submit_edit = col_btn1.form_submit_button(":material/save: Simpan Perubahan & Update Stok")
@@ -259,12 +255,17 @@ def jalankan():
                     
                     selisih_stok = e_stok - barang_update.stok_saat_ini
                     if selisih_stok != 0:
-                        nilai_selisih = abs(selisih_stok) * (barang_update.harga_modal or 0)
+                        # --- PERBAIKAN LOGIKA SELISIH KEUANGAN ---
+                        if barang_update.kategori == KategoriBarang.BARANG_JADI:
+                            # Baju: Harga modal sudah disimpan dalam satuan per Pcs
+                            nilai_selisih = abs(selisih_stok) * (barang_update.harga_modal or 0)
+                        else:
+                            # Kain/Bahan Baku: Kg langsung dikali harga modal per Kg
+                            nilai_selisih = abs(selisih_stok) * (barang_update.harga_modal or 0)
+                        # -----------------------------------------
                         
                         if barang_update.kategori == KategoriBarang.BARANG_JADI:
                             akun_persediaan = "12150"; nama_akun_persediaan = "Persediaan Barang Jadi"
-                        elif barang_update.kategori in [KategoriBarang.BAHAN_PEMBANTU, KategoriBarang.BAHAN_PENOLONG]:
-                            akun_persediaan = "12120"; nama_akun_persediaan = "Persediaan Bahan Penolong"
                         else:
                             akun_persediaan = "12110"; nama_akun_persediaan = "Persediaan Bahan Baku (Kain)"
                         
@@ -381,12 +382,83 @@ def jalankan():
         
         with sub_t2:
             if karyawans:
-                pilih_k = st.selectbox("Pilih Karyawan:", karyawans, format_func=lambda x: f"{x.nama_karyawan}")
+                pilih_k = st.selectbox("Pilih Karyawan:", karyawans, format_func=lambda x: f"{x.nama_karyawan}", key="pilih_edit_kar")
+                
                 with st.form("edit_emp", clear_on_submit=True):
-                    btn_del = st.form_submit_button("🗑️ Hapus Karyawan (Resign)")
+                    st.info("Edit rincian data karyawan di bawah ini.")
+                    c1, c2 = st.columns(2)
+                    e_nama = c1.text_input("Nama Lengkap Karyawan", value=pilih_k.nama_karyawan)
+                    e_nohp = c2.text_input("No. HP / WhatsApp", value=pilih_k.no_hp or "")
+                    e_alamat = st.text_input("Alamat Tempat Tinggal", value=pilih_k.alamat or "")
+                    
+                    c3, c4 = st.columns(2)
+                    # Mengambil urutan index dari enum agar dropdown sesuai dengan data karyawan saat ini
+                    idx_div = list(Divisi).index(pilih_k.divisi) if pilih_k.divisi in list(Divisi) else 0
+                    idx_tpg = list(TipeGaji).index(pilih_k.tipe_gaji) if pilih_k.tipe_gaji in list(TipeGaji) else 0
+                    
+                    e_div = c3.selectbox("Divisi Pekerjaan", list(Divisi), index=idx_div, format_func=lambda x: x.value)
+                    e_tpg = c4.selectbox("Tipe Gaji", list(TipeGaji), index=idx_tpg, format_func=lambda x: x.value)
+                    
+                    c5, c6 = st.columns(2)
+                    e_nom = c5.number_input("Gaji Pokok", min_value=0, value=int(pilih_k.nominal_gaji or 0))
+                    e_target = c6.number_input("Target Produksi", min_value=0, value=int(pilih_k.target_produksi_mingguan or 0))
+                    
+                    e_kasbon = st.number_input("Total Kasbon Saat Ini (Rp)", min_value=0, step=50000, value=int(pilih_k.saldo_kasbon or 0))
+                    
+                    col_btn1, col_btn2 = st.columns(2)
+                    btn_edit = col_btn1.form_submit_button("💾 Simpan Perubahan")
+                    btn_del = col_btn2.form_submit_button("🗑️ Hapus Karyawan (Resign)")
+                    
+                    if btn_edit:
+                        try:
+                            k_update = db.query(Karyawan).filter(Karyawan.id == pilih_k.id).first()
+                            
+                            # --- PERBAIKAN LOGIKA SELISIH KEUANGAN (KASBON) ---
+                            # Agar perubahan nominal kasbon langsung nge-link ke Neraca Keuangan
+                            selisih_kasbon = e_kasbon - (k_update.saldo_kasbon or 0)
+                            if selisih_kasbon != 0:
+                                if selisih_kasbon > 0: # Jika kasbon ditambah/dinaikkan
+                                    db.add(JurnalUmum(kode_akun="11220", nama_akun="Piutang Karyawan", keterangan=f"Koreksi Penambahan Kasbon - {e_nama}", debit=selisih_kasbon, kredit=0))
+                                    db.add(JurnalUmum(kode_akun="31110", nama_akun="Modal Disetor", keterangan=f"Koreksi Penambahan Kasbon - {e_nama}", debit=0, kredit=selisih_kasbon))
+                                else: # Jika kasbon dikurangi (selisih minus)
+                                    db.add(JurnalUmum(kode_akun="11220", nama_akun="Piutang Karyawan", keterangan=f"Koreksi Pengurangan Kasbon - {e_nama}", debit=0, kredit=abs(selisih_kasbon)))
+                                    db.add(JurnalUmum(kode_akun="31110", nama_akun="Modal Disetor", keterangan=f"Koreksi Pengurangan Kasbon - {e_nama}", debit=abs(selisih_kasbon), kredit=0))
+                            
+                            # Update data ke tabel Karyawan
+                            k_update.nama_karyawan = e_nama
+                            k_update.no_hp = e_nohp
+                            k_update.alamat = e_alamat
+                            k_update.divisi = e_div
+                            k_update.tipe_gaji = e_tpg
+                            k_update.nominal_gaji = e_nom
+                            k_update.target_produksi_mingguan = e_target
+                            k_update.saldo_kasbon = e_kasbon
+                            
+                            db.commit()
+                            st.success("Data Karyawan berhasil diperbarui!")
+                            time.sleep(1.5)
+                            st.rerun()
+                        except Exception as e:
+                            db.rollback()
+                            st.error(f"🚨 Gagal Menyimpan! Detail: {str(e)}")
+
                     if btn_del:
-                        k_del = db.query(Karyawan).filter(Karyawan.id == pilih_k.id).first()
-                        if k_del: db.delete(k_del); db.commit(); st.warning("Karyawan dihapus!"); st.rerun()
+                        try:
+                            k_del = db.query(Karyawan).filter(Karyawan.id == pilih_k.id).first()
+                            if k_del: 
+                                # Membersihkan seluruh riwayat jurnal (keuangan) yang berkaitan dengan karyawan ini
+                                # agar saldo di Neraca dan Riwayat Buku Besar ikut bersih
+                                db.query(JurnalUmum).filter(JurnalUmum.keterangan.contains(k_del.nama_karyawan)).delete(synchronize_session=False)
+                                
+                                # Baru kemudian menghapus data karyawannya
+                                db.delete(k_del)
+                                db.commit()
+                                st.warning(f"Karyawan {k_del.nama_karyawan} dan seluruh riwayat saldonya telah dihapus dari sistem!")
+                                time.sleep(1.5)
+                                st.rerun()
+                        except Exception as e:
+                            db.rollback()
+                            st.error(f"🚨 Gagal Menghapus! Detail: {str(e)}")
 
         with sub_t3:
             if karyawans:

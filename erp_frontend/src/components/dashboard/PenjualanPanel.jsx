@@ -31,8 +31,8 @@ export default function PenjualanPanel({ data = [], loading = false }) {
       {/* ── Header ──────────────────────────────────────── */}
       <div className="flex items-center justify-between mb-4">
         <div className="flex items-center gap-2">
-          <span className="text-base">🏷️</span>
-          <h3 className="text-sm font-700 text-slate-700">Laporan Penjualan</h3>
+          <span className="material-symbols-rounded text-[20px] text-emerald-700">sell</span>
+          <h3 className="text-sm font-bold text-slate-700">Laporan Penjualan</h3>
         </div>
         <button className="text-slate-300 hover:text-slate-500 text-lg leading-none transition-colors">
           •••
@@ -65,7 +65,7 @@ export default function PenjualanPanel({ data = [], loading = false }) {
               <div className="
                 w-9 h-9 rounded-lg bg-emerald-800 
                 flex items-center justify-center
-                text-white text-[10px] font-800
+                text-white text-[10px] font-extrabold
                 flex-shrink-0 group-hover:bg-emerald-700
                 transition-colors
               ">
@@ -74,7 +74,7 @@ export default function PenjualanPanel({ data = [], loading = false }) {
 
               {/* Detail */}
               <div className="flex-1 min-w-0">
-                <p className="text-xs font-700 text-slate-700 truncate">
+                <p className="text-xs font-bold text-slate-700 truncate">
                   {item.no_invoice}
                 </p>
                 <p className="text-[11px] text-slate-400 truncate mt-0.5">
@@ -84,7 +84,7 @@ export default function PenjualanPanel({ data = [], loading = false }) {
 
               {/* Nilai & Status */}
               <div className="text-right flex-shrink-0">
-                <p className="text-xs font-700 text-slate-700">
+                <p className="text-xs font-bold text-slate-700">
                   Rp {Number(item.total_tagihan).toLocaleString('id-ID')}
                 </p>
                 <div className="mt-1">

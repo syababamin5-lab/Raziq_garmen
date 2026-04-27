@@ -5,21 +5,21 @@ export default function ProduksiPanel({ gudang, loading = false }) {
   const rows = gudang
     ? [
         {
-          icon: '✂️',
+          icon: 'content_cut',
           label: 'Cutting Minggu Ini',
           sub: 'Kain siap potong',
           qty: `${(gudang.cutting_minggu_ini_pcs || 0).toLocaleString('id-ID')} Pcs`,
           desc: 'Selesai Cutting',
         },
         {
-          icon: '🚚',
+          icon: 'checkroom',
           label: 'Persediaan Baju Jadi',
           sub: 'Gudang barang jadi',
           qty: `${gudang.persediaan_baju_jadi_lusin} Lusin`,
           desc: 'Siap Kirim',
         },
         {
-          icon: '🧵',
+          icon: 'layers',
           label: 'Sisa Kain Gudang',
           sub: 'Bahan baku tersisa',
           qty: `${gudang.sisa_kain_kg} Kg`,
@@ -56,8 +56,8 @@ export default function ProduksiPanel({ gudang, loading = false }) {
       {/* ── Header ──────────────────────────────────────── */}
       <div className="flex items-center justify-between mb-4">
         <div className="flex items-center gap-2">
-          <span className="text-base">✂️</span>
-          <h3 className="text-sm font-700 text-slate-700">Laporan Produksi &amp; Masuk</h3>
+          <span className="material-symbols-rounded text-[20px] text-emerald-700">content_cut</span>
+          <h3 className="text-sm font-bold text-slate-700">Laporan Produksi &amp; Masuk</h3>
         </div>
         <button className="text-slate-300 hover:text-slate-500 text-lg leading-none transition-colors">
           •••
@@ -76,19 +76,19 @@ export default function ProduksiPanel({ gudang, loading = false }) {
             "
           >
             {/* Icon */}
-            <div className="w-9 h-9 rounded-lg bg-emerald-50 border border-emerald-100 flex items-center justify-center text-base flex-shrink-0">
-              {row.icon}
+            <div className="w-9 h-9 rounded-lg bg-emerald-50 border border-emerald-100 flex items-center justify-center flex-shrink-0">
+              <span className="material-symbols-rounded text-[20px] text-emerald-600">{row.icon}</span>
             </div>
 
             {/* Detail */}
             <div className="flex-1 min-w-0">
-              <p className="text-xs font-700 text-slate-700">{row.label}</p>
+              <p className="text-xs font-bold text-slate-700">{row.label}</p>
               <p className="text-[11px] text-slate-400 mt-0.5">{row.sub}</p>
             </div>
 
             {/* Qty & Desc */}
             <div className="text-right flex-shrink-0">
-              <p className="text-xs font-700 text-slate-800">{row.qty}</p>
+              <p className="text-xs font-bold text-slate-800">{row.qty}</p>
               <p className="text-[10px] text-slate-400 mt-0.5">{row.desc}</p>
             </div>
           </div>

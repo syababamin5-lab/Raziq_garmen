@@ -1,90 +1,93 @@
-/**
- * Sidebar.jsx — Navigasi kiri (Atelier Emerald Design)
- * Meniru sidebar dari gambar referensi: bg emerald-900, ikon + teks putih.
- */
 import { NavLink } from 'react-router-dom'
+import { getCurrentUser } from '../../api/authApi'
 
 const MENU_ITEMS = [
-  { path: '/',               icon: '▦',  label: 'Dashboard' },
-  { path: '/master',         icon: '📦', label: 'Master Data & SKU' },
-  { path: '/persediaan',     icon: '🗃️', label: 'Persediaan Awal' },
-  { path: '/produksi',       icon: '✂️', label: 'Produksi Harian' },
-  { path: '/pembelian',      icon: '🛒', label: 'Pembelian & Biaya' },
-  { path: '/penjualan',      icon: '🚚', label: 'Penjualan' },
-  { path: '/kas',            icon: '💼', label: 'Kas, Piutang & Utang' },
-  { path: '/laporan',        icon: '📊', label: 'Laporan Keuangan' },
-  { path: '/kasbon',         icon: '👤', label: 'Kasbon Karyawan' },
-  { path: '/riwayat',        icon: '🕐', label: 'Riwayat & Edit' },
+  { path: '/',               icon: 'dashboard',  label: 'Dashboard', roles: ['super_admin', 'admin', 'bos'] },
+  { path: '/master',         icon: 'inventory_2', label: 'Master Data & SKU', roles: ['super_admin', 'admin'] },
+  { path: '/persediaan',     icon: 'view_in_ar', label: 'Persediaan Awal', roles: ['super_admin', 'admin'] },
+  { path: '/produksi',       icon: 'content_cut', label: 'Produksi Harian', roles: ['super_admin', 'admin', 'user'] },
+  { path: '/pembelian',      icon: 'shopping_cart', label: 'Pembelian & Biaya', roles: ['super_admin', 'admin', 'user'] },
+  { path: '/penjualan',      icon: 'local_shipping', label: 'Penjualan', roles: ['super_admin', 'admin', 'user'] },
+  { path: '/kas',            icon: 'account_balance_wallet', label: 'Kas & Piutang', roles: ['super_admin', 'admin'] },
+  { path: '/laporan',        icon: 'monitoring', label: 'Laporan Keuangan', roles: ['super_admin', 'admin', 'bos'] },
+  { path: '/kasbon',         icon: 'person', label: 'Kasbon Karyawan', roles: ['super_admin', 'admin', 'user'] },
+  { path: '/riwayat',        icon: 'history', label: 'Riwayat & Edit', roles: ['super_admin', 'admin', 'bos'] },
+  { path: '/settings/users', icon: 'manage_accounts', label: 'Pengaturan User', roles: ['super_admin'] },
+  { path: '/settings/company', icon: 'business_center', label: 'Profil Perusahaan', roles: ['super_admin'] },
+  { path: '/profile',        icon: 'account_circle', label: 'Profil Saya', roles: ['super_admin', 'admin', 'user', 'bos'] },
 ]
 
-export default function Sidebar() {
+export default function Sidebar({ isOpen }) {
+  const user = getCurrentUser();
+  const filteredMenu = MENU_ITEMS.filter(item => item.roles.includes(user?.role));
+
   return (
-    <aside className="
-      fixed top-0 left-0 h-full w-56
-      bg-emerald-900 flex flex-col
-      shadow-xl z-50
-    ">
-      {/* ── Logo / Brand ──────────────────────────────── */}
-      <div className="px-5 py-6 border-b border-emerald-800">
-        <div className="flex items-center gap-3">
-          {/* Avatar placeholder — ganti dengan <img src="/logo_ansa.png" /> */}
-          <div className="w-10 h-10 rounded-xl bg-emerald-700 flex items-center justify-center text-white font-900 text-lg shadow-inner">
-            R
-          </div>
-          <div>
-            <p className="text-white font-800 text-sm leading-tight">
-              Raziq Garment
-            </p>
-            <p className="text-emerald-400 text-[10px] font-500 uppercase tracking-widest">
-              Management v2.0
-            </p>
-          </div>
+    <aside className={`
+      fixed top-0 left-0 h-full bg-emerald-900 flex flex-col shadow-xl z-50
+      transition-all duration-300 ease-in-out
+      ${isOpen ? 'w-56 translate-x-0' : 'w-0 md:w-20 -translate-x-full md:translate-x-0'}
+    `}>
+      {/* ── Logo ── */}
+      <div className={`px-5 py-6 border-b border-emerald-800 transition-opacity duration-300 ${isOpen ? 'opacity-100' : 'opacity-0 md:opacity-100'}`}>
+        <div className="flex items-center gap-3 overflow-hidden">
+          {user?.foto_url ? (
+            <img 
+              src={`http://${window.location.hostname}:8000${user.foto_url}`} 
+              className="w-10 h-10 rounded-xl object-cover border border-emerald-700 shadow-inner flex-shrink-0" 
+              alt="" 
+            />
+          ) : (
+            <div className="w-10 h-10 rounded-xl bg-emerald-700 flex items-center justify-center text-white font-black text-lg shadow-inner flex-shrink-0">
+              {user?.nama_lengkap?.charAt(0).toUpperCase() || 'R'}
+            </div>
+          )}
+          {isOpen && (
+             <div className="animate-in fade-in duration-500">
+                <p className="text-white font-extrabold text-sm leading-tight whitespace-nowrap">{user?.nama_lengkap?.split(' ')[0] || 'Raziq'} Garment</p>
+                <p className="text-emerald-400 text-[10px] font-medium uppercase tracking-widest">{user?.role?.replace('_', ' ') || 'v2.0 PRO'}</p>
+             </div>
+          )}
         </div>
       </div>
 
-      {/* ── Navigasi Utama ────────────────────────────── */}
-      <nav className="flex-1 overflow-y-auto px-3 py-4 space-y-0.5">
-        {MENU_ITEMS.map((item) => (
+      {/* ── Navigasi Utama ── */}
+      <nav className={`flex-1 overflow-y-auto px-3 py-4 space-y-1 ${!isOpen ? 'md:items-center' : ''}`}>
+        {filteredMenu.map((item) => (
           <NavLink
             key={item.path}
             to={item.path}
             end={item.path === '/'}
             className={({ isActive }) =>
-              `flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-600 
-               transition-all duration-200 group
+              `flex items-center gap-3 px-3 py-3 rounded-xl text-sm font-semibold 
+               transition-all duration-200 group relative
                ${isActive
                  ? 'bg-emerald-500 text-white shadow-md'
-                 : 'text-emerald-100/80 hover:bg-emerald-800 hover:text-white'
-               }`
+                 : 'text-emerald-100/70 hover:bg-emerald-800 hover:text-white'
+               }
+               ${!isOpen ? 'justify-center p-0 h-10 w-10 mx-auto mb-1' : ''}`
             }
+            title={!isOpen ? item.label : ''}
           >
-            <span className="text-base leading-none w-5 text-center flex-shrink-0">
+            <span className={`material-symbols-rounded text-[22px] flex-shrink-0 transition-transform duration-200 group-hover:scale-110`}>
               {item.icon}
             </span>
-            <span className="truncate">{item.label}</span>
+            {isOpen && <span className="truncate animate-in slide-in-from-left-2">{item.label}</span>}
+            
+            {/* Tooltip when closed */}
+            {!isOpen && (
+               <div className="absolute left-14 bg-emerald-800 text-white text-[10px] px-2 py-1 rounded opacity-0 group-hover:opacity-100 pointer-events-none transition-opacity whitespace-nowrap z-50 shadow-xl border border-emerald-700 font-bold uppercase tracking-widest">
+                  {item.label}
+               </div>
+            )}
           </NavLink>
         ))}
       </nav>
 
-      {/* ── Footer: New Production Order + Logout ─────── */}
+      {/* ── Footer ── */}
       <div className="px-3 py-4 border-t border-emerald-800 space-y-2">
-        <button className="
-          w-full flex items-center justify-center gap-2
-          bg-emerald-500 hover:bg-emerald-400
-          text-white text-sm font-700 py-2.5 rounded-xl
-          transition-all duration-200 shadow-md hover:shadow-lg
-        ">
-          <span>＋</span>
-          New Production Order
-        </button>
-        <button className="
-          w-full flex items-center justify-center gap-2
-          text-emerald-300 hover:text-white hover:bg-emerald-800
-          text-sm font-500 py-2 rounded-xl
-          transition-all duration-200
-        ">
-          <span>↪</span>
-          Keluar
+        <button className={`flex items-center justify-center gap-2 bg-emerald-500 hover:bg-emerald-400 text-white text-sm font-bold rounded-xl transition-all duration-300 shadow-md ${isOpen ? 'w-full py-2.5 px-4' : 'w-10 h-10 mx-auto'}`}>
+          <span className="material-symbols-rounded text-[20px]">add</span>
+          {isOpen && <span className="whitespace-nowrap">New Order</span>}
         </button>
       </div>
     </aside>

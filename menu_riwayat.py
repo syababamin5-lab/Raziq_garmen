@@ -51,8 +51,12 @@ def jalankan():
                     else:
                         ket_target = str(target.keterangan or "")
                         
-                        if "INV-" in ket_target or "PO-" in ket_target or "Retur" in ket_target:
-                            st.error("🚨 DITOLAK! Transaksi Penjualan (INV) atau Pembelian (PO) tidak boleh dihapus dari sini karena akan membuat Stok Gudang dan Piutang error. Gunakan menu 'Retur' atau 'Penyesuaian Persediaan'!")
+                        ket_target = str(target.keterangan or "").lower()
+                        
+                        # FITUR KEAMANAN BLOCKER VOID (Anti Data Yatim)
+                        kata_terlarang = ["inv-", "po-", "retur", "kasbon", "pelunasan", "bayar utang", "bayar supplier"]
+                        if any(kata in ket_target for kata in kata_terlarang):
+                            st.error("🚨 DITOLAK! Transaksi yang berkaitan dengan Penjualan, Pembelian, Kasbon, dan Utang-Piutang TIDAK BOLEH di-void dari sini karena akan membuat Saldo Master Data tidak sinkron. Lakukan penyesuaian manual!")
                         else:
 
                             pasangan_jurnal = db.query(JurnalUmum).filter(

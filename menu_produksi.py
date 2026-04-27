@@ -91,8 +91,8 @@ def jalankan():
             if st.form_submit_button(":material/save: Simpan Data Cutting"):
                 if not kain:
                     st.error("Pilih kain terlebih dahulu!")
-                elif kg_pakai > kain.stok_saat_ini:
-                    st.error(f"Stok kain tidak cukup! Sisa: {kain.stok_saat_ini:g} Kg")
+                elif kg_pakai > (kain.stok_saat_ini or 0.0):
+                    st.error(f"Stok kain tidak cukup! Sisa: {(kain.stok_saat_ini or 0.0):g} Kg")
                 else:
                     try:
                         waktu_cutting = datetime.datetime.combine(tgl_cutting, datetime.datetime.now().time())
@@ -237,7 +237,10 @@ def jalankan():
         jht_rows = []
         for j in j_jht:
             ket = str(j.keterangan)
-            m = re.search(r'Masuk (\d+) pcs (\S+) \(Jahit\)', ket)
+            # PERBAIKAN: Menggunakan (.*?) agar SKU yang memiliki spasi (Contoh: "OVS 14 Polos") tetap terbaca 100%
+            m = re.search(r'Masuk (\d+) pcs (.*?) \(Jahit\)', ket)
+            if m:
+                jht_rows.append({"kode_sku": m.group(2).strip(), "total_jahit": int(m.group(1))})
             if m:
                 jht_rows.append({"kode_sku": m.group(2).strip(), "total_jahit": int(m.group(1))})
 

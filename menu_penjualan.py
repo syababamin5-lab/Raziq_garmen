@@ -4,7 +4,8 @@ import datetime
 import time 
 from database import SessionLocal
 from models import Barang, Karyawan, KategoriBarang, Mitra, KategoriMitra, HeaderPenjualan, DetailPenjualan, JurnalUmum
-from utils import format_rp
+from utils import format_rp, terbilang
+from pdf_generator import export_invoice_pdf
 
 desain_tab = """
 <style>
@@ -16,28 +17,28 @@ desain_tab = """
     /* Tampilan Dasar Tab (Sedang Tidak Aktif) */
     .stTabs [data-baseweb="tab"] {
         background-color: #f0f2f6;
-        border-radius: 8px 8px 0px 0px; /* Ujung atas melengkung */
+        border-radius: 8px 8px 0px 0px; 
         color: #4a4a4a;
         font-weight: 600;
         padding: 10px 15px;
         border: 1px solid #d1d5db;
         border-bottom: none;
-        transition: all 0.3s ease-in-out; /* Animasi pergerakan smooth */
+        transition: all 0.3s ease-in-out; 
     }
 
     /* Animasi saat Mouse melewari Tab (Hover) */
     .stTabs [data-baseweb="tab"]:hover {
         background-color: #e2e8f0;
-        transform: translateY(-3px); /* Efek tombol terangkat ke atas */
+        transform: translateY(-3px); 
         color: #0b5345;
     }
 
     /* Tampilan Tab yang Sedang Aktif (Terpilih) */
     .stTabs [aria-selected="true"] {
-        background-color: #0b5345 !important; /* Warna hijau khas pabrik */
+        background-color: #0b5345 !important; 
         color: white !important;
         border: 1px solid #0b5345 !important;
-        box-shadow: 0px -3px 10px rgba(11, 83, 69, 0.3) !important; /* Efek cahaya di atas */
+        box-shadow: 0px -3px 10px rgba(11, 83, 69, 0.3) !important; 
     }
     
     /* Menyembunyikan garis bawah default biru dari Streamlit */
@@ -46,12 +47,13 @@ desain_tab = """
     }
 </style>
 """
+
 def jalankan():
     st.markdown(desain_tab, unsafe_allow_html=True)
     st.title(":material/local_shipping: Modul Penjualan & Retur")
     db = SessionLocal()
     
-    t1, t2 = st.tabs([":material/shopping_cart_checkout: Input Penjualan (Invoice)", ":material/keyboard_return: Retur Penjualan"])
+    t1, t2, t3 = st.tabs([":material/shopping_cart_checkout: Input Penjualan (Invoice)", ":material/keyboard_return: Retur Penjualan", ":material/receipt_long: Daftar & Cetak Invoice"])
 
     # ========================================================
     # TAB 1: INPUT PENJUALAN (KERANJANG BELANJA)
@@ -93,11 +95,10 @@ def jalankan():
                     st.rerun()
                 
                 with st.form("checkout_jual", clear_on_submit=True):
-                    # --- MESIN WAKTU: TANGGAL PENJUALAN ---
                     tgl_jual = st.date_input("📅 Tanggal Transaksi / Invoice", datetime.date.today())
                     
                     cust = st.selectbox("Customer", customers, format_func=lambda c: c.nama_mitra) if customers else None
-                    metode = st.selectbox("Metode", ["Piutang (Tempo)", "Tunai", "Transfer"])
+                    metode = st.selectbox("Metode Pembayaran", ["Piutang (Tempo)", "Tunai", "Transfer"])
                     
                     dp = 0.0
                     if metode == "Piutang (Tempo)":
@@ -115,7 +116,6 @@ def jalankan():
                             st.error("DP tidak boleh lebih besar dari Total Tagihan!")
                         else:
                             try:
-
                                 waktu_jual = datetime.datetime.combine(tgl_jual, datetime.datetime.now().time())
                                 no_inv = f"INV-{waktu_jual.strftime('%y%m%d%H%M')}"
                                 
@@ -173,7 +173,6 @@ def jalankan():
             details = db.query(DetailPenjualan).filter(DetailPenjualan.no_invoice == pilih_inv.no_invoice).all()
             
             with st.form("form_retur_jual", clear_on_submit=True):
-
                 tgl_retur = st.date_input("📅 Tanggal Retur Diterima", datetime.date.today())
                 
                 barang_retur = st.selectbox("Pilih Barang yang Dikembalikan", details, format_func=lambda x: f"{x.nama_barang} ({x.qty_lusin} LS)")
@@ -215,4 +214,102 @@ def jalankan():
                         db.rollback()
                         st.error(f"🚨 Gagal memproses retur. Error: {str(e)}")
 
+    # ========================================================
+    # TAB 3: DAFTAR INVOICE & CETAK PDF
+    # ========================================================
+    with t3:
+        st.subheader(":material/receipt_long: Riwayat & Cetak Invoice")
+        st.info("Pilih invoice untuk melihat rincian, mencetak PDF, atau membatalkan (Void) transaksi.")
+        
+        semua_inv = db.query(HeaderPenjualan).order_by(HeaderPenjualan.id.desc()).all()
+        
+        if not semua_inv:
+            st.warning("Belum ada data invoice / penjualan.")
+        else:
+            col_list, col_detail = st.columns([1, 2])
+            
+            with col_list:
+                pilih_histori = st.selectbox("Daftar Invoice Terbit:", semua_inv, format_func=lambda x: f"{x.no_invoice} ({x.nama_customer})")
+            
+            with col_detail:
+                if pilih_histori:
+                    st.markdown(f"### Rincian: {pilih_histori.no_invoice}")
+                    tgl_str = pilih_histori.tanggal.strftime('%d-%m-%Y %H:%M') if hasattr(pilih_histori.tanggal, 'strftime') else str(pilih_histori.tanggal)
+                    st.write(f"**Customer:** {pilih_histori.nama_customer}")
+                    st.write(f"**Tanggal:** {tgl_str}")
+                    st.write(f"**Metode:** {pilih_histori.metode_bayar}")
+                    
+                    # Ambil detail barangnya
+                    items_inv = db.query(DetailPenjualan).filter(DetailPenjualan.no_invoice == pilih_histori.no_invoice).all()
+                    
+                    if items_inv:
+                        df_items = pd.DataFrame([{
+                            "Nama Barang": d.nama_barang,
+                            "Qty (LS)": f"{d.qty_lusin:g}",
+                            "Harga/LS": format_rp(d.harga_per_lusin),
+                            "Subtotal": format_rp(d.subtotal)
+                        } for d in items_inv])
+                        st.table(df_items)
+                        
+                    st.markdown(f"<h4 style='text-align:right;'>Total Tagihan: {format_rp(pilih_histori.total_tagihan)}</h4>", unsafe_allow_html=True)
+                    
+                    st.markdown("---")
+                    
+                    col_btn1, col_btn2 = st.columns(2)
+                    
+                    # TOMBOL 1: CETAK PDF
+                    with col_btn1:
+                        terbilang_str = terbilang(pilih_histori.total_tagihan)
+                        pdf_bytes = export_invoice_pdf(pilih_histori, items_inv, terbilang_str)
+                        
+                        st.download_button(
+                            label=":material/print: Cetak Invoice (PDF)",
+                            data=pdf_bytes,
+                            file_name=f"Invoice_{pilih_histori.no_invoice}.pdf",
+                            mime="application/pdf",
+                            use_container_width=True
+                        )
+                        
+                    # TOMBOL 2: HAPUS / VOID
+                    with col_btn2:
+                        # FITUR KEAMANAN: Checkbox Konfirmasi sebelum Void
+                        st.warning("⚠️ Perhatian: Dilarang melakukan Void pada invoice yang sudah pernah dicicil/dibayar di Menu Kas.")
+                        konfirmasi_void = st.checkbox(f"Saya mengonfirmasi bahwa Invoice {pilih_histori.no_invoice} ini BELUM PERNAH dibayar.", key=f"cek_{pilih_histori.no_invoice}")
+                        
+                        # Tombol hanya bisa diklik jika checkbox dicentang
+                        if konfirmasi_void:
+                            if st.button("🗑️ Batalkan (Void) Invoice", use_container_width=True):
+                                try:
+                                    # 1. Kembalikan Stok Barang ke Gudang
+                                    for d in items_inv:
+                                        brg = db.query(Barang).filter(Barang.kode_sku == d.kode_sku).first()
+                                        if brg:
+                                            brg.stok_saat_ini += int(d.qty_lusin * 12)
+                                    
+                                    # 2. Kurangi Saldo Piutang Customer (Jika Ngutang)
+                                    if pilih_histori.metode_bayar == "Piutang (Tempo)":
+                                        j_piutang = db.query(JurnalUmum).filter(JurnalUmum.keterangan.contains(pilih_histori.no_invoice), JurnalUmum.kode_akun == "11210").first()
+                                        if j_piutang:
+                                            cust = db.query(Mitra).filter(Mitra.nama_mitra == pilih_histori.nama_customer).first()
+                                            if cust:
+                                                cust.saldo_piutang -= j_piutang.debit
+    
+                                    # 3. Hapus Seluruh Jurnal Keuangan Terkait
+                                    db.query(JurnalUmum).filter(JurnalUmum.keterangan.contains(pilih_histori.no_invoice)).delete(synchronize_session=False)
+                                    
+                                    # 4. Hapus Detail & Header Invoice
+                                    db.query(DetailPenjualan).filter(DetailPenjualan.no_invoice == pilih_histori.no_invoice).delete(synchronize_session=False)
+                                    db.query(HeaderPenjualan).filter(HeaderPenjualan.no_invoice == pilih_histori.no_invoice).delete(synchronize_session=False)
+                                    
+                                    db.commit()
+                                    st.success("Invoice Dibatalkan! Stok gudang dan keuangan telah dikembalikan seperti semula.")
+                                    time.sleep(2)
+                                    st.rerun()
+                                    
+                                except Exception as e:
+                                    db.rollback()
+                                    st.error(f"🚨 Gagal membatalkan invoice. Error: {str(e)}")
+                        else:
+                            st.button("🗑️ Batalkan (Void) Invoice", disabled=True, use_container_width=True)
+                                
     db.close()

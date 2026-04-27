@@ -41,7 +41,7 @@
 
   /* Badge status transaksi */
   .badge {
-    @apply inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-700 tracking-wide;
+    @apply inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-bold tracking-wide;
   }
   .badge-success { @apply badge bg-emerald-50 text-emerald-800; }
   .badge-warning { @apply badge bg-amber-50 text-amber-700; }
@@ -50,16 +50,16 @@
 
   /* Tombol primer */
   .btn-primary {
-    @apply bg-emerald-500 hover:bg-emerald-700 text-white font-600 px-4 py-2 
+    @apply bg-emerald-500 hover:bg-emerald-700 text-white font-semibold px-4 py-2 
            rounded-xl transition-all duration-200 hover:shadow-md;
   }
 
   /* Number besar pada kartu keuangan */
   .fin-value {
-    @apply text-2xl font-900 text-slate-800 leading-tight;
+    @apply text-2xl font-black text-slate-800 leading-tight;
   }
   .fin-label {
-    @apply text-xs font-500 text-surface-muted uppercase tracking-wider;
+    @apply text-xs font-medium text-surface-muted uppercase tracking-wider;
   }
 }
 

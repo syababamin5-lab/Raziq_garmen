@@ -2,9 +2,8 @@ import streamlit as st
 import pandas as pd
 import datetime
 import time
-import re
 from database import SessionLocal
-from models import JurnalUmum, AkunBukuBesar, Barang, KategoriBarang
+from models import JurnalUmum, AkunBukuBesar
 from utils import format_rp
 from pdf_generator import export_laporan_2kolom_pdf, export_dataframe_pdf
 
@@ -170,13 +169,12 @@ def jalankan():
     # ---------------------------------------------------------
     # RENDER TAB UI (100% LENGKAP)
     # ---------------------------------------------------------
-    tab1, tab2, tab3, tab4, tab5, tab6 = st.tabs([
+    tab1, tab2, tab3, tab4, tab5, = st.tabs([
         ":material/finance: HPP", 
         ":material/finance_mode: Laba Rugi", 
         ":material/account_balance: Neraca", 
         ":material/finance_chip: Ekuitas", 
-        ":material/analytics: Buku Besar",
-        ":material/inventory_2: WIP Cutting",
+        ":material/analytics: Buku Besar", 
     ])
     
     # === TAB 1: HPP ===
@@ -387,84 +385,5 @@ def jalankan():
                 with col_pdf2:
                     judul_kartu = f"KARTU PIUTANG/HUTANG: {filter_nama.upper()}" if filter_nama else f"BUKU BESAR: {akun_dipilih.nama_akun.upper()}"
                     st.download_button("📄 Download PDF Buku Besar", export_dataframe_pdf(judul_kartu, periode_str, df_bb, [25, 65, 33, 33, 34]), f"Kartu_{akun_dipilih.kode_akun}.pdf", "application/pdf")
-
-    # === TAB 6: WIP CUTTING ===
-    with tab6:
-        st.subheader(":material/inventory_2: Stok Barang Setengah Jadi (WIP Cutting)")
-        st.info(
-            "Laporan ini menghitung **sisa potongan kain** yang sudah Cutting "
-            "tetapi **belum masuk** ke proses Jahit/Finishing. "
-            "Dihitung dari jurnal produksi tanpa mengubah struktur database.",
-            icon=":material/lightbulb:"
-        )
-
-        j_cut_l = db.query(JurnalUmum).filter(
-            JurnalUmum.kode_akun == "51110",
-            JurnalUmum.keterangan.like("%Cutting%")
-        ).all()
-
-        j_jht_l = db.query(JurnalUmum).filter(
-            JurnalUmum.kode_akun == "12150",
-            JurnalUmum.keterangan.like("%Jahit%")
-        ).all()
-
-        cut_rows_l = []
-        for j in j_cut_l:
-            ket = str(j.keterangan)
-            pm = re.search(r'Cutting (\d+) pcs', ket)
-            sm = re.search(r'\[SKU:([^\]]+)\]', ket)
-            if pm:
-                cut_rows_l.append({"kode_sku": sm.group(1).strip() if sm else "\u2014", "total_potong": int(pm.group(1))})
-
-        jht_rows_l = []
-        for j in j_jht_l:
-            ket = str(j.keterangan)
-            m = re.search(r'Masuk (\d+) pcs (\S+) \(Jahit\)', ket)
-            if m:
-                jht_rows_l.append({"kode_sku": m.group(2).strip(), "total_jahit": int(m.group(1))})
-
-        df_cl = pd.DataFrame(cut_rows_l) if cut_rows_l else pd.DataFrame(columns=["kode_sku", "total_potong"])
-        df_jl = pd.DataFrame(jht_rows_l) if jht_rows_l else pd.DataFrame(columns=["kode_sku", "total_jahit"])
-
-        df_cgl = df_cl.groupby("kode_sku")["total_potong"].sum().reset_index() if not df_cl.empty else df_cl
-        df_jgl = df_jl.groupby("kode_sku")["total_jahit"].sum().reset_index() if not df_jl.empty else df_jl
-
-        df_wip_l = pd.merge(df_cgl, df_jgl, on="kode_sku", how="outer").fillna(0)
-        df_wip_l["total_potong"] = df_wip_l["total_potong"].astype(int)
-        df_wip_l["total_jahit"] = df_wip_l["total_jahit"].astype(int)
-        df_wip_l["sisa_wip"] = df_wip_l["total_potong"] - df_wip_l["total_jahit"]
-
-        baju_wip = db.query(Barang).filter(Barang.kategori == KategoriBarang.BARANG_JADI).all()
-        brd = {b.kode_sku: b.nama_barang for b in baju_wip}
-        df_wip_l["nama_barang"] = df_wip_l["kode_sku"].map(brd).fillna("Tidak Diketahui")
-
-        df_sl = df_wip_l[["kode_sku", "nama_barang", "total_potong", "total_jahit", "sisa_wip"]].copy()
-        df_sl.columns = ["Kode SKU", "Nama Barang", "Total Potong (Pcs)", "Total Masuk Jahit (Pcs)", "Sisa Belum Dijahit (Pcs)"]
-        df_sl = df_sl.sort_values("Sisa Belum Dijahit (Pcs)", ascending=False).reset_index(drop=True)
-
-        if df_sl.empty or df_sl["Total Potong (Pcs)"].sum() == 0:
-            st.info("Belum ada data WIP Cutting. Input Cutting terlebih dahulu dari menu Produksi.", icon=":material/inventory_2:")
-        else:
-            def _wip_style(val):
-                if val > 0: return 'background-color:#fff9c4;color:#5d4037;font-weight:bold'
-                if val < 0: return 'background-color:#ffcdd2;color:#b71c1c;font-weight:bold'
-                return 'background-color:#c8e6c9;color:#1b5e20;font-weight:bold'
-
-            st.dataframe(
-                df_sl.style.map(_wip_style, subset=["Sisa Belum Dijahit (Pcs)"]),
-                use_container_width=True, hide_index=True
-            )
-            st.markdown("---")
-            c1, c2, c3 = st.columns(3)
-            c1.metric("✂️ Total Pcs Dipotong", f"{int(df_sl['Total Potong (Pcs)'].sum()):,} Pcs")
-            c2.metric("🧵 Total Pcs Dijahit", f"{int(df_sl['Total Masuk Jahit (Pcs)'].sum()):,} Pcs")
-            c3.metric("📦 WIP / Sisa Antre Jahit", f"{int(df_sl['Sisa Belum Dijahit (Pcs)'].sum()):,} Pcs")
-
-            if (df_wip_l["kode_sku"] == "\u2014").any():
-                st.warning(
-                    "⚠️ Ada data cutting **tanpa info SKU** (entri lama). "
-                    "Masuk menu **Produksi → Tab Cutting** dan pilih **Model Baju** untuk entri baru.",
-                    icon=":material/warning:"
-                )
 
     db.close()
