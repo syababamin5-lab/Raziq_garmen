@@ -10,7 +10,7 @@ const api = axios.create({
   // Deteksi Otomatis: Pakai Local jika di localhost, pakai Cloud jika di Firebase URL
   baseURL: (window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1')
     ? 'http://localhost:8000/api'
-    : 'https://us-central1-landing-page-5cfbb.cloudfunctions.net/api',
+    : '/api',
   timeout: 30000,
 })
 
