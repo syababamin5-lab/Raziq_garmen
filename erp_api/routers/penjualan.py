@@ -17,8 +17,18 @@ router = APIRouter(prefix="/api/penjualan", tags=["Penjualan & Retur"])
 def submit_invoice(payload: schemas.SaleRequest, db: Session = Depends(get_db)):
     try:
         waktu_jual = datetime.datetime.fromisoformat(payload.tgl_jual.replace('Z', '+00:00')) if payload.tgl_jual else datetime.datetime.now()
-        # Use simple date format to append random number to match existing if you want, but streamlit used: f"INV-{waktu_jual.strftime('%y%m%d%H%M')}"
-        inv_no = f"INV-{waktu_jual.strftime('%y%m%d%H%M')}"
+        
+        # Generate nomor invoice yang SELALU UNIK: INV-YYMMDD-XXXX (XXXX = nomor urut hari ini)
+        prefix_hari_ini = f"INV-{waktu_jual.strftime('%y%m%d')}"
+        jumlah_hari_ini = db.query(models.HeaderPenjualan).filter(
+            models.HeaderPenjualan.no_invoice.like(f"{prefix_hari_ini}%")
+        ).count()
+        inv_no = f"{prefix_hari_ini}-{jumlah_hari_ini + 1:04d}"
+        
+        # Pastikan unik (fallback jika ada race condition)
+        while db.query(models.HeaderPenjualan).filter(models.HeaderPenjualan.no_invoice == inv_no).first():
+            jumlah_hari_ini += 1
+            inv_no = f"{prefix_hari_ini}-{jumlah_hari_ini + 1:04d}"
         
         cust = db.query(models.Mitra).filter(models.Mitra.id == payload.customer_id).first()
         if not cust:
