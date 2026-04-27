@@ -1,6 +1,10 @@
-streamlit
-streamlit-option-menu
+fastapi
+uvicorn
+sqlalchemy
+fpdf
 pandas
 openpyxl
-fpdf
-SQLAlchemy
+python-multipart
+jinja2
+python-dotenv
+passlib
