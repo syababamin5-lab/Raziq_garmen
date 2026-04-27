@@ -22,31 +22,21 @@ from routers import (
 
 app = FastAPI()
 
+# Startup Event handles all DB initialization
 @app.on_event("startup")
 async def startup_event():
-    # Buat tabel jika belum ada
     models.Base.metadata.create_all(bind=models.engine)
-    
-    # Seed User jika database kosong (Memory DB di Vercel)
     db = models.SessionLocal()
     try:
-        user = db.query(models.User).filter(models.User.username == "superadmin").first()
-        if not user:
-            # Hash password 'admin123' untuk superadmin
-            from passlib.context import CryptContext
-            pwd_context = CryptContext(schemes=["pbkdf2_sha256"], deprecated="auto")
-            hashed = pwd_context.hash("admin123")
-            
-            new_user = models.User(
-                username="superadmin",
-                password_hash=hashed,
-                nama_lengkap="Super Admin (Vercel Demo)",
-                role="super_admin",
-                is_active=1
-            )
-            db.add(new_user)
+        if db.query(models.User).count() == 0:
+            users = [
+                models.User(username="superadmin", password_hash=get_password_hash("admin123"), nama_lengkap="Syabaab (Admin Super)", role="super_admin"),
+                models.User(username="admin", password_hash=get_password_hash("admin123"), nama_lengkap="Administrator", role="admin"),
+                models.User(username="user", password_hash=get_password_hash("user123"), nama_lengkap="Staff User", role="user"),
+                models.User(username="bos", password_hash=get_password_hash("bos123"), nama_lengkap="Owner / Investor", role="bos")
+            ]
+            db.add_all(users)
             db.commit()
-            print("Seeded default user for Vercel")
     finally:
         db.close()
 
@@ -80,7 +70,7 @@ import jwt
 
 SECRET_KEY = "raziq_garment_secret_key"
 ALGORITHM = "HS256"
-pwd_context = CryptContext(schemes=["pbkdf2_sha256"], deprecated="auto")
+pwd_context = CryptContext(schemes=["sha256_crypt"], deprecated="auto")
 
 def verify_password(plain_password, hashed_password):
     return pwd_context.verify(plain_password, hashed_password)
@@ -94,29 +84,7 @@ def create_access_token(data: dict):
     encoded_jwt = jwt.encode(to_encode, SECRET_KEY, algorithm=ALGORITHM)
     return encoded_jwt
 
-@app.on_event("startup")
-def seed_users():
-    # Ensure all tables exist
-    models.Base.metadata.create_all(bind=engine)
-    
-    db = SessionLocal()
-    # Seed default users if empty
-    if db.query(models.User).count() == 0:
-        users = [
-            models.User(username="superadmin", password_hash=get_password_hash("admin123"), nama_lengkap="Syabaab (Admin Super)", role="super_admin"),
-            models.User(username="admin", password_hash=get_password_hash("admin123"), nama_lengkap="Administrator", role="admin"),
-            models.User(username="user", password_hash=get_password_hash("user123"), nama_lengkap="Staff User", role="user"),
-            models.User(username="bos", password_hash=get_password_hash("bos123"), nama_lengkap="Owner / Investor", role="bos")
-        ]
-        db.add_all(users)
-        db.commit()
-    else:
-        # Update existing superadmin name if needed
-        sa = db.query(models.User).filter(models.User.username == "superadmin").first()
-        if sa:
-            sa.nama_lengkap = "Syabaab (Admin Super)"
-            db.commit()
-    db.close()
+# Seed users removed (moved to startup_event)
 
 @app.post("/api/auth/login", response_model=schemas.TokenResponse)
 def login(request: schemas.LoginRequest, db: Session = Depends(get_db)):
