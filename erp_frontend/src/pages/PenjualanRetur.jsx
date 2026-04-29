@@ -470,13 +470,15 @@ export default function PenjualanRetur() {
                                                     )}
 
                                                     {/* 🖨️ Cetak PDF */}
-                                                    <button
-                                                        onClick={() => window.open(`${import.meta.env.VITE_API_BASE_URL || ''}/api/penjualan/print/${h.no_invoice}`, '_blank')}
-                                                        className="p-2 bg-slate-100 text-slate-600 rounded-xl hover:bg-slate-200 transition-all"
+                                                    <a
+                                                        href={`${import.meta.env.VITE_API_BASE_URL || ''}/api/penjualan/print/${h.no_invoice}`}
+                                                        target="_blank"
+                                                        rel="noreferrer"
+                                                        className="p-2 bg-slate-100 text-slate-600 rounded-xl hover:bg-slate-200 transition-all inline-block"
                                                         title="Cetak Invoice PDF"
                                                     >
                                                         <span className="material-symbols-rounded text-lg">print</span>
-                                                    </button>
+                                                    </a>
 
                                                     {/* 🗑️ Void */}
                                                     <button onClick={() => handleVoid(h.no_invoice)} className="p-2 bg-red-50 text-red-500 rounded-xl hover:bg-red-500 hover:text-white transition-all" title="Void Invoice (Hapus)">

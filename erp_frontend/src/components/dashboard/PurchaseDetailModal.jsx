@@ -153,13 +153,15 @@ export default function PurchaseDetailModal({ isOpen, onClose, po }) {
           >
             Tutup
           </button>
-          <button 
-            onClick={() => window.open(`${import.meta.env.VITE_API_BASE_URL || ''}/api/pembelian/print/${po?.no_po}`, '_blank')}
-            className="flex-1 py-4 bg-blue-600 text-white rounded-2xl font-black shadow-lg shadow-blue-200 hover:bg-blue-700 hover:scale-[1.02] active:scale-[0.98] transition-all flex items-center justify-center gap-2"
+          <a 
+            href={`${import.meta.env.VITE_API_BASE_URL || ''}/api/pembelian/print/${po?.no_po}`}
+            target="_blank"
+            rel="noreferrer"
+            className="flex-1 py-4 bg-emerald-600 text-white rounded-2xl font-black shadow-lg shadow-emerald-200 hover:bg-emerald-700 hover:scale-[1.02] active:scale-[0.98] transition-all flex items-center justify-center gap-2"
           >
             <span className="material-symbols-rounded text-xl">print</span>
-            Cetak Nota PO PDF
-          </button>
+            Cetak PO PDF
+          </a>
         </div>
       </div>
     </div>

@@ -153,13 +153,15 @@ export default function InvoiceDetailModal({ isOpen, onClose, invoice }) {
           >
             Tutup
           </button>
-          <button 
-            onClick={() => window.open(`${import.meta.env.VITE_API_BASE_URL || ''}/api/penjualan/print/${invoice?.no_invoice}`, '_blank')}
+          <a 
+            href={`${import.meta.env.VITE_API_BASE_URL || ''}/api/penjualan/print/${invoice?.no_invoice}`}
+            target="_blank"
+            rel="noreferrer"
             className="flex-1 py-4 bg-emerald-600 text-white rounded-2xl font-black shadow-lg shadow-emerald-200 hover:bg-emerald-700 hover:scale-[1.02] active:scale-[0.98] transition-all flex items-center justify-center gap-2"
           >
             <span className="material-symbols-rounded text-xl">print</span>
             Cetak Invoice PDF
-          </button>
+          </a>
         </div>
       </div>
     </div>

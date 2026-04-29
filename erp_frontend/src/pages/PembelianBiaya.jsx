@@ -699,13 +699,15 @@ export default function PembelianBiaya() {
                                             )}
 
                                             {/* 🖨️ Cetak PDF */}
-                                            <button 
-                                                onClick={() => window.open(`${import.meta.env.VITE_API_BASE_URL || ''}/api/pembelian/print/${h.no_po}`, '_blank')}
-                                                className="p-2 bg-slate-100 text-slate-600 rounded-xl hover:bg-slate-200 transition-all" 
+                                            <a
+                                                href={`${import.meta.env.VITE_API_BASE_URL || ''}/api/pembelian/print/${h.no_po}`}
+                                                target="_blank"
+                                                rel="noreferrer"
+                                                className="p-2 bg-slate-100 text-slate-600 rounded-xl hover:bg-slate-200 transition-all inline-block"
                                                 title="Cetak Nota PO PDF"
                                             >
                                                 <span className="material-symbols-rounded text-lg">print</span>
-                                            </button>
+                                            </a>
 
                                             {/* 🗑️ Void */}
                                             {!isBos && (
