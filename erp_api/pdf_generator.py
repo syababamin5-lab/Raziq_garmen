@@ -39,11 +39,26 @@ class PDF(FPDF):
         self.set_text_color(0, 0, 0)
 
     def footer(self):
-        # Nomor Halaman di bawah
+        # Posisi 15 mm dari bawah
         self.set_y(-15)
-        self.set_font('Arial', 'I', 8)
-        self.set_text_color(150, 150, 150)
-        self.cell(0, 10, f'Halaman {self.page_no()} | Dicetak pada: {datetime.datetime.now().strftime("%d-%m-%Y %H:%M")}', 0, 0, 'C')
+        self.set_font('Arial', 'I', 7)
+        self.set_text_color(160, 160, 160)
+        
+        # Garis tipis pembatas footer
+        self.set_draw_color(220, 220, 220)
+        self.line(10, self.get_y(), self.w - 10, self.get_y())
+        
+        # Developed by (Kiri)
+        self.set_x(10)
+        self.cell(0, 8, 'Developed by ANSA ENTERPRISE', 0, 0, 'L')
+        
+        # Halaman (Tengah)
+        self.set_x(0)
+        self.cell(self.w, 8, f'Halaman {self.page_no()}', 0, 0, 'C')
+        
+        # Waktu Cetak (Kanan)
+        self.set_x(self.w - 100)
+        self.cell(90, 8, f'Dicetak: {datetime.datetime.now().strftime("%d/%m/%Y %H:%M")}', 0, 0, 'R')
 
     def check_page_break(self, height):
         # Deteksi batas bawah (Kertas P tingginya 297mm, Kertas L tingginya 210mm)
