@@ -133,6 +133,7 @@ const PrayerTimesCompact = () => {
             </div>
         </div>
       </div>
+      </div>
 
       <PrayerModal 
         isOpen={isModalOpen} 
