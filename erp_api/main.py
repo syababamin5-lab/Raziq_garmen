@@ -163,9 +163,17 @@ async def startup_event():
             db.add_all([models.AkunBukuBesar(**c) for c in coa_data])
             db.commit()
 
-        # 3. AUTO-SEED COMPANY CONFIG
-        if db.query(models.CompanyConfig).count() == 0:
-            db.add(models.CompanyConfig())
+        # 3. AUTO-SEED / UPDATE COMPANY CONFIG
+        config = db.query(models.CompanyConfig).first()
+        if not config:
+            config = models.CompanyConfig()
+            db.add(config)
+            db.commit()
+        
+        # Migrasi data lama jika masih ada kata 'PABRIK'
+        if "PABRIK" in config.nama_perusahaan:
+            config.nama_perusahaan = "RAZIQ GARMENT"
+            config.atas_nama_bank = "RAZIQ GARMENT"
             db.commit()
     finally:
         db.close()
