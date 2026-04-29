@@ -890,15 +890,18 @@ if os.path.exists(build_path):
     @app.get("/{full_path:path}")
     async def serve_spa(full_path: str):
         # 1. Cek apakah ini request ke file fisik di root dist (favicon, manifest, dll)
-        file_path = os.path.join(build_path, full_path)
+        # Hapus leading slash agar os.path.join bekerja benar di Linux
+        clean_path = full_path.lstrip('/')
+        file_path = os.path.join(build_path, clean_path)
+        
         if os.path.isfile(file_path):
             return FileResponse(file_path)
         
         # 2. Jika bukan file fisik, dan bukan request API, kembalikan index.html (SPA)
-        if not full_path.startswith("api/"):
+        if not clean_path.startswith("api/"):
             return FileResponse(os.path.join(build_path, "index.html"))
         
-        return {"error": "Not Found"}
+        return {"error": "Not Found", "path_checked": file_path}
 else:
     @app.get("/")
     def read_root():
