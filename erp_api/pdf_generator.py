@@ -19,7 +19,7 @@ class PDF(FPDF):
         self.set_xy(10, 10)
         self.set_font('Arial', 'B', 20)
         self.set_text_color(255, 255, 255)
-        self.cell(0, 10, self.config.nama_perusahaan if self.config else 'PABRIK RAZIQ GARMENT', 0, 1, 'L')
+        self.cell(0, 10, self.config.nama_perusahaan if self.config else 'RAZIQ GARMENT', 0, 1, 'L')
         
         self.set_font('Arial', '', 9)
         self.set_text_color(200, 255, 220)
