@@ -131,16 +131,7 @@ const PrayerTimesCompact = () => {
               </span>
               <span className="text-[10px] font-bold text-slate-400">Lagi</span>
             </div>
-          </div>
         </div>
-        
-        {/* Tombol Simulasi Kecil */}
-        <button 
-          onClick={() => setIsModalOpen(true)}
-          className="text-[8px] font-bold text-slate-300 hover:text-emerald-500 transition-colors uppercase tracking-tighter"
-        >
-          [ Test ]
-        </button>
       </div>
 
       <PrayerModal 
