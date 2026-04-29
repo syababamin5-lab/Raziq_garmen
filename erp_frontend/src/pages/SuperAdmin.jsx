@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import api from '../api/api';
 
 export default function SuperAdmin() {
@@ -8,6 +8,30 @@ export default function SuperAdmin() {
   const [showPruneModal, setShowPruneModal] = useState(false);
   const [loading, setLoading] = useState(false);
   const [understood, setUnderstood] = useState(false);
+  
+  // User Logs State
+  const [logs, setLogs] = useState([]);
+  const [loadingLogs, setLoadingLogs] = useState(false);
+
+  const fetchLogs = async () => {
+    setLoadingLogs(true);
+    try {
+      const { data } = await api.get('/users/logs');
+      if (data.status === 'success') {
+        setLogs(data.data);
+      }
+    } catch (err) {
+      console.error("Gagal mengambil log:", err);
+    }
+    setLoadingLogs(false);
+  };
+
+  useEffect(() => {
+    fetchLogs();
+    // Auto refresh tiap 30 detik
+    const interval = setInterval(fetchLogs, 30000);
+    return () => clearInterval(interval);
+  }, []);
 
   // Dashboard Settings State
   const [dashSettings, setDashSettings] = useState(() => {
@@ -221,6 +245,64 @@ export default function SuperAdmin() {
                 </button>
               ))}
           </div>
+        </div>
+      </div>
+
+      {/* User Activity Log Section */}
+      <div className="bg-white p-8 rounded-[2rem] shadow-sm border border-slate-100 flex flex-col mt-8">
+        <div className="flex items-center justify-between mb-6">
+          <div className="flex items-center gap-3">
+            <div className="p-3 bg-indigo-50 rounded-xl">
+              <span className="material-symbols-rounded text-indigo-600">monitor_heart</span>
+            </div>
+            <div>
+              <h2 className="text-xl font-black text-slate-900 tracking-tight">Live User Activity Log</h2>
+              <p className="text-xs font-medium text-slate-400">Pantau aktivitas dan akses menu pengguna secara real-time</p>
+            </div>
+          </div>
+          <button onClick={fetchLogs} className="p-2 text-slate-400 hover:text-indigo-600 hover:bg-indigo-50 rounded-xl transition-all" title="Refresh Logs">
+            <span className={`material-symbols-rounded ${loadingLogs ? 'animate-spin' : ''}`}>sync</span>
+          </button>
+        </div>
+
+        <div className="overflow-x-auto border border-slate-100 rounded-2xl max-h-[400px] overflow-y-auto custom-scrollbar">
+          <table className="w-full text-left text-xs">
+            <thead className="bg-slate-50 text-slate-500 font-black uppercase tracking-widest sticky top-0 z-10 shadow-sm">
+              <tr>
+                <th className="py-4 px-5">Waktu</th>
+                <th className="py-4 px-5">Pengguna</th>
+                <th className="py-4 px-5">Aksi</th>
+                <th className="py-4 px-5">Menu / Modul</th>
+              </tr>
+            </thead>
+            <tbody className="divide-y divide-slate-100">
+              {logs.length > 0 ? logs.map((log) => (
+                <tr key={log.id} className="hover:bg-slate-50/50 transition-all">
+                  <td className="py-3 px-5 text-slate-500 font-medium">
+                    {new Date(log.waktu).toLocaleString('id-ID', {day:'2-digit', month:'short', hour:'2-digit', minute:'2-digit', second:'2-digit'})}
+                  </td>
+                  <td className="py-3 px-5 font-bold text-slate-700">
+                    {log.nama_lengkap} <span className="text-[10px] text-slate-400 font-normal">(@{log.username})</span>
+                  </td>
+                  <td className="py-3 px-5">
+                    <span className={`px-2 py-1 rounded text-[10px] font-black uppercase tracking-wider ${
+                      log.aksi.includes('Tambah') ? 'bg-emerald-100 text-emerald-700' :
+                      log.aksi.includes('Hapus') ? 'bg-red-100 text-red-700' :
+                      log.aksi.includes('Ubah') ? 'bg-amber-100 text-amber-700' :
+                      'bg-slate-100 text-slate-600'
+                    }`}>
+                      {log.aksi}
+                    </span>
+                  </td>
+                  <td className="py-3 px-5 font-medium text-slate-600">{log.menu}</td>
+                </tr>
+              )) : (
+                <tr>
+                  <td colSpan="4" className="py-10 text-center text-slate-400 font-medium italic">Belum ada aktivitas terekam.</td>
+                </tr>
+              )}
+            </tbody>
+          </table>
         </div>
       </div>
 

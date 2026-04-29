@@ -38,7 +38,62 @@ def verify_password(plain_password, hashed_password):
 def get_password_hash(password):
     return pwd_context.hash(password)
 
+from fastapi import Request
+import jwt
+
 app = FastAPI()
+
+# MENGATASI CORS
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=["*"],
+    allow_credentials=True,
+    allow_methods=["*"],
+    allow_headers=["*"],
+)
+
+# USER ACTIVITY TRACKING MIDDLEWARE
+@app.middleware("http")
+async def log_user_activity(request: Request, call_next):
+    response = await call_next(request)
+    
+    path = request.url.path
+    if path.startswith("/api/") and not path.endswith("/logs"):
+        try:
+            auth = request.headers.get("Authorization")
+            if auth and auth.startswith("Bearer "):
+                token = auth.split(" ")[1]
+                payload = jwt.decode(token, SECRET_KEY, algorithms=[ALGORITHM])
+                username = payload.get("sub")
+                nama = payload.get("nama", username)
+                
+                method = request.method
+                
+                menu = "Sistem"
+                if "dashboard" in path: menu = "Dashboard"
+                elif "master" in path: menu = "Master Data"
+                elif "penjualan" in path: menu = "Penjualan"
+                elif "pembelian" in path: menu = "Pembelian"
+                elif "produksi" in path: menu = "Produksi"
+                elif "keuangan" in path or "jurnal" in path: menu = "Keuangan"
+                elif "kasbon" in path: menu = "Kasbon"
+                elif "users" in path: menu = "User Management"
+                elif "auth" in path: menu = "Autentikasi"
+                
+                aksi = "Melihat Data"
+                if method == "POST": aksi = "Menambahkan Data"
+                elif method == "PUT": aksi = "Mengubah Data"
+                elif method == "DELETE": aksi = "Menghapus Data"
+                
+                db = models.SessionLocal()
+                new_log = models.UserLog(username=username, nama_lengkap=nama, aksi=aksi, menu=menu)
+                db.add(new_log)
+                db.commit()
+                db.close()
+        except Exception:
+            pass
+            
+    return response
 
 # Startup Event handles all DB initialization
 @app.on_event("startup")
@@ -58,7 +113,6 @@ async def startup_event():
             db.commit()
 
         # 2. AUTO-SEED CHART OF ACCOUNTS (COA) - PERMANENSI MASTER DATA
-        if db.query(models.AkunBukuBesar).count() == 0:
             coa_data = [
                 {"kode_akun": "11110", "nama_akun": "Kas Tunai", "kategori": "Aset"},
                 {"kode_akun": "11120", "nama_akun": "Kas di Bank", "kategori": "Aset"},
@@ -810,6 +864,11 @@ def export_transactions_range(start_date: str, end_date: str, db: Session = Depe
         )
     except Exception as e:
         return {"status": "error", "message": str(e)}
+
+@app.get("/api/users/logs")
+def get_user_logs(db: Session = Depends(get_db)):
+    logs = db.query(models.UserLog).order_by(models.UserLog.id.desc()).limit(200).all()
+    return {"status": "success", "data": [{"id": l.id, "username": l.username, "nama_lengkap": l.nama_lengkap, "aksi": l.aksi, "menu": l.menu, "waktu": l.waktu.isoformat()} for l in logs]}
 
 # ==========================================================
 # DEPLOYMENT: SERVE REACT FRONTEND (SPA)

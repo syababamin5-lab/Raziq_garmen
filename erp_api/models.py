@@ -229,6 +229,15 @@ class User(Base):
     no_hp = Column(String, nullable=True)
     is_active = Column(Integer, default=1)
 
+class UserLog(Base):
+    __tablename__ = "user_logs"
+    id = Column(Integer, primary_key=True, index=True)
+    username = Column(String, index=True)
+    nama_lengkap = Column(String)
+    aksi = Column(String)       # Contoh: "Melihat Halaman", "Menambahkan Data", "Menghapus Data"
+    menu = Column(String)       # Contoh: "Master Data", "Kas & Piutang", "Penjualan"
+    waktu = Column(DateTime, default=datetime.datetime.utcnow)
+
 class CompanyConfig(Base):
     __tablename__ = "company_config"
     id = Column(Integer, primary_key=True, index=True)
