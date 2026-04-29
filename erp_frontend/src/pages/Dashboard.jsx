@@ -157,7 +157,8 @@ export default function Dashboard() {
             </div>
           </div>
         </div>
-      )}
+      </div>
+    )}
 
 
       {/* ── Row 1: Keuangan Cards ────────────────────────────── */}
