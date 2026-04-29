@@ -5,6 +5,7 @@
 import React from 'react'
 import { getCurrentUser, logout } from '../../api/authApi'
 import api, { getFileUrl } from '../../api/api'
+import PrayerTimesCompact from './PrayerTimesCompact'
 
 export default function Topbar({ title, onToggleSidebar, isSidebarOpen }) {
   const user = getCurrentUser();
@@ -31,6 +32,11 @@ export default function Topbar({ title, onToggleSidebar, isSidebarOpen }) {
         <h2 className="text-slate-800 font-extrabold text-lg tracking-tight uppercase">
           {title}
         </h2>
+      </div>
+
+      {/* Middle Section: Prayer Times */}
+      <div className="hidden lg:flex items-center justify-center flex-1">
+        <PrayerTimesCompact />
       </div>
 
       <div className="flex items-center gap-4">
