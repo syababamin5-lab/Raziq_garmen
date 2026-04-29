@@ -40,15 +40,21 @@ export default function TotalProduksiPanel({ productionAnalytics, loading = fals
           </div>
         </div>
 
-        <div className="flex flex-col justify-center items-center text-center relative z-10 py-4">
-          <p className="text-[9px] font-bold text-indigo-300 uppercase tracking-widest mb-1 opacity-70">Kumulatif Bulan Ini</p>
-          <div className="flex items-baseline gap-1.5 justify-center">
-            <span className="text-4xl font-black text-white tracking-tighter drop-shadow-md">
+        <div className="flex-1 flex flex-col justify-center items-center text-center relative z-10 py-2">
+          <p className="text-[12px] font-black text-indigo-200 uppercase tracking-[0.15em] mb-3">
+            Kumulatif Bulan Ini
+          </p>
+          <div className="flex items-baseline gap-2 justify-center">
+            <span className="text-5xl font-black text-white tracking-tighter drop-shadow-lg">
               {totalBulanIni.toLocaleString('id-ID', { minimumFractionDigits: 0, maximumFractionDigits: 1 })}
             </span>
-            <span className="text-xs font-bold text-indigo-200">Lusin</span>
+            <span className="text-sm font-bold text-indigo-300 uppercase">Lusin</span>
           </div>
-          <p className="text-[10px] text-indigo-200/60 mt-1 font-medium">({(totalBulanIni * 12).toLocaleString('id-ID')} Pcs)</p>
+          <div className="mt-2 px-3 py-1 rounded-full bg-white/5 border border-white/5">
+            <p className="text-[11px] text-indigo-200 font-bold tracking-tight">
+              {(totalBulanIni * 12).toLocaleString('id-ID')} Pcs Terjahit
+            </p>
+          </div>
         </div>
 
         <div className="mt-auto p-3.5 bg-white/5 backdrop-blur-md rounded-2xl border border-white/10 relative z-10">
