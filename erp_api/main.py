@@ -573,14 +573,13 @@ async def import_excel(tipe: str, overwrite: bool = False, file: UploadFile = Fi
                 
                 stok_pcs = stok_excel * 12 if ("lusin" in satuan_teks or "ls" in satuan_teks) else stok_excel
                 
-                # Konsistensi: Modal disimpan per PCS, Jual disimpan per LUSIN
-                if "lusin" in satuan_teks or "ls" in satuan_teks:
-                    harga_modal = harga_modal_excel / 12
-                    harga_jual_db = harga_jual
-                else:
-                    # Jika satuan di excel adalah PCS
-                    harga_modal = harga_modal_excel
-                    harga_jual_db = harga_jual * 12
+                # KOREKSI ATURAN PERUSAHAAN: 
+                # Di Excel, Harga Modal dan Harga Jual untuk Baju SELALU ditulis PER LUSIN.
+                # Namun di Database: 
+                # - harga_modal disimpan per PCS
+                # - harga_jual disimpan per LUSIN
+                harga_modal = harga_modal_excel / 12
+                harga_jual_db = harga_jual
                 
                 if sku in existing_skus:
                     barang = existing_skus[sku]
