@@ -158,9 +158,21 @@ def get_dashboard_summary(db: Session = Depends(get_db)):
             prod_pcs_month = get_total_produksi_jahit(first_day, now)
             prod_pcs_week = get_total_produksi_jahit(start_of_week, now)
             
+            prod_detail_raw = db.query(
+                models.ProductionLog.nama_barang, 
+                func.sum(models.ProductionLog.qty_hasil).label("total_pcs")
+            ).filter(
+                models.ProductionLog.divisi == "Jahit", 
+                models.ProductionLog.tanggal >= first_day, 
+                models.ProductionLog.tanggal <= now
+            ).group_by(models.ProductionLog.nama_barang).all()
+            
+            detail_prod = [{"nama_barang": r.nama_barang, "qty_lusin": r.total_pcs / 12} for r in prod_detail_raw]
+            
             production_analytics = schemas.ProductionAnalytics(
                 total_lusin_bulan_ini=prod_pcs_month / 12,
-                total_lusin_minggu_ini=prod_pcs_week / 12
+                total_lusin_minggu_ini=prod_pcs_week / 12,
+                detail_bulan_ini=detail_prod
             )
         except Exception as e:
             print(f"Stats Error Sales/Prod Analytics: {e}")

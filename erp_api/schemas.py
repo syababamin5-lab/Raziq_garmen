@@ -66,10 +66,15 @@ class SalesAnalytics(BaseModel):
     total_pcs_terjual_bulan_ini: float
     total_pcs_terjual_minggu_ini: float
 
+class ProductionDetailItem(BaseModel):
+    nama_barang: str
+    qty_lusin: float
+
 class ProductionAnalytics(BaseModel):
     """Analitik Produksi (Kumulatif Jahit / Barang Jadi)"""
     total_lusin_bulan_ini: float
     total_lusin_minggu_ini: float
+    detail_bulan_ini: Optional[List[ProductionDetailItem]] = []
 
 class DashboardResponse(BaseModel):
     """Response lengkap untuk halaman Dashboard"""
