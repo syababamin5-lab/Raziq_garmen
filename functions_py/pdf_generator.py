@@ -12,7 +12,7 @@ class PDF(FPDF):
     def header(self):
         # Kop Perusahaan
         self.set_font('Arial', 'B', 15)
-        self.cell(0, 8, 'PABRIK RAZIQ GARMENT', 0, 1, 'C')
+        self.cell(0, 8, 'RAZIQ GARMENT', 0, 1, 'C')
         
         # Judul Laporan & Periode
         self.set_font('Arial', 'B', 12)
