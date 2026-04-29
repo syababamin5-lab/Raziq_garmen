@@ -878,23 +878,27 @@ base_dir = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 build_path = os.path.join(base_dir, "erp_frontend", "dist")
 
 if os.path.exists(build_path):
-    # Mount folder assets secara spesifik jika ada
+    # Mount folder assets
     assets_path = os.path.join(build_path, "assets")
     if os.path.exists(assets_path):
         app.mount("/assets", StaticFiles(directory=assets_path), name="assets")
     
-    # Catch-all route untuk melayani index.html (SPA)
     @app.get("/")
     async def serve_index():
         return FileResponse(os.path.join(build_path, "index.html"))
 
     @app.get("/{full_path:path}")
-    async def serve_react_app(full_path: str):
-        # Jika bukan file fisik, kirim index.html
+    async def serve_spa(full_path: str):
+        # 1. Cek apakah ini request ke file fisik di root dist (favicon, manifest, dll)
         file_path = os.path.join(build_path, full_path)
         if os.path.isfile(file_path):
             return FileResponse(file_path)
-        return FileResponse(os.path.join(build_path, "index.html"))
+        
+        # 2. Jika bukan file fisik, dan bukan request API, kembalikan index.html (SPA)
+        if not full_path.startswith("api/"):
+            return FileResponse(os.path.join(build_path, "index.html"))
+        
+        return {"error": "Not Found"}
 else:
     @app.get("/")
     def read_root():
