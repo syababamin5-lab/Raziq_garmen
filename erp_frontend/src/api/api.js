@@ -37,4 +37,21 @@ api.interceptors.response.use(
   }
 )
 
+/**
+ * getFileUrl — Helper untuk mendapatkan URL file (foto/ttd) yang benar
+ * Menangani perbedaan antara Localhost (port 8000) dan Production (Railway).
+ */
+export const getFileUrl = (path) => {
+  if (!path) return null;
+  if (path.startsWith('http')) return path;
+  
+  // Jika di localhost, arahkan ke port backend (8000)
+  if (window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1') {
+    return `http://localhost:8000${path}`;
+  }
+  
+  // Jika di production, gunakan path relatif (karena frontend & backend satu domain)
+  return path;
+};
+
 export default api

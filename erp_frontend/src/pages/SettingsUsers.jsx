@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import api from '../api/api';
+import api, { getFileUrl } from '../api/api';
 
 export default function SettingsUsers() {
   const [users, setUsers] = useState([]);
@@ -151,7 +151,7 @@ export default function SettingsUsers() {
                 <div className="flex flex-col items-center gap-3 mb-6 bg-slate-50 p-6 rounded-3xl border border-dashed border-slate-200">
                    <div className="w-24 h-24 rounded-3xl bg-white border border-slate-100 shadow-sm overflow-hidden relative group">
                       {formData.foto_url ? (
-                        <img src={`${api.defaults.baseURL.replace('/api', '')}${formData.foto_url}`} className="w-full h-full object-cover" alt="Profile" />
+                        <img src={getFileUrl(formData.foto_url)} className="w-full h-full object-cover" alt="Profile" />
                       ) : (
                         <div className="w-full h-full flex items-center justify-center bg-emerald-50 text-emerald-600 text-3xl font-black">
                           {formData.nama_lengkap?.charAt(0).toUpperCase() || '?'}
@@ -212,7 +212,7 @@ export default function SettingsUsers() {
                         <div className="flex items-center gap-4">
                           <div className="w-12 h-12 rounded-2xl bg-emerald-50 border border-emerald-100 flex items-center justify-center text-emerald-600 font-black overflow-hidden">
                             {u.foto_url ? (
-                                <img src={`${api.defaults.baseURL.replace('/api', '')}${u.foto_url}`} className="w-full h-full object-cover" alt="" />
+                                <img src={getFileUrl(u.foto_url)} className="w-full h-full object-cover" alt="" />
                             ) : u.nama_lengkap.charAt(0).toUpperCase()}
                           </div>
                           <div>

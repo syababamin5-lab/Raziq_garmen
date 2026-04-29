@@ -198,7 +198,7 @@ app.mount("/uploads", StaticFiles(directory=os.path.join(os.path.dirname(os.path
 from passlib.context import CryptContext
 import jwt
 
-SECRET_KEY = "raziq_garment_secret_key"
+# SECRET_KEY moved to top
 
 def create_access_token(data: dict):
     to_encode = data.copy()

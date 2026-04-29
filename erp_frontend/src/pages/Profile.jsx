@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import api from '../api/api';
+import api, { getFileUrl } from '../api/api';
 
 export default function Profile() {
   const [user, setUser] = useState(JSON.parse(localStorage.getItem('user') || '{}'));
@@ -60,7 +60,7 @@ export default function Profile() {
         <div className="relative z-10 flex items-center gap-6">
           <div className="w-20 h-20 rounded-3xl bg-white/10 backdrop-blur-md flex items-center justify-center border border-white/20 overflow-hidden">
             {formData.foto_url ? (
-               <img src={`${api.defaults.baseURL.replace('/api', '')}${formData.foto_url}`} className="w-full h-full object-cover" alt="" />
+               <img src={getFileUrl(formData.foto_url)} className="w-full h-full object-cover" alt="" />
             ) : <span className="material-symbols-rounded text-5xl">person</span>}
           </div>
           <div>
@@ -76,7 +76,7 @@ export default function Profile() {
           <div className="flex flex-col items-center justify-center space-y-4 border-r border-slate-100 pr-8">
              <div className="w-48 h-48 rounded-[2.5rem] bg-slate-50 border border-slate-200 shadow-inner overflow-hidden relative group">
                 {formData.foto_url ? (
-                  <img src={`${api.defaults.baseURL.replace('/api', '')}${formData.foto_url}`} className="w-full h-full object-cover" alt="Profile" />
+                  <img src={getFileUrl(formData.foto_url)} className="w-full h-full object-cover" alt="Profile" />
                 ) : (
                   <div className="w-full h-full flex items-center justify-center text-slate-300">
                     <span className="material-symbols-rounded text-7xl">image</span>

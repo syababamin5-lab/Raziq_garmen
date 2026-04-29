@@ -4,7 +4,7 @@
  */
 import React from 'react'
 import { getCurrentUser, logout } from '../../api/authApi'
-import api from '../../api/api'
+import api, { getFileUrl } from '../../api/api'
 
 export default function Topbar({ title, onToggleSidebar, isSidebarOpen }) {
   const user = getCurrentUser();
@@ -37,7 +37,7 @@ export default function Topbar({ title, onToggleSidebar, isSidebarOpen }) {
         <div className="flex items-center gap-3">
           <div className="w-9 h-9 rounded-xl bg-emerald-50 border border-emerald-100 flex items-center justify-center text-emerald-700 font-black text-sm overflow-hidden shadow-sm">
             {user?.foto_url ? (
-              <img src={`${api.defaults.baseURL.replace('/api', '')}${user.foto_url}`} className="w-full h-full object-cover" alt="" />
+              <img src={getFileUrl(user.foto_url)} className="w-full h-full object-cover" alt="" />
             ) : (
               user?.nama_lengkap?.charAt(0).toUpperCase() || 'S'
             )}
