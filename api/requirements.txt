@@ -4,7 +4,10 @@ sqlalchemy
 fpdf
 pandas
 openpyxl
+xlsxwriter
 python-multipart
 jinja2
 python-dotenv
-passlib
+passlib[bcrypt]
+PyJWT
+requests
