@@ -170,7 +170,6 @@ export default function Dashboard() {
             label="Total Uang Keluar"
             value={formatRp(data?.keuangan?.total_uang_keluar_bulan_ini)}
             icon="trending_down"
-            badge="-Keluar"
             badgeType="down"
             sub="Bulan Ini"
             loading={loading}
@@ -180,10 +179,10 @@ export default function Dashboard() {
 
       {/* ── Row 2: Penjualan & Produksi Panels ────────────────── */}
       {(dashSettings.showPenjualan || dashSettings.showProduksi) && (
-        <div className={`grid gap-4 ${dashSettings.showPenjualan && dashSettings.showProduksi ? 'grid-cols-1 md:grid-cols-3' : 'grid-cols-1'}`}>
-          {/* Panel Kiri -> Penjualan */}
+        <div className={`grid gap-4 ${dashSettings.showPenjualan && dashSettings.showProduksi ? 'grid-cols-1 md:grid-cols-12' : 'grid-cols-1'}`}>
+          {/* Panel Kiri -> Penjualan (Porsi 4/12) */}
           {dashSettings.showPenjualan && (
-            <div className={dashSettings.showProduksi ? "" : "md:col-span-3"}>
+            <div className={dashSettings.showProduksi ? "md:col-span-4" : "md:col-span-12"}>
               <PenjualanPanel
                 data={data?.penjualan_terkini}
                 loading={loading}
@@ -194,9 +193,9 @@ export default function Dashboard() {
               />
             </div>
           )}
-          {/* Panel Tengah -> Produksi */}
+          {/* Panel Tengah -> Produksi (Porsi 5/12 - DIBUAT LEBIH LEBAR) */}
           {dashSettings.showProduksi && (
-            <div>
+            <div className={dashSettings.showPenjualan ? "md:col-span-5" : "md:col-span-8"}>
               <ProduksiPanel
                 gudang={data?.gudang}
                 salesAnalytics={data?.sales_analytics}
@@ -204,10 +203,10 @@ export default function Dashboard() {
               />
             </div>
           )}
-          {/* Panel Kanan -> Total Produksi */}
+          {/* Panel Kanan -> Total Produksi (Porsi 3/12 - DIPERKECIL LEBARNYA) */}
           {dashSettings.showProduksi && (
-            <div>
-              <TotalProduksiPanel
+            <div className={dashSettings.showPenjualan ? "md:col-span-3" : "md:col-span-4"}>
+              <TotalProduksiPanel 
                 productionAnalytics={data?.production_analytics}
                 loading={loading}
               />
