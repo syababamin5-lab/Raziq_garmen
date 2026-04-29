@@ -1,11 +1,14 @@
 import React, { useState, useEffect } from 'react';
 import axios from 'axios';
+import PrayerModal from './PrayerModal';
 
 const PrayerTimesCompact = () => {
   const [timings, setTimings] = useState(null);
   const [nextPrayer, setNextPrayer] = useState(null);
   const [timeLeft, setTimeLeft] = useState("");
   const [isWarning, setIsWarning] = useState(false);
+  const [isModalOpen, setIsModalOpen] = useState(false);
+  const [lastNotified, setLastNotified] = useState("");
 
   useEffect(() => {
     const fetchPrayerTimes = async (lat, lon) => {
@@ -73,6 +76,12 @@ const PrayerTimesCompact = () => {
 
       setTimeLeft(`${String(Math.floor(diffMins / 60)).padStart(2, '0')}:${String(diffMins % 60).padStart(2, '0')}:${String(diffSecs).padStart(2, '0')}`);
       
+      // Trigger Pop-up saat waktu Shalat Tiba (00:00:00)
+      if (diffMins === 0 && diffSecs === 0 && lastNotified !== upcoming.name) {
+        setIsModalOpen(true);
+        setLastNotified(upcoming.name);
+      }
+
       // Warning 5-10 menit
       if (diffMins <= 10 && diffMins >= 0) {
         setIsWarning(true);
@@ -84,39 +93,47 @@ const PrayerTimesCompact = () => {
     calculateTime();
     const interval = setInterval(calculateTime, 1000);
     return () => clearInterval(interval);
-  }, [timings]);
+  }, [timings, lastNotified]);
 
   if (!nextPrayer) return null;
 
   return (
-    <div className={`
-      flex items-center gap-3 px-4 py-1.5 rounded-full border transition-all duration-500
-      ${isWarning 
-        ? 'bg-red-50 border-red-200 animate-pulse scale-105 shadow-lg shadow-red-500/10' 
-        : 'bg-emerald-50 border-emerald-100 shadow-sm'}
-    `}>
+    <>
       <div className={`
-        flex items-center justify-center w-7 h-7 rounded-full 
-        ${isWarning ? 'bg-red-500 text-white' : 'bg-emerald-500 text-white'}
+        flex items-center gap-3 px-4 py-1.5 rounded-full border transition-all duration-500
+        ${isWarning 
+          ? 'bg-red-50 border-red-200 animate-pulse scale-105 shadow-lg shadow-red-500/10' 
+          : 'bg-emerald-50 border-emerald-100 shadow-sm'}
       `}>
-        <span className="material-symbols-rounded text-base">mosque</span>
-      </div>
-      
-      <div className="flex flex-col">
-        <div className="flex items-center gap-1.5">
-          <span className={`text-[9px] font-black uppercase tracking-widest ${isWarning ? 'text-red-600' : 'text-emerald-700'}`}>
-            {isWarning ? 'PERSIPAPAN ADZAN' : 'MENUJU'} {nextPrayer.name}
-          </span>
-          {isWarning && <span className="w-1 h-1 rounded-full bg-red-500 animate-ping"></span>}
+        <div className={`
+          flex items-center justify-center w-7 h-7 rounded-full 
+          ${isWarning ? 'bg-red-500 text-white' : 'bg-emerald-500 text-white'}
+        `}>
+          <span className="material-symbols-rounded text-base">mosque</span>
         </div>
-        <div className="flex items-center gap-2 -mt-1">
-          <span className={`text-xs font-black tabular-nums ${isWarning ? 'text-red-800' : 'text-slate-800'}`}>
-            {timeLeft}
-          </span>
-          <span className="text-[10px] font-bold text-slate-400">Lagi</span>
+        
+        <div className="flex flex-col">
+          <div className="flex items-center gap-1.5">
+            <span className={`text-[9px] font-black uppercase tracking-widest ${isWarning ? 'text-red-600' : 'text-emerald-700'}`}>
+              {isWarning ? 'PERSIAPAN ADZAN' : 'MENUJU'} {nextPrayer.name}
+            </span>
+            {isWarning && <span className="w-1 h-1 rounded-full bg-red-500 animate-ping"></span>}
+          </div>
+          <div className="flex items-center gap-2 -mt-1">
+            <span className={`text-xs font-black tabular-nums ${isWarning ? 'text-red-800' : 'text-slate-800'}`}>
+              {timeLeft}
+            </span>
+            <span className="text-[10px] font-bold text-slate-400">Lagi</span>
+          </div>
         </div>
       </div>
-    </div>
+
+      <PrayerModal 
+        isOpen={isModalOpen} 
+        onClose={() => setIsModalOpen(false)} 
+        prayerName={nextPrayer.name} 
+      />
+    </>
   );
 };
 
