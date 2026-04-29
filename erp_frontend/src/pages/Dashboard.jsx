@@ -52,7 +52,7 @@ export default function Dashboard() {
     "Bersama kesulitan ada kemudahan, maka jangan pernah menyerah.",
     "Doa adalah senjata orang mukmin, iringilah setiap usahamu dengan doa."
   ];
-  
+
   const getGreeting = () => {
     const hour = new Date().getHours();
     if (hour < 11) return "Selamat Pagi";
@@ -81,7 +81,7 @@ export default function Dashboard() {
     if (res !== null) {
       const newTarget = parseInt(res);
       if (isNaN(newTarget)) return alert("Masukkan angka yang valid!");
-      
+
       try {
         setLoading(true);
         const apiRes = await updateTarget(newTarget);
@@ -110,7 +110,7 @@ export default function Dashboard() {
           {/* Abstract Decorations */}
           <div className="absolute top-[-20%] right-[-10%] w-64 h-64 bg-white/10 rounded-full blur-3xl group-hover:bg-white/20 transition-all duration-700"></div>
           <div className="absolute bottom-[-20%] left-[5%] w-32 h-32 bg-emerald-400/20 rounded-full blur-2xl"></div>
-          
+
           <div className="relative z-10 flex flex-col md:flex-row justify-between items-start md:items-center gap-6">
             <div className="flex items-center gap-6">
               <div className="w-20 h-20 rounded-3xl bg-white/10 backdrop-blur-md border border-white/20 flex items-center justify-center text-white shadow-inner animate-pulse">
@@ -121,17 +121,17 @@ export default function Dashboard() {
                   {getGreeting()}, <span className="text-emerald-200">Bos {user.nama_lengkap}</span>!
                 </h1>
                 <p className="text-emerald-50/70 font-medium text-sm mt-1 tracking-wide flex items-center gap-2">
-                   <span className="w-2 h-2 rounded-full bg-emerald-400 animate-ping"></span>
-                   Sistem Pabrik Atelier Emerald siap memberikan laporan terbaik hari ini.
+                  <span className="w-2 h-2 rounded-full bg-emerald-400 animate-ping"></span>
+                  Semoga hari hari bos menyenangkan.
                 </p>
               </div>
             </div>
-            
+
             <div className="bg-white/10 backdrop-blur-md border border-white/10 p-5 rounded-3xl max-w-md self-stretch flex items-center gap-4 hover:bg-white/15 transition-colors">
-               <span className="material-symbols-rounded text-emerald-300 text-3xl">format_quote</span>
-               <p className="italic text-white text-xs font-medium leading-relaxed leading-snug">
-                 "{randomQuote}"
-               </p>
+              <span className="material-symbols-rounded text-emerald-300 text-3xl">format_quote</span>
+              <p className="italic text-white text-xs font-medium leading-relaxed leading-snug">
+                "{randomQuote}"
+              </p>
             </div>
           </div>
         </div>
@@ -207,7 +207,7 @@ export default function Dashboard() {
           {/* Panel Kanan -> Total Produksi */}
           {dashSettings.showProduksi && (
             <div>
-              <TotalProduksiPanel 
+              <TotalProduksiPanel
                 productionAnalytics={data?.production_analytics}
                 loading={loading}
               />
@@ -223,9 +223,9 @@ export default function Dashboard() {
           <h2 className="text-lg font-extrabold text-slate-800">Status Gudang Akhir</h2>
         </div>
         <GudangCards
-           gudang={data?.gudang}
-           loading={loading}
-           onSetTarget={handleSetTarget}
+          gudang={data?.gudang}
+          loading={loading}
+          onSetTarget={handleSetTarget}
         />
       </div>
 
@@ -313,7 +313,7 @@ export default function Dashboard() {
         </div>
       </div>
 
-      <InvoiceDetailModal 
+      <InvoiceDetailModal
         isOpen={isModalOpen}
         onClose={() => setIsModalOpen(false)}
         invoice={selectedInvoice}

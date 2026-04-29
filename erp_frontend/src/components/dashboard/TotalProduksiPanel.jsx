@@ -22,44 +22,44 @@ export default function TotalProduksiPanel({ productionAnalytics, loading = fals
     <>
       <div 
         onClick={() => setShowDetail(true)}
-        className="card flex flex-col h-full bg-gradient-to-br from-indigo-900 to-slate-900 border-none shadow-[0_20px_50px_rgba(0,0,0,0.2)] text-white relative overflow-hidden group cursor-pointer hover:scale-[1.02] active:scale-100 transition-all duration-300"
+        className="card flex flex-col h-full bg-gradient-to-br from-indigo-900 to-slate-900 border-none shadow-lg text-white relative overflow-hidden group cursor-pointer hover:scale-[1.02] active:scale-100 transition-all duration-300 min-h-[320px]"
       >
         {/* Background decorations */}
-        <div className="absolute top-0 right-0 -mt-10 -mr-10 w-40 h-40 bg-indigo-500/20 rounded-full blur-3xl group-hover:bg-indigo-400/40 transition-all duration-700"></div>
-        <div className="absolute bottom-0 left-0 -mb-10 -ml-10 w-32 h-32 bg-purple-500/20 rounded-full blur-2xl group-hover:bg-purple-400/40 transition-all duration-700"></div>
+        <div className="absolute top-0 right-0 -mt-8 -mr-8 w-32 h-32 bg-indigo-500/10 rounded-full blur-3xl group-hover:bg-indigo-400/30 transition-all duration-700"></div>
+        <div className="absolute bottom-0 left-0 -mb-8 -ml-8 w-24 h-24 bg-purple-500/10 rounded-full blur-2xl group-hover:bg-purple-400/30 transition-all duration-700"></div>
         
-        <div className="flex items-center justify-between mb-8 relative z-10">
-          <div className="flex items-center gap-3">
-            <div className="w-10 h-10 rounded-xl bg-white/10 backdrop-blur-sm flex items-center justify-center shadow-inner border border-white/5">
-              <span className="material-symbols-rounded text-[20px] text-indigo-300">inventory</span>
+        <div className="flex items-center justify-between mb-4 relative z-10 p-1">
+          <div className="flex items-center gap-2">
+            <div className="w-8 h-8 rounded-lg bg-white/10 backdrop-blur-sm flex items-center justify-center border border-white/5">
+              <span className="material-symbols-rounded text-[18px] text-indigo-300">inventory</span>
             </div>
-            <h3 className="text-sm font-black text-indigo-50 tracking-wide uppercase">Total Produksi</h3>
+            <h3 className="text-[11px] font-black text-indigo-50 tracking-wider uppercase">Total Produksi</h3>
           </div>
-          <div className="w-8 h-8 rounded-full bg-white/5 flex items-center justify-center group-hover:bg-white/20 transition-colors">
-            <span className="material-symbols-rounded text-sm text-indigo-200">open_in_new</span>
+          <div className="w-7 h-7 rounded-full bg-white/5 flex items-center justify-center group-hover:bg-white/20 transition-colors">
+            <span className="material-symbols-rounded text-xs text-indigo-200">open_in_new</span>
           </div>
         </div>
 
-        <div className="flex-1 flex flex-col justify-center items-center text-center relative z-10 mb-6">
-          <p className="text-[10px] font-bold text-indigo-300 uppercase tracking-[0.2em] mb-3">Kumulatif Bulan Ini</p>
-          <div className="flex items-baseline gap-2 justify-center">
-            <span className="text-5xl font-black text-white tracking-tighter drop-shadow-md">
+        <div className="flex flex-col justify-center items-center text-center relative z-10 py-4">
+          <p className="text-[9px] font-bold text-indigo-300 uppercase tracking-widest mb-1 opacity-70">Kumulatif Bulan Ini</p>
+          <div className="flex items-baseline gap-1.5 justify-center">
+            <span className="text-4xl font-black text-white tracking-tighter drop-shadow-md">
               {totalBulanIni.toLocaleString('id-ID', { minimumFractionDigits: 0, maximumFractionDigits: 1 })}
             </span>
-            <span className="text-sm font-bold text-indigo-200">Lusin</span>
+            <span className="text-xs font-bold text-indigo-200">Lusin</span>
           </div>
-          <p className="text-xs text-indigo-200/70 mt-2 font-medium">({(totalBulanIni * 12).toLocaleString('id-ID')} Pcs Baju)</p>
+          <p className="text-[10px] text-indigo-200/60 mt-1 font-medium">({(totalBulanIni * 12).toLocaleString('id-ID')} Pcs)</p>
         </div>
 
-        <div className="mt-auto p-4 bg-white/5 backdrop-blur-md rounded-2xl border border-white/10 relative z-10">
+        <div className="mt-auto p-3.5 bg-white/5 backdrop-blur-md rounded-2xl border border-white/10 relative z-10">
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-2">
-              <span className="material-symbols-rounded text-indigo-300 text-lg">calendar_month</span>
-              <span className="text-xs font-bold text-indigo-100">Minggu Ini</span>
+              <span className="material-symbols-rounded text-indigo-300 text-base">calendar_today</span>
+              <span className="text-[10px] font-bold text-indigo-100">Minggu Ini</span>
             </div>
             <div className="text-right">
-              <span className="text-lg font-black text-white">{totalMingguIni.toLocaleString('id-ID', { minimumFractionDigits: 0, maximumFractionDigits: 1 })}</span>
-              <span className="text-[10px] text-indigo-200 ml-1">Lusin</span>
+              <span className="text-base font-black text-white">{totalMingguIni.toLocaleString('id-ID', { minimumFractionDigits: 0, maximumFractionDigits: 1 })}</span>
+              <span className="text-[9px] text-indigo-200 ml-1">Lusin</span>
             </div>
           </div>
         </div>
