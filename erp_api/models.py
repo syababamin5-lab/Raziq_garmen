@@ -241,7 +241,7 @@ class UserLog(Base):
 class CompanyConfig(Base):
     __tablename__ = "company_config"
     id = Column(Integer, primary_key=True, index=True)
-    nama_perusahaan = Column(String, default="PABRIK RAZIQ GARMENT")
+    nama_perusahaan = Column(String, default="RAZIQ GARMENT")
     alamat = Column(String, default="Bandung - Jawa Barat")
     no_telp = Column(String, default="0812-1491-4641")
     email = Column(String, default="raziqgarment@gmail.com")
@@ -251,7 +251,7 @@ class CompanyConfig(Base):
     logo_url = Column(String, nullable=True)
     nama_bank = Column(String, default="BCA")
     no_rekening = Column(String, default="123-456-7890")
-    atas_nama_bank = Column(String, default="PABRIK RAZIQ GARMENT")
+    atas_nama_bank = Column(String, default="RAZIQ GARMENT")
     target_cutting_mingguan = Column(Integer, default=1000)
     ttd_url = Column(String, nullable=True)
 
