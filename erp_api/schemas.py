@@ -66,11 +66,17 @@ class SalesAnalytics(BaseModel):
     total_pcs_terjual_bulan_ini: float
     total_pcs_terjual_minggu_ini: float
 
+class ProductionAnalytics(BaseModel):
+    """Analitik Produksi (Kumulatif Jahit / Barang Jadi)"""
+    total_lusin_bulan_ini: float
+    total_lusin_minggu_ini: float
+
 class DashboardResponse(BaseModel):
     """Response lengkap untuk halaman Dashboard"""
     keuangan: DashboardKeuangan
     penjualan_terkini: List[PenjualanRecentItem]
     sales_analytics: Optional[SalesAnalytics] = None
+    production_analytics: Optional[ProductionAnalytics] = None
     gudang: GudangStatus
     top_piutang: List[MitraDebtItem]
     top_utang: List[MitraDebtItem]

@@ -149,14 +149,29 @@ def get_dashboard_summary(db: Session = Depends(get_db)):
                 total_pcs_terjual_bulan_ini=pcs_this_month,
                 total_pcs_terjual_minggu_ini=pcs_this_week
             )
+            
+            # Helper for Total Produksi Jahit (Pcs)
+            def get_total_produksi_jahit(start, end):
+                return db.query(func.sum(models.ProductionLog.qty_hasil))\
+                    .filter(models.ProductionLog.divisi == "Jahit", models.ProductionLog.tanggal >= start, models.ProductionLog.tanggal <= end).scalar() or 0
+                    
+            prod_pcs_month = get_total_produksi_jahit(first_day, now)
+            prod_pcs_week = get_total_produksi_jahit(start_of_week, now)
+            
+            production_analytics = schemas.ProductionAnalytics(
+                total_lusin_bulan_ini=prod_pcs_month / 12,
+                total_lusin_minggu_ini=prod_pcs_week / 12
+            )
         except Exception as e:
-            print(f"DEBUG Dashboard Sales Analytics Error: {e}")
+            print(f"Stats Error Sales/Prod Analytics: {e}")
             sales_analytics = None
+            production_analytics = None
 
         return schemas.DashboardResponse(
             keuangan=schemas.DashboardKeuangan(sisa_saldo_tunai=tunai, sisa_saldo_bank=bank, total_uang_masuk_bulan_ini=masuk_ini, total_uang_keluar_bulan_ini=keluar_ini, perubahan_kas_pct=0, perubahan_keluar_pct=0),
             penjualan_terkini=penjualan_terkini,
             sales_analytics=sales_analytics,
+            production_analytics=production_analytics,
             gudang=schemas.GudangStatus(
                 cutting_minggu_ini_pcs=actual_cutting, cutting_target_pcs=target_pcs, cutting_pct=cutting_pct,
                 persediaan_baju_jadi_lusin=total_baju_pcs / 12 if total_baju_pcs else 0,

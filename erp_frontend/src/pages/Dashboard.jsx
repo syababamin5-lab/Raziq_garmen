@@ -5,6 +5,7 @@ import KeuanganCard from '../components/dashboard/KeuanganCard'
 import PenjualanPanel from '../components/dashboard/PenjualanPanel'
 import GudangCards from '../components/dashboard/GudangCards'
 import ProduksiPanel from '../components/dashboard/ProduksiPanel'
+import TotalProduksiPanel from '../components/dashboard/TotalProduksiPanel'
 import InvoiceDetailModal from '../components/dashboard/InvoiceDetailModal'
 
 export default function Dashboard() {
@@ -179,25 +180,38 @@ export default function Dashboard() {
 
       {/* ── Row 2: Penjualan & Produksi Panels ────────────────── */}
       {(dashSettings.showPenjualan || dashSettings.showProduksi) && (
-        <div className={`grid gap-4 ${dashSettings.showPenjualan && dashSettings.showProduksi ? 'grid-cols-2' : 'grid-cols-1'}`}>
+        <div className={`grid gap-4 ${dashSettings.showPenjualan && dashSettings.showProduksi ? 'grid-cols-1 md:grid-cols-3' : 'grid-cols-1'}`}>
           {/* Panel Kiri -> Penjualan */}
           {dashSettings.showPenjualan && (
-            <PenjualanPanel
-              data={data?.penjualan_terkini}
-              loading={loading}
-              onItemClick={(item) => {
-                setSelectedInvoice(item)
-                setIsModalOpen(true)
-              }}
-            />
+            <div className={dashSettings.showProduksi ? "" : "md:col-span-3"}>
+              <PenjualanPanel
+                data={data?.penjualan_terkini}
+                loading={loading}
+                onItemClick={(item) => {
+                  setSelectedInvoice(item)
+                  setIsModalOpen(true)
+                }}
+              />
+            </div>
           )}
-          {/* Panel Kanan -> Produksi */}
+          {/* Panel Tengah -> Produksi */}
           {dashSettings.showProduksi && (
-            <ProduksiPanel
-              gudang={data?.gudang}
-              salesAnalytics={data?.sales_analytics}
-              loading={loading}
-            />
+            <div>
+              <ProduksiPanel
+                gudang={data?.gudang}
+                salesAnalytics={data?.sales_analytics}
+                loading={loading}
+              />
+            </div>
+          )}
+          {/* Panel Kanan -> Total Produksi */}
+          {dashSettings.showProduksi && (
+            <div>
+              <TotalProduksiPanel 
+                productionAnalytics={data?.production_analytics}
+                loading={loading}
+              />
+            </div>
           )}
         </div>
       )}
