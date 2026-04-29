@@ -1,16 +1,15 @@
 /**
  * api.js — Axios instance terpusat
  * Semua fetch ke FastAPI melewati file ini.
- * Ganti BASE_URL jika deploy ke server berbeda.
+ * Set VITE_API_URL di Railway environment variables untuk production.
  */
 import axios from 'axios'
 
+// Gunakan VITE_API_URL dari env jika ada (Railway), fallback ke localhost untuk development
+const BASE_URL = import.meta.env.VITE_API_URL || 'http://localhost:8000/api'
+
 const api = axios.create({
-  // Vite proxy mengarahkan /api → http://127.0.0.1:8000
-  // Deteksi Otomatis: Pakai Local jika di localhost, pakai Cloud jika di Firebase URL
-  baseURL: (window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1')
-    ? 'http://localhost:8000/api'
-    : '/api',
+  baseURL: BASE_URL,
   timeout: 30000,
 })
 

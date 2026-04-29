@@ -10,23 +10,28 @@ from sqlalchemy import create_engine, Column, Integer, String, Float, DateTime, 
 from sqlalchemy.orm import sessionmaker, Session
 from sqlalchemy.ext.declarative import declarative_base
 
-# Konfigurasi Database Lokal (SQLite)
-BASE_DIR = os.path.dirname(os.path.abspath(__file__))
-DB_PATH = os.path.join(BASE_DIR, "garmen.db")
+# Konfigurasi Database
+# Gunakan PostgreSQL jika ada DATABASE_URL di environment, jika tidak gunakan SQLite lokal
+SQLALCHEMY_DATABASE_URL = os.environ.get("DATABASE_URL")
 
-# Deteksi Vercel atau Lingkungan Read-Only
-if not os.path.exists(DB_PATH) and os.environ.get('VERCEL'):
-    SQLALCHEMY_DATABASE_URL = "sqlite:///:memory:"
-    print("WARNING: Using In-Memory Database for Vercel Demo")
+if SQLALCHEMY_DATABASE_URL:
+    # Fix for Heroku/Railway which might provide "postgres://" instead of "postgresql://"
+    if SQLALCHEMY_DATABASE_URL.startswith("postgres://"):
+        SQLALCHEMY_DATABASE_URL = SQLALCHEMY_DATABASE_URL.replace("postgres://", "postgresql://", 1)
 else:
+    BASE_DIR = os.path.dirname(os.path.abspath(__file__))
+    DB_PATH = os.path.join(BASE_DIR, "garmen.db")
     SQLALCHEMY_DATABASE_URL = f"sqlite:///{DB_PATH}"
 
-# Buat Engine dengan penanganan error lebih baik
+# Buat Engine
 try:
-    engine = create_engine(SQLALCHEMY_DATABASE_URL, connect_args={"check_same_thread": False})
+    # connect_args={"check_same_thread": False} hanya untuk SQLite
+    connect_args = {"check_same_thread": False} if SQLALCHEMY_DATABASE_URL.startswith("sqlite") else {}
+    engine = create_engine(SQLALCHEMY_DATABASE_URL, connect_args=connect_args)
     SessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=engine)
 except Exception as e:
-    # Fallback Terakhir ke Memory
+    print(f"Database Connection Error: {e}")
+    # Fallback Terakhir ke Memory SQLite
     engine = create_engine("sqlite:///:memory:", connect_args={"check_same_thread": False})
     SessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=engine)
 
