@@ -618,9 +618,13 @@ async def import_excel(tipe: str, overwrite: bool = False, file: UploadFile = Fi
                     stok = float(row['Stok Awal']) if pd.notna(row['Stok Awal']) else 0
                     hrg_m = float(row['Harga Modal']) if pd.notna(row['Harga Modal']) else 0
                     
+                    raw_sat = row.get('Satuan (Kg/Pcs)', 'Kg')
+                    sat_val = str(raw_sat).strip() if pd.notna(raw_sat) else "Kg"
+                    if sat_val.lower() == "nan": sat_val = "Kg"
+                    
                     new_barang = models.Barang(
                         nama_barang=row.get('Nama Bahan', ''), kode_sku=sku, model_code="BAHAN",
-                        kategori=kategori, satuan=row.get('Satuan (Kg/Pcs)', "Kg"),
+                        kategori=kategori, satuan=sat_val,
                         stok_saat_ini=stok, harga_modal=hrg_m
                     )
                     db.add(new_barang)
