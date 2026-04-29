@@ -5,101 +5,111 @@ const PrayerModal = ({ isOpen, onClose, prayerName }) => {
 
   const quotesMapping = {
     "Subuh": {
-      title: "Awali Hari dengan Sujud",
-      quote: "Awali harimu dengan sujud kepada-Nya, niscaya keberkahan akan menyertaimu sepanjang hari.",
-      sub: "Rezeki yang berkah dimulai dari ketaatan di waktu fajar."
+      title: "Cahaya Fajar",
+      quote: "Bangunlah untuk menyambut kemenangan. Dua rakaat sebelum fajar lebih baik dari dunia dan seisinya.",
+      sub: "Awali harimu dengan keberkahan shalat Subuh berjamaah."
     },
     "Dzuhur": {
-      title: "Istirahat Terbaik",
-      quote: "Di tengah penatnya pekerjaan, ingatlah bahwa shalat adalah istirahat terbaik bagi jiwa.",
-      sub: "Segarkan kembali semangatmu dengan menghadap Sang Pencipta."
+      title: "Jeda Keberkahan",
+      quote: "Dunia bisa menunggu, namun Allah memanggilmu sekarang. Rehatlah sejenak dalam sujud.",
+      sub: "Shalat Dzuhur adalah penyegar jiwa di tengah teriknya rutinitas."
     },
     "Ashar": {
-      title: "Prioritas Utama",
-      quote: "Jangan biarkan kesibukan sore hari melalaikanmu dari kewajiban utama.",
-      sub: "Kesuksesan sejati adalah saat pekerjaan tidak menghalangi ibadah."
+      title: "Puncak Ketaatan",
+      quote: "Jangan biarkan kesibukan sore menghapus pahalamu. Shalatlah sebelum waktu berlalu.",
+      sub: "Jagalah shalat Ashar-mu, maka Allah akan menjaga urusan soremu."
     },
     "Maghrib": {
-      title: "Syukuri Hari Ini",
-      quote: "Syukuri nikmat hari ini dengan shalat tepat waktu. Mari tutup hari dengan ketaatan.",
-      sub: "Kemenangan hari ini adalah saat kita tetap teguh dalam barisan-Nya."
+      title: "Senja Penuh Syukur",
+      quote: "Matahari boleh terbenam, tapi imanmu harus tetap bersinar. Mari jemput ridha-Nya di waktu Maghrib.",
+      sub: "Syukuri nikmat hari ini dengan sujud yang khusyuk."
     },
     "Isya": {
-      title: "Ketenangan Jiwa",
-      quote: "Istirahatkan ragamu, namun jangan lupakan penciptamu. Shalat Isya adalah ketenangan.",
-      sub: "Mari akhiri hari dengan syukur dan doa agar esok menjadi lebih baik."
+      title: "Ketenangan Malam",
+      quote: "Tutuplah hari ini dengan doa dan sujud yang indah. Isya adalah gerbang ketenangan tidurmu.",
+      sub: "Serahkan segala lelahmu kepada Sang Pemilik Kehidupan."
     },
     "Default": {
-      title: "Panggilan Kebaikan",
-      quote: "Shalatlah tepat waktu, niscaya Allah akan memudahkan urusanmu.",
-      sub: "Dunia sementara, akhirat selamanya. Mari luruskan niat, rapatkan barisan."
+      title: "Panggilan Cinta",
+      quote: "Shalatlah tepat waktu agar hidupmu selalu dalam bimbingan-Nya.",
+      sub: "Dunia hanya sementara, persiapkan bekal terbaikmu sekarang."
     }
   };
 
   const currentContent = quotesMapping[prayerName] || quotesMapping["Default"];
 
   return (
-    <div className="fixed inset-0 z-[9999] flex items-center justify-center p-6 md:p-12">
-      {/* Overlay */}
+    <div className="fixed inset-0 z-[9999] flex items-center justify-center p-4">
+      {/* Overlay dengan Blur Super Kuat */}
       <div 
-        className="absolute inset-0 bg-emerald-950/90 backdrop-blur-xl"
+        className="absolute inset-0 bg-emerald-950/60 backdrop-blur-3xl transition-all duration-700"
         onClick={onClose}
       ></div>
       
-      {/* Modal Content - Increased size by ~10% (max-w-xl) */}
-      <div className="relative bg-white rounded-[4rem] overflow-hidden shadow-[0_32px_64px_-12px_rgba(0,0,0,0.5)] w-full max-w-xl animate-in zoom-in slide-in-from-bottom-10 duration-500 ease-out">
-        {/* Header Image */}
-        <div className="relative h-72 overflow-hidden">
+      {/* Modal Content - Perfectly Centered & Large */}
+      <div className="relative bg-white/95 backdrop-blur-sm rounded-[4rem] overflow-hidden shadow-[0_50px_100px_-20px_rgba(0,0,0,0.5)] w-full max-w-xl animate-in zoom-in slide-in-from-bottom-20 duration-500 ease-out border border-white/20">
+        
+        {/* Header Image Section */}
+        <div className="relative h-80 overflow-hidden">
           <img 
             src="/prayer_bg.png" 
             alt="Prayer Time" 
-            className="w-full h-full object-cover scale-110 hover:scale-100 transition-transform duration-1000"
+            className="w-full h-full object-cover scale-110"
           />
-          <div className="absolute inset-0 bg-gradient-to-t from-black/90 via-black/30 to-transparent flex flex-col justify-end p-10 text-white">
-            <h2 className="text-5xl font-black tracking-tighter leading-none mb-2">{currentContent.title}</h2>
-            <div className="flex items-center gap-3">
-              <span className="px-3 py-1 rounded-full bg-emerald-500 text-[10px] font-black uppercase tracking-widest shadow-lg">ADZAN {prayerName.toUpperCase()}</span>
-              <span className="w-1.5 h-1.5 rounded-full bg-white/50"></span>
-              <span className="text-white/70 font-bold text-xs uppercase tracking-widest">Waktunya Menghadap-Nya</span>
+          <div className="absolute inset-0 bg-gradient-to-t from-emerald-950 via-black/20 to-transparent flex flex-col justify-end p-12 text-center items-center">
+            <div className="mb-4 inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-emerald-500/20 backdrop-blur-md border border-emerald-400/30 text-emerald-300 text-[10px] font-black uppercase tracking-[0.3em]">
+              <span className="w-2 h-2 rounded-full bg-emerald-400 animate-pulse"></span>
+              Waktu {prayerName} Tiba
             </div>
+            <h2 className="text-5xl font-black text-white tracking-tighter leading-tight drop-shadow-2xl">
+              {currentContent.title}
+            </h2>
           </div>
+          
           <button 
             onClick={onClose}
-            className="absolute top-8 right-8 w-12 h-12 rounded-full bg-black/20 backdrop-blur-md flex items-center justify-center text-white hover:bg-emerald-600 transition-all hover:scale-110 active:scale-95 z-20"
+            className="absolute top-8 right-8 w-12 h-12 rounded-full bg-black/20 backdrop-blur-xl border border-white/10 flex items-center justify-center text-white hover:bg-red-500 transition-all hover:scale-110 active:scale-95 z-30"
           >
             <span className="material-symbols-rounded text-2xl">close</span>
           </button>
         </div>
         
-        {/* Motivational Text */}
-        <div className="p-12 text-center space-y-8">
-          <div className="space-y-4">
-            <h3 className="text-2xl md:text-3xl font-black text-slate-800 leading-[1.2] px-4">
+        {/* Content Section - High Centering */}
+        <div className="p-14 text-center flex flex-col items-center">
+          <div className="max-w-md space-y-6">
+            <span className="material-symbols-rounded text-emerald-600 text-5xl opacity-20">format_quote</span>
+            <h3 className="text-3xl font-black text-slate-800 leading-tight -mt-4">
               "{currentContent.quote}"
             </h3>
-            <div className="w-16 h-1.5 bg-emerald-500 mx-auto rounded-full opacity-30"></div>
-            <p className="text-slate-500 font-bold text-base max-w-sm mx-auto leading-relaxed italic">
+            <p className="text-slate-500 font-bold text-lg italic opacity-80">
               {currentContent.sub}
             </p>
+            <div className="w-20 h-1 bg-gradient-to-r from-transparent via-emerald-500 to-transparent mx-auto rounded-full mt-6 opacity-40"></div>
           </div>
           
-          <div className="flex flex-col gap-4 pt-4">
+          <div className="w-full mt-12 flex flex-col items-center gap-6">
             <button 
               onClick={onClose}
-              className="group relative bg-emerald-600 hover:bg-emerald-500 text-white font-black py-5 px-8 rounded-3xl shadow-2xl shadow-emerald-600/30 transition-all active:scale-95 overflow-hidden"
+              className="w-full max-w-sm group relative bg-emerald-600 hover:bg-emerald-500 text-white font-black py-5 px-10 rounded-[2rem] shadow-2xl shadow-emerald-600/40 transition-all active:scale-95 overflow-hidden"
             >
-              <div className="relative z-10 flex items-center justify-center gap-3 text-lg">
-                <span className="material-symbols-rounded">check_circle</span>
-                SAYA SIAP SHALAT SEKARANG
+              <div className="relative z-10 flex items-center justify-center gap-4 text-xl tracking-tight">
+                <span className="material-symbols-rounded">mosque</span>
+                SAYA SIAP BERIBADAH
               </div>
-              <div className="absolute inset-0 bg-white/10 translate-y-full group-hover:translate-y-0 transition-transform duration-300"></div>
+              <div className="absolute inset-0 bg-white/20 translate-y-full group-hover:translate-y-0 transition-transform duration-500 ease-out"></div>
             </button>
             
-            <div className="flex flex-col items-center gap-1 opacity-40">
-              <p className="text-[10px] text-slate-400 font-black uppercase tracking-[0.3em]">
-                RAZIQ GARMEN | ENTERPRISE
+            <div className="flex flex-col items-center gap-2">
+              <p className="text-[10px] text-slate-400 font-black uppercase tracking-[0.4em] opacity-60">
+                RAZIQ GARMEN SYSTEM
               </p>
-              <p className="text-[8px] text-slate-300 font-medium">Spiritual & Professional Balance</p>
+              <div className="flex items-center gap-2 text-[8px] font-bold text-slate-300 uppercase tracking-widest">
+                <span>Spiritual</span>
+                <span className="w-1 h-1 rounded-full bg-slate-200"></span>
+                <span>Professional</span>
+                <span className="w-1 h-1 rounded-full bg-slate-200"></span>
+                <span>Integrity</span>
+              </div>
             </div>
           </div>
         </div>
@@ -109,4 +119,5 @@ const PrayerModal = ({ isOpen, onClose, prayerName }) => {
 };
 
 export default PrayerModal;
+
 
