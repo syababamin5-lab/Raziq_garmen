@@ -1,5 +1,5 @@
 node_modules/
-dist/
+# dist/  <-- Commented out to allow frontend build
 .venv/
 venv/
 __pycache__/

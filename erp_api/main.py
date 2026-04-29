@@ -874,8 +874,23 @@ def get_user_logs(db: Session = Depends(get_db)):
 # DEPLOYMENT: SERVE REACT FRONTEND (SPA)
 # ==========================================================
 # Folder dist hasil 'npm run build'
-base_dir = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
-build_path = os.path.join(base_dir, "erp_frontend", "dist")
+# Cek beberapa kemungkinan path (lokal vs server)
+possible_paths = [
+    os.path.join(os.getcwd(), "erp_frontend", "dist"),
+    os.path.join(os.path.dirname(os.getcwd()), "erp_frontend", "dist"),
+    os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))), "erp_frontend", "dist"),
+    "/app/erp_frontend/dist" # Path spesifik Railway
+]
+
+build_path = None
+for p in possible_paths:
+    if os.path.exists(p):
+        build_path = p
+        break
+
+if not build_path:
+    # Fallback ke path default
+    build_path = os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))), "erp_frontend", "dist")
 
 if os.path.exists(build_path):
     # Mount folder assets
