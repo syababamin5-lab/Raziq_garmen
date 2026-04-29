@@ -1,5 +1,6 @@
 import { NavLink } from 'react-router-dom'
 import { getCurrentUser } from '../../api/authApi'
+import api from '../../api/api'
 
 const MENU_ITEMS = [
   { path: '/',               icon: 'dashboard',  label: 'Dashboard', roles: ['super_admin', 'admin', 'bos'] },
@@ -38,7 +39,7 @@ export default function Sidebar({ isOpen }) {
         <div className="flex items-center gap-3 overflow-hidden">
           {user?.foto_url ? (
             <img 
-              src={`http://${window.location.hostname}:8000${user.foto_url}`} 
+              src={`${api.defaults.baseURL.replace('/api', '')}${user.foto_url}`} 
               className="w-10 h-10 rounded-xl object-cover border border-white/20 shadow-inner flex-shrink-0" 
               alt="" 
             />
