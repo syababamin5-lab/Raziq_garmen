@@ -884,9 +884,12 @@ if os.path.exists(build_path):
         app.mount("/assets", StaticFiles(directory=assets_path), name="assets")
     
     # Catch-all route untuk melayani index.html (SPA)
+    @app.get("/")
+    async def serve_index():
+        return FileResponse(os.path.join(build_path, "index.html"))
+
     @app.get("/{full_path:path}")
     async def serve_react_app(full_path: str):
-        # Jika request ke API, biarkan FastAPI menghandle (sudah lewat router di atas)
         # Jika bukan file fisik, kirim index.html
         file_path = os.path.join(build_path, full_path)
         if os.path.isfile(file_path):
