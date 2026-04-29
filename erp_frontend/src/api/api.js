@@ -1,12 +1,13 @@
 /**
  * api.js — Axios instance terpusat
  * Semua fetch ke FastAPI melewati file ini.
- * Set VITE_API_URL di Railway environment variables untuk production.
  */
 import axios from 'axios'
 
-// Gunakan VITE_API_URL dari env jika ada (Railway), fallback ke localhost untuk development
-const BASE_URL = import.meta.env.VITE_API_URL || 'http://localhost:8000/api'
+// Deteksi Otomatis di Browser: Pakai Localhost jika di komputer lokal, pakai /api jika di production (Railway)
+const BASE_URL = (window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1')
+  ? 'http://localhost:8000/api'
+  : '/api'
 
 const api = axios.create({
   baseURL: BASE_URL,
