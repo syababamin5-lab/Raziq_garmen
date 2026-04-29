@@ -185,6 +185,45 @@ def get_buku_besar(kode_akun: str, bulan: int, tahun: int, filter_nama: str = ""
     except Exception as e:
         return {"success": False, "message": str(e)}
 
+@router.get("/export-pdf-buku-besar")
+def export_buku_besar_pdf_endpoint(kode_akun: str, bulan: int, tahun: int, filter_nama: str = "", db: Session = Depends(get_db)):
+    try:
+        from pdf_generator import export_dataframe_pdf
+        import pandas as pd
+        from fastapi.responses import Response
+        
+        res = get_buku_besar(kode_akun, bulan, tahun, filter_nama, db)
+        if not res["success"]: return {"status": "error", "message": "Gagal ambil data"}
+        
+        data = res["data"]["list"]
+        df_list = []
+        for d in data:
+            df_list.append({
+                "Tanggal": d["tanggal"][:10],
+                "Keterangan": d["keterangan"],
+                "Debit": f"Rp {int(d['debit']):,}" if d['debit'] else "-",
+                "Kredit": f"Rp {int(d['kredit']):,}" if d['kredit'] else "-",
+                "Saldo": f"Rp {int(d['saldo']):,}"
+            })
+            
+        df = pd.DataFrame(df_list)
+        
+        akun = db.query(models.AkunStandard).filter(models.AkunStandard.kode_akun == kode_akun).first()
+        nama_akun = akun.nama_akun if akun else kode_akun
+        
+        judul = f"BUKU BESAR - {nama_akun}"
+        periode_str = f"{new_date(2000, bulan, 1).strftime('%B')} {tahun}"
+        
+        config = db.query(models.CompanyConfig).first()
+        # [Tanggal, Keterangan, Debit, Kredit, Saldo] Widths
+        pdf_bytes = export_dataframe_pdf(judul, periode_str, df, [30, 95, 40, 40, 45], config)
+        
+        return Response(content=pdf_bytes, media_type="application/pdf", headers={"Content-Disposition": f"inline; filename=BukuBesar_{kode_akun}_{bulan}_{tahun}.pdf"})
+    except Exception as e:
+        import traceback
+        print(traceback.format_exc())
+        return {"status": "error", "message": str(e)}
+
 @router.get("/export-pdf")
 def export_laporan_pdf(tipe: str, bulan: int, tahun: int, db: Session = Depends(get_db)):
     try:
