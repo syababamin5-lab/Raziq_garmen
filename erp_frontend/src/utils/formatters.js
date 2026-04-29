@@ -34,6 +34,7 @@ export function pcsToLusin(pcs) {
 export function getStatusClass(status) {
   switch (status) {
     case 'SELESAI':      return 'badge-success'
+    case 'BELUM':        return 'badge-warning'
     case 'PENDING BAYAR': return 'badge-warning'
     case 'PROSES':       return 'badge-info'
     default:             return 'badge-info'

@@ -90,17 +90,72 @@ export default function SettingsCompany() {
             </div>
           </div>
 
-          {/* Section: Digital */}
+          {/* Section: Rekening Bank */}
           <div>
-            <h3 className="text-xs font-black text-emerald-600 uppercase tracking-[0.2em] mb-6 border-b pb-2">Kontak Digital</h3>
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+            <h3 className="text-xs font-black text-emerald-600 uppercase tracking-[0.2em] mb-6 border-b pb-2">Informasi Rekening Bank (Untuk Invoice)</h3>
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
               <div>
-                <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest pl-2 mb-2 block">Email Perusahaan</label>
-                <input type="email" className="w-full bg-slate-50 border-none rounded-2xl p-4 font-bold text-slate-800 focus:ring-2 focus:ring-emerald-500/20 transition-all outline-none" value={config.email} onChange={e => setConfig({...config, email: e.target.value})} />
+                <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest pl-2 mb-2 block">Nama Bank</label>
+                <input type="text" className="w-full bg-slate-50 border-none rounded-2xl p-4 font-bold text-slate-800 focus:ring-2 focus:ring-emerald-500/20 transition-all outline-none" value={config.nama_bank || ''} onChange={e => setConfig({...config, nama_bank: e.target.value})} placeholder="Contoh: BCA" />
               </div>
               <div>
-                <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest pl-2 mb-2 block">Website</label>
-                <input type="text" className="w-full bg-slate-50 border-none rounded-2xl p-4 font-bold text-slate-800 focus:ring-2 focus:ring-emerald-500/20 transition-all outline-none" value={config.website} onChange={e => setConfig({...config, website: e.target.value})} />
+                <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest pl-2 mb-2 block">Nomor Rekening</label>
+                <input type="text" className="w-full bg-slate-50 border-none rounded-2xl p-4 font-bold text-slate-800 focus:ring-2 focus:ring-emerald-500/20 transition-all outline-none" value={config.no_rekening || ''} onChange={e => setConfig({...config, no_rekening: e.target.value})} placeholder="000-000-0000" />
+              </div>
+              <div>
+                <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest pl-2 mb-2 block">Atas Nama (A/N)</label>
+                <input type="text" className="w-full bg-slate-50 border-none rounded-2xl p-4 font-bold text-slate-800 focus:ring-2 focus:ring-emerald-500/20 transition-all outline-none" value={config.atas_nama_bank || ''} onChange={e => setConfig({...config, atas_nama_bank: e.target.value})} placeholder="Contoh: PT RAZIQ GARMENT" />
+              </div>
+            </div>
+          </div>
+
+          {/* Section: Tanda Tangan Digital */}
+          <div>
+            <h3 className="text-xs font-black text-emerald-600 uppercase tracking-[0.2em] mb-6 border-b pb-2">Tanda Tangan Digital (TTD Pimpinan)</h3>
+            <div className="flex flex-col md:flex-row items-start gap-10">
+              <div className="w-full md:w-64 aspect-square bg-slate-100 rounded-[2rem] border-2 border-dashed border-slate-200 flex flex-col items-center justify-center p-6 text-center group hover:border-emerald-500 transition-all cursor-pointer relative overflow-hidden">
+                {config.ttd_url ? (
+                  <img src={config.ttd_url} alt="TTD Preview" className="w-full h-full object-contain" />
+                ) : (
+                  <>
+                    <span className="material-symbols-rounded text-4xl text-slate-300 mb-2 group-hover:text-emerald-500 transition-all">signature</span>
+                    <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest">Belum Ada Tanda Tangan</p>
+                  </>
+                )}
+                <input 
+                  type="file" 
+                  className="absolute inset-0 opacity-0 cursor-pointer" 
+                  accept="image/*"
+                  onChange={async (e) => {
+                    const file = e.target.files[0];
+                    if (!file) return;
+                    const formData = new FormData();
+                    formData.append('file', file);
+                    try {
+                      const { data } = await api.post('/company-config/upload-ttd', formData);
+                      if (data.status === 'success') {
+                        setConfig({...config, ttd_url: data.url});
+                      }
+                    } catch (err) { alert('Gagal upload TTD'); }
+                  }}
+                />
+              </div>
+              <div className="flex-1 space-y-4">
+                <div className="p-6 bg-emerald-50 rounded-3xl border border-emerald-100">
+                  <h4 className="font-black text-emerald-900 text-sm mb-2 uppercase italic">📜 Penting!</h4>
+                  <ul className="text-[11px] text-emerald-700 font-medium space-y-2 list-disc pl-4">
+                    <li>Gunakan gambar transparan (PNG) untuk hasil terbaik.</li>
+                    <li>Tanda tangan ini akan otomatis muncul di seluruh invoice dan laporan PDF.</li>
+                    <li>Jika tidak diunggah, sistem akan menggunakan Barcode Validasi sebagai pengganti.</li>
+                  </ul>
+                </div>
+                <button 
+                  type="button"
+                  onClick={() => setConfig({...config, ttd_url: null})}
+                  className="text-[10px] font-black text-red-500 uppercase tracking-widest hover:underline"
+                >
+                  Hapus Tanda Tangan (Gunakan Barcode)
+                </button>
               </div>
             </div>
           </div>

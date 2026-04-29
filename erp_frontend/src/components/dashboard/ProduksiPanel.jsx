@@ -1,7 +1,9 @@
+import { formatRp } from '../../utils/formatters'
+
 /**
  * ProduksiPanel.jsx — Panel "Laporan Produksi & Masuk" (kanan bawah)
  */
-export default function ProduksiPanel({ gudang, loading = false }) {
+export default function ProduksiPanel({ gudang, salesAnalytics, loading = false }) {
   const rows = gudang
     ? [
         {
@@ -41,10 +43,6 @@ export default function ProduksiPanel({ gudang, loading = false }) {
               <div className="h-2.5 bg-slate-200 rounded w-28" />
               <div className="h-2 bg-slate-100 rounded w-20" />
             </div>
-            <div className="space-y-1.5 text-right">
-              <div className="h-2.5 bg-slate-200 rounded w-16" />
-              <div className="h-2 bg-slate-100 rounded w-12 ml-auto" />
-            </div>
           </div>
         ))}
       </div>
@@ -52,7 +50,7 @@ export default function ProduksiPanel({ gudang, loading = false }) {
   }
 
   return (
-    <div className="card h-full">
+    <div className="card flex flex-col">
       {/* ── Header ──────────────────────────────────────── */}
       <div className="flex items-center justify-between mb-4">
         <div className="flex items-center gap-2">
@@ -94,6 +92,53 @@ export default function ProduksiPanel({ gudang, loading = false }) {
           </div>
         ))}
       </div>
+
+      {/* ── Prominent Sales Analytics (NEW & ELEGANT) ────────── */}
+      {salesAnalytics && (
+        <div className="mt-4 pt-4 border-t border-slate-100 flex flex-col gap-3">
+          <div className="grid grid-cols-2 gap-3 mb-[-8px]">
+            {/* Minggu Ini */}
+            <div className="relative overflow-hidden p-6 rounded-[1.5rem] bg-gradient-to-br from-emerald-600 to-emerald-800 text-white shadow-lg shadow-emerald-900/20 group transition-transform hover:scale-[1.02]">
+              <div className="absolute bottom-0 right-0 p-4 opacity-10 group-hover:opacity-20 transition-opacity">
+                <span className="material-symbols-rounded text-5xl">trending_up</span>
+              </div>
+              <div className="relative z-10">
+                <div className="flex justify-between items-center mb-1">
+                  <p className="text-[10px] font-bold text-emerald-100 uppercase tracking-widest">Omzet Minggu Ini</p>
+                  <span className={`px-2 py-0.5 rounded-full text-[9px] font-black bg-white/20 backdrop-blur-md`}>
+                    {salesAnalytics.perubahan_minggu_pct >= 0 ? '+' : ''}{salesAnalytics.perubahan_minggu_pct.toFixed(0)}%
+                  </span>
+                </div>
+                <h4 className="text-xl font-black tracking-tighter mb-1">{formatRp(salesAnalytics.nominal_minggu_ini)}</h4>
+                <div className="flex items-center gap-1.5 opacity-80">
+                  <span className="material-symbols-rounded text-[14px]">checkroom</span>
+                  <p className="text-[11px] font-medium">{salesAnalytics.total_pcs_terjual_minggu_ini} Pcs Terjual</p>
+                </div>
+              </div>
+            </div>
+
+            {/* Bulan Ini */}
+            <div className="relative overflow-hidden p-6 rounded-[1.5rem] bg-gradient-to-br from-slate-800 to-slate-900 text-white shadow-lg shadow-slate-900/20 group transition-transform hover:scale-[1.02]">
+              <div className="absolute bottom-0 right-0 p-4 opacity-10 group-hover:opacity-20 transition-opacity">
+                <span className="material-symbols-rounded text-5xl">calendar_month</span>
+              </div>
+              <div className="relative z-10">
+                <div className="flex justify-between items-center mb-1">
+                  <p className="text-[10px] font-bold text-slate-300 uppercase tracking-widest">Omzet Bulan Ini</p>
+                  <span className={`px-2 py-0.5 rounded-full text-[9px] font-black bg-white/10 backdrop-blur-md`}>
+                    {salesAnalytics.perubahan_bulan_pct >= 0 ? '+' : ''}{salesAnalytics.perubahan_bulan_pct.toFixed(0)}%
+                  </span>
+                </div>
+                <h4 className="text-xl font-black tracking-tighter mb-1">{formatRp(salesAnalytics.nominal_bulan_ini)}</h4>
+                <div className="flex items-center gap-1.5 opacity-70">
+                  <span className="material-symbols-rounded text-[14px]">inventory_2</span>
+                  <p className="text-[11px] font-medium">{salesAnalytics.total_pcs_terjual_bulan_ini} Pcs Terjual</p>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   )
 }

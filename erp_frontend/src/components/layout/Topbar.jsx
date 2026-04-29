@@ -14,7 +14,7 @@ export default function Topbar({ title, onToggleSidebar, isSidebarOpen }) {
       bg-white/80 backdrop-blur-md border-b border-slate-100
       flex items-center justify-between px-6 z-40
       transition-all duration-300 ease-in-out
-    " style={{ left: isSidebarOpen ? '224px' : '80px' }}>
+    " style={{ left: isSidebarOpen ? '256px' : '80px' }}>
       
       <div className="flex items-center gap-4">
         {/* Toggle Button */}

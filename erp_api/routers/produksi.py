@@ -58,7 +58,7 @@ def submit_cutting(payload: CuttingRequest, db: Session = Depends(get_db)):
         total_upah = payload.hasil_pcs * payload.ongkos_per_pcs
         ket_jurnal = f"Cutting {payload.hasil_pcs} pcs dari {payload.kg_pakai}kg {kain.nama_barang} [SKU:{produk.kode_sku}] [Potong: {karyawan.nama_karyawan} | Upah: {total_upah}]"
 
-        # Jurnal
+        # Jurnal Pemakaian Bahan Baku
         db.add(models.JurnalUmum(
             tanggal=datetime.datetime.now(), 
             kode_akun="51110", nama_akun="Pemakaian Bahan Baku", 
@@ -68,6 +68,31 @@ def submit_cutting(payload: CuttingRequest, db: Session = Depends(get_db)):
             tanggal=datetime.datetime.now(), 
             kode_akun="12110", nama_akun="Persediaan Bahan Baku (Kain)", 
             keterangan=f"Pemakaian Kain {kain.nama_barang}", debit=0, kredit=nilai_kain_terpakai
+        ))
+
+        # Jurnal Pengakuan Utang Upah (BTKL) - IFRS Compliance
+        if total_upah > 0:
+            db.add(models.JurnalUmum(
+                tanggal=datetime.datetime.now(),
+                kode_akun="51210", nama_akun="BTKL - Upah Cutting",
+                keterangan=f"Upah Potong {payload.hasil_pcs} pcs - {karyawan.nama_karyawan}",
+                debit=total_upah, kredit=0
+            ))
+            db.add(models.JurnalUmum(
+                tanggal=datetime.datetime.now(),
+                kode_akun="21210", nama_akun="Utang Gaji & Upah",
+                keterangan=f"Hutang Upah Potong - {karyawan.nama_karyawan}",
+                debit=0, kredit=total_upah
+            ))
+
+        # Log Produksi untuk Dashboard (Cutting)
+        db.add(models.ProductionLog(
+            tanggal=datetime.datetime.now(),
+            divisi="Cutting",
+            kode_sku=produk.kode_sku,
+            nama_barang=produk.nama_barang,
+            qty_hasil=payload.hasil_pcs,
+            karyawan_id=payload.tukang_potong_id
         ))
 
         db.commit()
@@ -85,10 +110,48 @@ def submit_jahit(payload: JahitRequest, db: Session = Depends(get_db)):
         total_pcs = int(payload.qty_lusin * 12)
         produk.stok_saat_ini += total_pcs
 
-        nilai_masuk = total_pcs * (produk.harga_modal or 0)
+        # Kalkulasi HPP Dinamis (Bahan + Upah) berdasarkan riwayat Cutting
+        jurnals_cut = db.query(models.JurnalUmum).filter(
+            models.JurnalUmum.kode_akun == "51110",
+            models.JurnalUmum.keterangan.like(f"%[SKU:{produk.kode_sku}]%")
+        ).all()
+        
+        total_kain_rp = 0.0
+        total_upah_rp = 0.0
+        total_pcs_potong = 0
+        
+        for j in jurnals_cut:
+            total_kain_rp += j.debit
+            ket = str(j.keterangan)
+            try:
+                if "Upah: " in ket:
+                    upah_str = ket.split("Upah: ")[1].split("]")[0].strip()
+                    total_upah_rp += float(upah_str)
+                pcs_match = re.search(r'Cutting (\d+) pcs', ket)
+                if pcs_match:
+                    total_pcs_potong += int(pcs_match.group(1))
+            except:
+                pass
+                
+        if total_pcs_potong > 0:
+            hpp_per_pcs = (total_kain_rp + total_upah_rp) / total_pcs_potong
+            produk.harga_modal = hpp_per_pcs # Update Harga Modal (HPP) ke tabel Barang!
+        else:
+            hpp_per_pcs = produk.harga_modal or 0.0
+
+        nilai_masuk = total_pcs * hpp_per_pcs
 
         db.add(models.JurnalUmum(tanggal=datetime.datetime.now(), kode_akun="12150", nama_akun="Persediaan Barang Jadi", keterangan=f"Masuk {total_pcs} pcs {produk.kode_sku} (Jahit)", debit=nilai_masuk, kredit=0))
         db.add(models.JurnalUmum(tanggal=datetime.datetime.now(), kode_akun="51199", nama_akun="Ikhtisar Produksi", keterangan=f"Masuk Gudang {produk.kode_sku}", debit=0, kredit=nilai_masuk))
+
+        # Log Produksi untuk Dashboard (Jahit)
+        db.add(models.ProductionLog(
+            tanggal=datetime.datetime.now(),
+            divisi="Jahit",
+            kode_sku=produk.kode_sku,
+            nama_barang=produk.nama_barang,
+            qty_hasil=total_pcs
+        ))
 
         db.commit()
         return APIResponse(success=True, message=f"Berhasil! Masuk {payload.qty_lusin} lusin ke gudang.")

@@ -71,14 +71,20 @@ def submit_invoice(payload: schemas.SaleRequest, db: Session = Depends(get_db)):
         if sisa_utang < 0 and payload.metode == "Piutang (Tempo)":
             raise Exception("DP tidak boleh lebih besar dari Total Tagihan!")
 
-        # Simpan Header Invoice
+        status_invoice = "Lunas"
+        if payload.metode == "Piutang (Tempo)" and sisa_utang > 0:
+            status_invoice = "Tempo"
+
+        # Simpan Header Invoice (simpan uang_muka agar PDF bisa tampilkan DP)
         db.add(models.HeaderPenjualan(
             no_invoice=inv_no, 
             tanggal=waktu_jual, 
             nama_customer=cust.nama_mitra, 
             metode_bayar=payload.metode, 
             total_tagihan=total_tagihan, 
-            diskon=payload.diskon or 0.0
+            diskon=payload.diskon or 0.0,
+            uang_muka=payload.dp or 0.0,
+            status=status_invoice
         ))
 
         # Jurnal Pendapatan Penjualan
@@ -93,7 +99,9 @@ def submit_invoice(payload: schemas.SaleRequest, db: Session = Depends(get_db)):
             cust.saldo_piutang += sisa_utang
             db.add(models.JurnalUmum(tanggal=waktu_jual, kode_akun="11210", nama_akun="Piutang Usaha", keterangan=f"Tagihan {inv_no} - {cust.nama_mitra}", debit=sisa_utang, kredit=0))
             if (payload.dp or 0.0) > 0:
-                db.add(models.JurnalUmum(tanggal=waktu_jual, kode_akun="11110", nama_akun="Kas Tunai", keterangan=f"DP Invoice {inv_no} - {cust.nama_mitra}", debit=payload.dp, kredit=0))
+                akun_dp = "11110" if payload.dp_sumber == "Kas Tunai" else "11120"
+                nama_dp = "Kas Tunai" if payload.dp_sumber == "Kas Tunai" else "Kas di Bank"
+                db.add(models.JurnalUmum(tanggal=waktu_jual, kode_akun=akun_dp, nama_akun=nama_dp, keterangan=f"DP Invoice {inv_no} - {cust.nama_mitra}", debit=payload.dp, kredit=0))
 
         db.commit()
         return schemas.APIResponse(success=True, message=f"Invoice {inv_no} berhasil diterbitkan!", data={"no_invoice": inv_no})
@@ -108,28 +116,52 @@ def print_invoice(no_inv: str, db: Session = Depends(get_db)):
         if not header: return {"error": "Invoice tidak ditemukan"}
 
         items_inv = db.query(models.DetailPenjualan).filter(models.DetailPenjualan.no_invoice == no_inv).all()
-        terbilang_str = terbilang(header.total_tagihan)
         
-        pdf_bytes = export_invoice_pdf(header, items_inv, terbilang_str)
+        # Ambil Profil Perusahaan & Profil Customer
+        config = db.query(models.CompanyConfig).first()
+        customer = db.query(models.Mitra).filter(models.Mitra.nama_mitra == header.nama_customer).first()
+        
+        # Terbilang: tampilkan nilai tagihan yang harus dibayar customer
+        uang_muka = getattr(header, 'uang_muka', 0.0) or 0.0
+        nilai_terbilang = header.total_tagihan - uang_muka if header.metode_bayar == "Piutang (Tempo)" else header.total_tagihan
+        terbilang_str = terbilang(nilai_terbilang)
+        
+        pdf_bytes = export_invoice_pdf(header, items_inv, terbilang_str, config, customer)
 
         res = io.BytesIO(pdf_bytes)
         return StreamingResponse(res, media_type="application/pdf", headers={"Content-Disposition": f"inline; filename={no_inv}.pdf"})
     except Exception as e:
+        import traceback
+        print(traceback.format_exc())
         return {"error": str(e)}
 
 @router.get("/history", response_model=schemas.APIResponse)
 def get_penjualan_history(db: Session = Depends(get_db)):
     try:
-        invoices = db.query(models.HeaderPenjualan).order_by(models.HeaderPenjualan.id.desc()).all()
-        return schemas.APIResponse(success=True, message="Success", data={"list": [
-            {
+        invoices = db.query(models.HeaderPenjualan).order_by(models.HeaderPenjualan.id.desc()).limit(50).all()
+        result = []
+        for i in invoices:
+            # Cari saldo piutang customer saat ini
+            cust = db.query(models.Mitra).filter(models.Mitra.nama_mitra == i.nama_customer).first()
+            sisa_piutang = cust.saldo_piutang if cust else 0
+            
+            # Jika saldo piutang sudah 0 tapi status masih Tempo, auto-koreksi ke Lunas
+            if i.status == "Tempo" and sisa_piutang <= 0:
+                i.status = "Lunas"
+                db.commit()
+
+            result.append({
                 "no_invoice": i.no_invoice,
                 "nama_customer": i.nama_customer,
                 "total_tagihan": i.total_tagihan,
                 "metode_bayar": i.metode_bayar,
+                "uang_muka": getattr(i, 'uang_muka', 0.0) or 0.0,
+                "status": i.status,
+                "sisa_piutang_customer": sisa_piutang,
                 "tanggal": i.tanggal.isoformat() if hasattr(i.tanggal, 'isoformat') else str(i.tanggal)
-            } for i in invoices
-        ]})
+            })
+            
+        return schemas.APIResponse(success=True, message="Success", data={"list": result})
     except Exception as e:
         return schemas.APIResponse(success=False, message=str(e))
 
@@ -222,6 +254,84 @@ def void_invoice(no_inv: str, db: Session = Depends(get_db)):
         
         db.commit()
         return schemas.APIResponse(success=True, message="Invoice Dibatalkan! Stok gudang dan keuangan telah dikembalikan seperti semula.", data=None)
+    except Exception as e:
+        db.rollback()
+        return schemas.APIResponse(success=False, message=str(e))
+
+@router.post("/bayar-invoice-cepat", response_model=schemas.APIResponse)
+def bayar_invoice_cepat(payload: schemas.BayarInvoiceCepatRequest, db: Session = Depends(get_db)):
+    try:
+        # =====================================================
+        # VALIDASI BERLAPIS - ANTI PEMBAYARAN GANDA
+        # =====================================================
+
+        # LAPIS 1: CEK KEBERADAAN & STATUS INVOICE
+        invoice = db.query(models.HeaderPenjualan).filter(
+            models.HeaderPenjualan.no_invoice == payload.no_invoice
+        ).first()
+        if not invoice:
+            raise Exception("Error: Invoice tidak ditemukan!")
+
+        if invoice.status == "Lunas":
+            raise Exception("🔒 Ditolak! Invoice ini sudah dilunasi sebelumnya. Pembayaran ganda tidak diizinkan!")
+
+        # LAPIS 2: CEK KEBERADAAN CUSTOMER
+        customer = db.query(models.Mitra).filter(
+            models.Mitra.nama_mitra == invoice.nama_customer
+        ).first()
+        if not customer:
+            raise Exception("Error: Data customer tidak ditemukan di database!")
+
+        # LAPIS 3: CEK SALDO PIUTANG (dengan toleransi floating point Rp 1)
+        TOLERANSI = 1.0
+        if customer.saldo_piutang < (payload.nominal - TOLERANSI):
+            raise Exception(
+                f"🔒 Ditolak! Saldo piutang customer ({int(customer.saldo_piutang):,}) "
+                f"tidak mencukupi nominal invoice ({int(payload.nominal):,}). "
+                f"Kemungkinan sudah sebagian dilunasi via menu Kas Piutang. "
+                f"Silakan cek menu Kas & Piutang!"
+            )
+
+        # =====================================================
+        # PROSES PELUNASAN DALAM SATU BLOK TRANSAKSI ATOMIK
+        # =====================================================
+        waktu_bayar = datetime.datetime.now()
+
+        # 1. Set status invoice ke Lunas (GEMBOK UTAMA - cegah race condition)
+        invoice.status = "Lunas"
+
+        # 2. Kurangi saldo piutang customer (pakai nominal aktual invoice jika ada toleransi)
+        nominal_aktual = min(payload.nominal, customer.saldo_piutang)
+        customer.saldo_piutang -= nominal_aktual
+
+        # 3. Jurnal Keuangan: Kas/Bank (D) vs Piutang Usaha (K)
+        akun_debit = "11110" if "Tunai" in payload.sumber_dana else "11120"
+        nama_debit = "Kas Tunai" if akun_debit == "11110" else "Kas di Bank"
+
+        db.add(models.JurnalUmum(
+            tanggal=waktu_bayar,
+            kode_akun=akun_debit,
+            nama_akun=nama_debit,
+            keterangan=f"Pelunasan Invoice {invoice.no_invoice} - {customer.nama_mitra}",
+            debit=nominal_aktual,
+            kredit=0
+        ))
+        db.add(models.JurnalUmum(
+            tanggal=waktu_bayar,
+            kode_akun="11210",
+            nama_akun="Piutang Usaha",
+            keterangan=f"Pelunasan Invoice {invoice.no_invoice} - {customer.nama_mitra}",
+            debit=0,
+            kredit=nominal_aktual
+        ))
+
+        db.commit()
+        return schemas.APIResponse(
+            success=True,
+            message=f"✅ Pelunasan Invoice {invoice.no_invoice} sebesar Rp {int(nominal_aktual):,} berhasil dicatat!",
+            data=None
+        )
+
     except Exception as e:
         db.rollback()
         return schemas.APIResponse(success=False, message=str(e))

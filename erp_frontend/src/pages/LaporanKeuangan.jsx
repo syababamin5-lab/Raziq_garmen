@@ -84,6 +84,37 @@ export default function LaporanKeuangan() {
       );
   };
 
+  // Render tabel neraca yang selalu tampil meski detail kosong (untuk Persediaan)
+  const renderTableAlways = (judul, data, total, isNeg = false) => {
+      const entries = data ? Object.entries(data) : [];
+      return (
+          <div className="space-y-3 mb-8">
+              <h4 className="text-xs font-black text-slate-400 uppercase tracking-widest pl-2 border-l-4 border-amber-500">{judul}</h4>
+              <div className="bg-white rounded-2xl border border-slate-100 overflow-hidden shadow-sm">
+                  <table className="w-full text-sm">
+                      <tbody className="divide-y divide-slate-50">
+                          {entries.length > 0 ? entries.map(([name, val]) => (
+                              <tr key={name} className="hover:bg-slate-50 transition-all">
+                                  <td className="py-3 px-6 text-slate-600 italic">{name}</td>
+                                  <td className={`py-3 px-6 text-right font-bold ${isNeg ? 'text-red-500' : 'text-slate-800'}`}>{formatRp(val)}</td>
+                              </tr>
+                          )) : (
+                              <tr>
+                                  <td className="py-3 px-6 text-slate-400 italic text-sm">Belum ada mutasi persediaan tercatat</td>
+                                  <td className="py-3 px-6 text-right font-bold text-slate-400">Rp 0</td>
+                              </tr>
+                          )}
+                          <tr className="bg-slate-50">
+                              <td className="py-4 px-6 font-black text-[#064E3B] text-right">TOTAL {judul.toUpperCase()}</td>
+                              <td className={`py-4 px-6 text-right font-black border-l-2 border-slate-200 ${isNeg ? 'text-red-600' : 'text-emerald-700'}`}>{formatRp(total || 0)}</td>
+                          </tr>
+                      </tbody>
+                  </table>
+              </div>
+          </div>
+      );
+  };
+
   return (
     <div className="max-w-6xl mx-auto space-y-6 pb-20">
         {/* Header Sekaligus Filter */}
@@ -186,6 +217,7 @@ export default function LaporanKeuangan() {
                              <div className="space-y-6">
                                 <h3 className="bg-slate-900 text-white p-3 rounded-xl text-center text-xs font-black tracking-widest">AKTIVA / ASSET</h3>
                                 {renderTable("Aset Lancar", reportData.neraca.aset_lancar?.detail, reportData.neraca.aset_lancar?.total)}
+                                {renderTableAlways("Persediaan (12xxx)", reportData.neraca.persediaan?.detail, reportData.neraca.persediaan?.total)}
                                 {renderTable("Aset Tetap", reportData.neraca.aset_tetap?.detail, reportData.neraca.aset_tetap?.total)}
                                 {reportData.neraca.penyusutan?.total > 0 && renderTable("Akumulasi Penyusutan (-)", reportData.neraca.penyusutan?.detail, reportData.neraca.penyusutan?.total, true)}
                                 <div className="bg-slate-800 p-6 rounded-2xl text-white flex justify-between items-center">

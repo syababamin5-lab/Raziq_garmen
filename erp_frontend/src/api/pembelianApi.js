@@ -44,3 +44,13 @@ export const submitReturPembelian = async (payload) => {
     const { data } = await api.post('/pembelian/retur', payload);
     return data;
 };
+
+export const bayarPOCepat = async (payload) => {
+  const { data } = await api.post('/pembelian/bayar-po-cepat', payload);
+  return data;
+};
+
+export const voidPembelian = async (noPo) => {
+  const { data } = await api.delete(`/pembelian/void/${noPo}`);
+  return data;
+};

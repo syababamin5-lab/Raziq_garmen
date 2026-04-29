@@ -10,3 +10,6 @@ import api from './api'
  */
 export const getDashboardSummary = () =>
   api.get('/dashboard/summary').then((res) => res.data)
+
+export const updateTarget = (newTarget) =>
+  api.post('/dashboard/update-target', { target: newTarget }).then((res) => res.data)

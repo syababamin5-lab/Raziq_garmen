@@ -33,6 +33,9 @@ export default function Produksi() {
     qty_lusin: 1,
   });
 
+  const user = JSON.parse(localStorage.getItem('user') || '{}');
+  const isBos = user.role === 'bos';
+
   const fetchOptions = async () => {
     try {
       const res = await getProduksiOptions();
@@ -206,9 +209,13 @@ export default function Produksi() {
               </div>
             </div>
 
-            <button type="submit" disabled={loading} className="btn-primary w-full md:w-auto flex justify-center items-center gap-2 px-8">
+            <button 
+              type="submit" 
+              disabled={loading || isBos} 
+              className={`btn-primary w-full md:w-auto flex justify-center items-center gap-2 px-8 ${isBos ? 'opacity-50 cursor-not-allowed bg-slate-400' : ''}`}
+            >
               <span className="material-symbols-rounded text-[20px]">save</span>
-              {loading ? 'Menyimpan...' : 'Simpan Data Cutting'}
+              {isBos ? 'VIEW ONLY (BOS)' : loading ? 'Menyimpan...' : 'Simpan Data Cutting'}
             </button>
           </form>
         )}
@@ -240,9 +247,13 @@ export default function Produksi() {
               </div>
             </div>
 
-            <button type="submit" disabled={loading} className="btn-primary w-full md:w-auto flex justify-center items-center gap-2 px-8">
+            <button 
+              type="submit" 
+              disabled={loading || isBos} 
+              className={`btn-primary w-full md:w-auto flex justify-center items-center gap-2 px-8 ${isBos ? 'opacity-50 cursor-not-allowed bg-slate-400' : ''}`}
+            >
               <span className="material-symbols-rounded text-[20px]">save</span>
-              {loading ? 'Menyimpan...' : 'Simpan ke Gudang'}
+              {isBos ? 'VIEW ONLY (BOS)' : loading ? 'Menyimpan...' : 'Simpan ke Gudang'}
             </button>
           </form>
         )}

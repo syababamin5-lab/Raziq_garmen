@@ -18,25 +18,28 @@ def get_opsi_akun(db, kategori_filter):
     return daftar_akun
 
 def terbilang(angka):
-    angka = int(abs(angka))
-    huruf = ["", "Satu", "Dua", "Tiga", "Empat", "Lima", "Enam", "Tujuh", "Delapan", "Sembilan", "Sepuluh", "Sebelas"]
-    if angka < 12:
-        return huruf[angka]
-    elif angka < 20:
-        return terbilang(angka - 10) + " Belas"
-    elif angka < 100:
-        return terbilang(angka // 10) + " Puluh " + terbilang(angka % 10)
-    elif angka < 200:
-        return "Seratus " + terbilang(angka - 100)
-    elif angka < 1000:
-        return terbilang(angka // 100) + " Ratus " + terbilang(angka % 100)
-    elif angka < 2000:
-        return "Seribu " + terbilang(angka - 1000)
-    elif angka < 1000000:
-        return terbilang(angka // 1000) + " Ribu " + terbilang(angka % 1000)
-    elif angka < 1000000000:
-        return terbilang(angka // 1000000) + " Juta " + terbilang(angka % 1000000)
-    elif angka < 1000000000000:
-        return terbilang(angka // 1000000000) + " Miliar " + terbilang(angka % 1000000000)
-    else:
-        return str(angka)
+    def proses(n):
+        huruf = ["", "Satu", "Dua", "Tiga", "Empat", "Lima", "Enam", "Tujuh", "Delapan", "Sembilan", "Sepuluh", "Sebelas"]
+        if n < 12:
+            return huruf[n]
+        elif n < 20:
+            return proses(n - 10) + " Belas"
+        elif n < 100:
+            return proses(n // 10) + " Puluh " + proses(n % 10)
+        elif n < 200:
+            return "Seratus " + proses(n - 100)
+        elif n < 1000:
+            return proses(n // 100) + " Ratus " + proses(n % 100)
+        elif n < 2000:
+            return "Seribu " + proses(n - 1000)
+        elif n < 1000000:
+            return proses(n // 1000) + " Ribu " + proses(n % 1000)
+        elif n < 1000000000:
+            return proses(n // 1000000) + " Juta " + proses(n % 1000000)
+        elif n < 1000000000000:
+            return proses(n // 1000000000) + " Miliar " + proses(n % 1000000000)
+        else:
+            return str(n)
+
+    res = proses(int(abs(angka)))
+    return " ".join(res.split())

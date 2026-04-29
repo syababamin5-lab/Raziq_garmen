@@ -25,6 +25,8 @@ class PenjualanRecentItem(BaseModel):
     no_invoice: str
     nama_produk: str
     total_tagihan: float
+    uang_muka: float = 0.0
+    diskon: float = 0.0
     status: str  # "SELESAI" | "PROSES" | "PENDING BAYAR"
     tanggal: str
 
@@ -55,10 +57,20 @@ class MitraDebtItem(BaseModel):
     nominal: float
     kategori: str
 
+class SalesAnalytics(BaseModel):
+    """Analitik Penjualan (Bulan & Minggu)"""
+    nominal_bulan_ini: float
+    nominal_minggu_ini: float
+    perubahan_bulan_pct: float
+    perubahan_minggu_pct: float
+    total_pcs_terjual_bulan_ini: float
+    total_pcs_terjual_minggu_ini: float
+
 class DashboardResponse(BaseModel):
     """Response lengkap untuk halaman Dashboard"""
     keuangan: DashboardKeuangan
     penjualan_terkini: List[PenjualanRecentItem]
+    sales_analytics: Optional[SalesAnalytics] = None
     gudang: GudangStatus
     top_piutang: List[MitraDebtItem]
     top_utang: List[MitraDebtItem]
@@ -196,6 +208,9 @@ class PembelianBahanRequest(BaseModel):
     tgl_po: str
     supplier_id: int
     metode_pembayaran: str # "Kas Tunai", "Transfer Bank", "Utang Dagang"
+    dp: float = 0.0
+    dp_sumber: str = "Kas Tunai"
+    diskon: float = 0.0
     items: List[PembelianBahanItem]
 
 class OpexRequest(BaseModel):
@@ -213,6 +228,7 @@ class AsetRequest(BaseModel):
     nama_barang: str
     nominal: float
     sumber_dana: str # "Kas Tunai", "Bank", "Modal Awal (Khusus Aset Lama)"
+    masa_bulan: Optional[int] = 12
 
 class ReturPembelianRequest(BaseModel):
     no_po: str
@@ -220,6 +236,11 @@ class ReturPembelianRequest(BaseModel):
     qty_retur: float
     tgl_retur: str
     alasan: str
+
+class BayarPOCepatRequest(BaseModel):
+    no_po: str
+    nominal: float
+    sumber_dana: str = "Kas Tunai"
 
 # ============================================================
 # SCHEMA: Penjualan & Retur (Tahap 5)
@@ -237,6 +258,7 @@ class SaleRequest(BaseModel):
     customer_id: int
     metode: str # "Piutang (Tempo)", "Tunai", "Transfer"
     dp: float
+    dp_sumber: str = "Kas Tunai"
     diskon: float
     items: List[SaleItem]
 
@@ -246,6 +268,11 @@ class SaleReturRequest(BaseModel):
     qty_retur: float
     tgl_retur: str
     alasan: str
+
+class BayarInvoiceCepatRequest(BaseModel):
+    no_invoice: str
+    nominal: float
+    sumber_dana: str = "Kas Tunai"
 
 # ============================================================
 # SCHEMA: Keuangan & Arus Kas (Tahap 5)

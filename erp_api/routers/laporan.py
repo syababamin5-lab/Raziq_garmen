@@ -41,25 +41,43 @@ def get_laporan_keuangan(bulan: int, tahun: int, db: Session = Depends(get_db)):
         if bulan == 12: end_date = datetime.datetime(tahun+1, 1, 1)
         else: end_date = datetime.datetime(tahun, bulan+1, 1)
 
-        # 1. HPP
-        baku_val, d_baku = get_saldo_sqlite(db, "5111", start_date, end_date) # 51110: Bahan
-        btkl_val, d_btkl = get_saldo_sqlite(db, "5112", start_date, end_date) # 51120: BTKL/HPP
-        bop_val, d_bop = get_saldo_sqlite(db, "5113", start_date, end_date)   # 51130: BOP
-        ikhtisar_val, d_ikh = get_saldo_sqlite(db, "5119", start_date, end_date) # 51199: Ikhtisar
+        # 1. HPP (Cost of Goods Manufactured / Sold)
+        # 511xx: Bahan Baku & HPP Terjual
+        # 512xx: BTKL
+        # 513xx: BOP
+        # 51199: Ikhtisar Produksi (Credit for stock output)
+        
+        baku_val, d_baku = get_saldo_sqlite(db, "5111", start_date, end_date)
+        btkl_val, d_btkl = get_saldo_sqlite(db, "512", start_date, end_date)
+        bop_val, d_bop = get_saldo_sqlite(db, "513", start_date, end_date)
+        ikhtisar_val, d_ikh = get_saldo_sqlite(db, "51199", start_date, end_date)
         terjual_val, d_terjual = get_saldo_sqlite(db, "51120", start_date, end_date) # khusus HPP barang jual
-        total_hpp = baku_val + btkl_val + bop_val - ikhtisar_val
-
+        
+        # Dalam Akuntansi Manufaktur: HPP = Bahan + BTKL + BOP - Ikhtisar (WIP/Output)
+        # Namun di sini Ikhtisar 51199 dicatat di Kredit saat barang jadi masuk gudang.
+        # Jadi total_hpp_produksi = baku + btkl + bop - ikhtisar_val
+        total_hpp_periode = baku_val + btkl_val + bop_val - ikhtisar_val
+        
         # 2. Laba Rugi
         omzet, d_omzet = get_saldo_sqlite(db, "411", start_date, end_date)
-        beban_jual, d_bjual = get_saldo_sqlite(db, "611", start_date, end_date)
-        beban_admin, d_badmin = get_saldo_sqlite(db, "612", start_date, end_date)
-        laba_kotor = omzet - total_hpp
+        beban_jual, d_bjual = get_saldo_sqlite(db, "61", start_date, end_date) # 61xxx: Pemasaran
+        beban_admin, d_badmin = get_saldo_sqlite(db, "62", start_date, end_date) # 62xxx: Admin & Umum
+        
+        laba_kotor = omzet - total_hpp_periode
         laba_bersih = laba_kotor - beban_jual - beban_admin
 
         # 3. Neraca (Saldo Akumulasi hingga saat ini)
-        aset_lancar, d_al = get_saldo_sqlite(db, "11", None, end_date)
-        aset_tetap, d_at = get_saldo_sqlite(db, "12", None, end_date)
-        penyusutan, d_peny = get_saldo_sqlite(db, "129", None, end_date) # 129xx: Akumulasi Penyusutan
+        aset_lancar, d_al = get_saldo_sqlite(db, "11", None, end_date) # 11: Kas, Bank, Piutang
+        persediaan, d_psd = get_saldo_sqlite(db, "12", None, end_date) # 12: Persediaan
+        aset_tetap, d_at = get_saldo_sqlite(db, "13", None, end_date) # 13: Aset Tetap
+        # Akumulasi penyusutan di 13x20, 13x40 dll
+        # Kita hitung dari saldo kredit di akun yang mengandung "Akumulasi"
+        penyusutan = 0
+        d_peny = {}
+        for j in db.query(models.JurnalUmum).filter(models.JurnalUmum.nama_akun.like("%Akumulasi%")).all():
+            val = (j.kredit or 0) - (j.debit or 0)
+            penyusutan += val
+            d_peny[j.nama_akun] = d_peny.get(j.nama_akun, 0) + val
         
         utang_pdk, d_updk = get_saldo_sqlite(db, "21", None, end_date)
         utang_pjg, d_upjg = get_saldo_sqlite(db, "22", None, end_date)
@@ -69,14 +87,17 @@ def get_laporan_keuangan(bulan: int, tahun: int, db: Session = Depends(get_db)):
         # Ekuitas = Laba Kumulatif
         laba_kumulatif, _ = get_saldo_sqlite(db, "41", None, end_date)
         hpp_kumulatif, _ = get_saldo_sqlite(db, "51", None, end_date)
-        beban_kumulatif, _ = get_saldo_sqlite(db, "61", None, end_date)
-        total_laba_akum = laba_kumulatif - hpp_kumulatif - beban_kumulatif
+        beban_kumulatif, _ = get_saldo_sqlite(db, "6", None, end_date) # Semua kepala 6
+        beban_kumulatif -= hpp_kumulatif # hpp_kumulatif sudah dihitung dari 51
+        # Wait, get_saldo_sqlite handles the sign based on first digit.
+        # Let's just calculate manually for clarity
+        total_laba_akum = laba_kumulatif - hpp_kumulatif - (beban_kumulatif if beban_kumulatif > 0 else 0)
 
         return {
             "success": True,
             "data": {
                 "hpp": {
-                    "total_hpp": total_hpp, 
+                    "total_hpp": total_hpp_periode, 
                     "bahan": {"total": baku_val, "detail": d_baku}, 
                     "btkl": {"total": btkl_val, "detail": d_btkl}, 
                     "bop": {"total": bop_val, "detail": d_bop},
@@ -85,7 +106,7 @@ def get_laporan_keuangan(bulan: int, tahun: int, db: Session = Depends(get_db)):
                 },
                 "laba_rugi": {
                     "pendapatan": {"total": omzet, "detail": d_omzet},
-                    "hpp_negatif": total_hpp,
+                    "hpp_negatif": total_hpp_periode,
                     "laba_kotor": laba_kotor,
                     "beban_jual": {"total": beban_jual, "detail": d_bjual},
                     "beban_admin": {"total": beban_admin, "detail": d_badmin},
@@ -93,9 +114,10 @@ def get_laporan_keuangan(bulan: int, tahun: int, db: Session = Depends(get_db)):
                 },
                 "neraca": {
                     "aset_lancar": {"total": aset_lancar, "detail": d_al},
+                    "persediaan": {"total": persediaan, "detail": d_psd},
                     "aset_tetap": {"total": aset_tetap, "detail": d_at},
                     "penyusutan": {"total": penyusutan, "detail": d_peny},
-                    "total_aset": aset_lancar + aset_tetap - penyusutan,
+                    "total_aset": aset_lancar + persediaan + aset_tetap - penyusutan,
                     
                     "utang_pdk": {"total": utang_pdk, "detail": d_updk},
                     "utang_pjg": {"total": utang_pjg, "detail": d_upjg},
@@ -104,7 +126,7 @@ def get_laporan_keuangan(bulan: int, tahun: int, db: Session = Depends(get_db)):
                     "prive": {"total": prive_val, "detail": d_prive},
                     
                     "total_pasiva": utang_pdk + utang_pjg + modal_disetor + total_laba_akum - prive_val,
-                    "is_balance": abs((aset_lancar + aset_tetap - penyusutan) - (utang_pdk + utang_pjg + modal_disetor + total_laba_akum - prive_val)) < 100
+                    "is_balance": abs((aset_lancar + persediaan + aset_tetap - penyusutan) - (utang_pdk + utang_pjg + modal_disetor + total_laba_akum - prive_val)) < 100
                 },
                 "ekuitas": {
                     "modal_awal": modal_disetor,
@@ -211,27 +233,47 @@ def export_laporan_pdf(tipe: str, bulan: int, tahun: int, db: Session = Depends(
             val_total = data["laba_rugi"]["laba_bersih"]
             
         elif tipe == "NERACA":
-            judul = "LAPORAN NERACA"
-            pdf_list.append(("ASET LANCAR", None, True))
-            for k, v in data["neraca"]["aset_lancar"]["detail"].items(): pdf_list.append((k, v, False))
-            pdf_list.append(("ASET TETAP", None, True))
-            for k, v in data["neraca"]["aset_tetap"]["detail"].items(): pdf_list.append((k, v, False))
-            pdf_list.append(("AKUMULASI PENYUSUTAN (-)", -data["neraca"]["penyusutan"]["total"], True))
+            judul = "LAPORAN NERACA (SKONTRO)"
+            # SISI KIRI (AKTIVA)
+            left_list = []
+            left_list.append(("ASET LANCAR", None, True))
+            for k, v in data["neraca"]["aset_lancar"]["detail"].items(): left_list.append((k, v, False))
+            left_list.append(("PERSEDIAAN", None, True))
+            for k, v in data["neraca"]["persediaan"]["detail"].items(): left_list.append((k, v, False))
+            left_list.append(("ASET TETAP", None, True))
+            for k, v in data["neraca"]["aset_tetap"]["detail"].items(): left_list.append((k, v, False))
+            left_list.append(("AKUMULASI PENYUSUTAN (-)", -data["neraca"]["penyusutan"]["total"], True))
             
-            pdf_list.append(("KEWAJIBAN & MODAL", None, True))
-            for k, v in data["neraca"]["utang_pdk"]["detail"].items(): pdf_list.append((k, v, False))
-            for k, v in data["neraca"]["utang_pjg"]["detail"].items(): pdf_list.append((k, v, False))
-            for k, v in data["neraca"]["modal_disetor"]["detail"].items(): pdf_list.append((k, v, False))
-            pdf_list.append(("LABA DITAHAN & BERJALAN", data["neraca"]["laba_akumulasi"], False))
+            # SISI KANAN (PASIVA)
+            right_list = []
+            right_list.append(("KEWAJIBAN JANGKA PENDEK", None, True))
+            for k, v in data["neraca"]["utang_pdk"]["detail"].items(): right_list.append((k, v, False))
+            right_list.append(("KEWAJIBAN JANGKA PANJANG", None, True))
+            for k, v in data["neraca"]["utang_pjg"]["detail"].items(): right_list.append((k, v, False))
+            right_list.append(("EKUITAS / MODAL", None, True))
+            for k, v in data["neraca"]["modal_disetor"]["detail"].items(): right_list.append((k, v, False))
+            right_list.append(("LABA DITAHAN & BERJALAN", data["neraca"]["laba_akumulasi"], False))
             
-            label_total = "TOTAL AKTIVA"
-            val_total = data["neraca"]["total_aset"]
+            # Ambil Profil
+            config = db.query(models.CompanyConfig).first()
             
-        pdf_bytes = export_laporan_2kolom_pdf(judul, f"{bulan}/{tahun}", pdf_list, label_total, val_total)
-        return Response(content=pdf_bytes, media_type="application/pdf", headers={"Content-Disposition": f"attachment; filename=Laporan_{tipe}_{bulan}_{tahun}.pdf"})
+            from pdf_generator import export_neraca_skontro_pdf
+            pdf_bytes = export_neraca_skontro_pdf(
+                judul, periode_str, left_list, right_list, 
+                data["neraca"]["total_aset"], data["neraca"]["total_kewajiban_modal"], config
+            )
+            return Response(content=pdf_bytes, media_type="application/pdf", headers={"Content-Disposition": f"inline; filename=Neraca_{bulan}_{tahun}.pdf"})
+
+        # DEFAULT (HPP / LR) - Tetap 2 Kolom
+        # Ambil Profil
+        config = db.query(models.CompanyConfig).first()
+        pdf_bytes = export_laporan_2kolom_pdf(judul, periode_str, pdf_list, label_total, val_total, config)
+        return Response(content=pdf_bytes, media_type="application/pdf", headers={"Content-Disposition": f"inline; filename=Laporan_{tipe}_{bulan}_{tahun}.pdf"})
         
     except Exception as e:
-        return {"success": False, "message": str(e)}
+        import traceback
+        print(traceback.format_exc())
+        return {"status": "error", "message": str(e)}
 
 def new_date(y, m, d):
     return datetime.datetime(y, m, d)

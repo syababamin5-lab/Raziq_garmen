@@ -3,7 +3,7 @@ import api from '../api/api';
 import { formatInputNumber, parseNumber } from '../utils/formatters';
 
 export default function MasterData() {
-  const [activeTab, setActiveTab] = useState('Barang & SKU');
+  const [activeTab, setActiveTab] = useState('Kartu Barang Jadi');
   
   const [data, setData] = useState({
     barang: [],
@@ -69,15 +69,16 @@ export default function MasterData() {
     let method = 'POST';
     
     if (modal.type === 'add_barang' || modal.type === 'edit_barang') endpoint = '/master/barang';
-    // Untuk edit barang, override method & path
-    if (modal.type === 'edit_barang') {
+    else if (modal.type === 'add_karyawan' || modal.type === 'edit_karyawan') endpoint = '/master/karyawan';
+    else if (modal.type === 'add_mitra' || modal.type === 'edit_mitra') endpoint = '/master/mitra';
+    else if (modal.type === 'add_akun') endpoint = '/master/akun';
+    else if (modal.type === 'saldo_awal') endpoint = '/master/saldo_awal';
+
+    // Jika ini adalah aksi EDIT, tambahkan ID ke endpoint dan gunakan PUT
+    if (modal.type.startsWith('edit_')) {
         endpoint += `/${modal.item.id}`;
         method = 'PUT';
     }
-    else if (modal.type === 'add_karyawan') endpoint = '/master/karyawan';
-    else if (modal.type === 'add_mitra') endpoint = '/master/mitra';
-    else if (modal.type === 'add_akun') endpoint = '/master/akun';
-    else if (modal.type === 'saldo_awal') endpoint = '/master/saldo_awal';
 
     try {
       let bodyData = { ...formData };
@@ -92,6 +93,7 @@ export default function MasterData() {
       }
       if (modal.type === 'add_mitra') {
           if (!bodyData.no_hp) bodyData.no_hp = "-";
+          if (!bodyData.email) bodyData.email = "-";
           if (!bodyData.alamat) bodyData.alamat = "-";
           if (bodyData.saldo_awal === undefined) bodyData.saldo_awal = 0;
       }
@@ -137,7 +139,12 @@ export default function MasterData() {
     }
   };
 
-  const tabs = ['Barang & SKU', 'Karyawan', 'Mitra Bisnis', 'Chart of Accounts', 'Saldo Awal'];
+  const handlePrintStock = (tipe = 'all') => {
+    const url = `${api.defaults.baseURL}/master/barang/print?tipe=${tipe}`;
+    window.open(url, '_blank');
+  };
+
+  const tabs = ['Kartu Barang Jadi', 'Kartu Bahan Baku', 'Karyawan', 'Mitra Bisnis', 'Chart of Accounts', 'Saldo Awal'];
 
   return (
     <div className="space-y-6">
@@ -178,12 +185,15 @@ export default function MasterData() {
 
       {/* Konten Tabs */}
       <div className="bg-white rounded-2xl p-6 shadow-[0_4px_24px_rgba(0,0,0,0.02)] border border-slate-100">
-        {/* BARANG TAB */}
-        {activeTab === 'Barang & SKU' && (
+        {/* KARTU BARANG JADI TAB */}
+        {activeTab === 'Kartu Barang Jadi' && (
           <div className="space-y-6">
             <div className="flex justify-between items-center mb-4">
-               <h3 className="text-lg font-bold text-slate-800">Gudang Kain & Barang Jadi</h3>
-               <button className="flex items-center gap-2 text-xs font-bold text-emerald-700 bg-emerald-50 px-3 py-1.5 rounded-lg border border-emerald-100 hover:bg-emerald-100 transition-all">
+               <h3 className="text-lg font-bold text-slate-800">Gudang Barang Jadi (Baju)</h3>
+               <button 
+                  onClick={() => handlePrintStock('baju')}
+                  className="flex items-center gap-2 text-xs font-bold text-emerald-700 bg-emerald-50 px-3 py-1.5 rounded-lg border border-emerald-100 hover:bg-emerald-100 transition-all"
+               >
                   <span className="material-symbols-rounded text-sm">picture_as_pdf</span>
                   Cetak Laporan Stok PDF
                </button>
@@ -192,30 +202,33 @@ export default function MasterData() {
               <table className="w-full text-left border-collapse text-sm">
                 <thead>
                   <tr className="bg-slate-50 text-slate-500 uppercase text-[10px] font-black tracking-widest border-b border-slate-100">
-                    <th className="py-4 px-4">Kategori</th>
                     <th className="py-4 px-4">Model Code</th>
                     <th className="py-4 px-4">Product Name</th>
                     <th className="py-4 px-4">SKU</th>
                     <th className="py-4 px-4 text-right">Stok Gudang</th>
-                    <th className="py-4 px-4 text-right">Harga Jual</th>
+                    <th className="py-4 px-4 text-right">Harga Modal / HPP</th>
+                    <th className="py-4 px-4 text-right">Harga Jual / Lusin</th>
                     <th className="py-4 px-4 text-right">Aksi</th>
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-slate-50">
-                  {data.barang.map(item => {
-                    const isBaju = item.kategori.includes('Barang Jadi');
-                    const stokTampil = isBaju 
-                      ? `${(item.stok_saat_ini / 12).toFixed(1)} Lusin (${item.stok_saat_ini} Pcs)`
-                      : `${item.stok_saat_ini} Kg`;
+                  {data.barang.filter(item => item.kategori.includes('Barang Jadi')).map(item => {
+                    const stokTampil = `${(item.stok_saat_ini / 12).toFixed(1)} Lusin (${item.stok_saat_ini} Pcs)`;
                     
                     return (
                       <tr key={item.id} className="hover:bg-slate-50/50 transition-colors">
-                        <td className="py-3 px-4"><span className="text-[10px] font-bold px-2 py-0.5 rounded bg-slate-100 text-slate-600">{item.kategori}</span></td>
                         <td className="py-3 px-4 font-mono text-xs">{item.model_code}</td>
                         <td className="py-3 px-4 font-bold text-slate-800">{item.nama_barang}</td>
                         <td className="py-3 px-4 font-mono text-emerald-700">{item.kode_sku}</td>
                         <td className="py-3 px-4 text-right font-black text-slate-700">{stokTampil}</td>
-                        <td className="py-3 px-4 text-right font-bold text-emerald-600">Rp {item.harga_jual?.toLocaleString('id-ID')}</td>
+                        <td className="py-3 px-4 text-right font-bold text-slate-500">
+                          <div>Rp {item.harga_modal?.toLocaleString('id-ID')} <span className="text-[10px] font-normal text-slate-400">/ Pcs</span></div>
+                          <div className="text-[10px] font-medium text-emerald-600">Rp {(item.harga_modal * 12).toLocaleString('id-ID')} <span className="font-normal text-slate-400">/ Lusin</span></div>
+                        </td>
+                        <td className="py-3 px-4 text-right font-bold text-emerald-600">
+                          <div className="text-[10px] font-medium text-slate-400">Rp {(item.harga_jual / 12).toLocaleString('id-ID')} <span className="font-normal">/ Pcs</span></div>
+                          <div>Rp {item.harga_jual?.toLocaleString('id-ID')} <span className="text-[10px] font-normal text-slate-400">/ Lusin</span></div>
+                        </td>
                         <td className="py-3 px-4 text-right">
                           <button onClick={() => openModal('edit_barang', item)} className="text-emerald-600 hover:bg-emerald-50 p-2 rounded-lg transition-all" title="Quick Edit / Stock Opname">
                             <span className="material-symbols-rounded text-[20px]">edit_square</span>
@@ -229,7 +242,63 @@ export default function MasterData() {
                   })}
                 </tbody>
               </table>
-              {data.barang.length === 0 && <div className="text-center py-20 text-slate-400 font-medium">Belum ada data barang atau bahan baku.</div>}
+              {data.barang.filter(item => item.kategori.includes('Barang Jadi')).length === 0 && <div className="text-center py-20 text-slate-400 font-medium">Belum ada data barang jadi.</div>}
+            </div>
+          </div>
+        )}
+
+        {/* KARTU BAHAN BAKU TAB */}
+        {activeTab === 'Kartu Bahan Baku' && (
+          <div className="space-y-6">
+            <div className="flex justify-between items-center mb-4">
+               <h3 className="text-lg font-bold text-slate-800">Gudang Bahan Baku & Aksesoris</h3>
+               <button 
+                  onClick={() => handlePrintStock('bahan')}
+                  className="flex items-center gap-2 text-xs font-bold text-emerald-700 bg-emerald-50 px-3 py-1.5 rounded-lg border border-emerald-100 hover:bg-emerald-100 transition-all"
+               >
+                  <span className="material-symbols-rounded text-sm">picture_as_pdf</span>
+                  Cetak Laporan Stok PDF
+               </button>
+            </div>
+            <div className="overflow-x-auto border border-slate-100 rounded-xl">
+              <table className="w-full text-left border-collapse text-sm">
+                <thead>
+                  <tr className="bg-slate-50 text-slate-500 uppercase text-[10px] font-black tracking-widest border-b border-slate-100">
+                    <th className="py-4 px-4">Kategori</th>
+                    <th className="py-4 px-4">Nama Bahan</th>
+                    <th className="py-4 px-4">Kode / SKU</th>
+                    <th className="py-4 px-4 text-right">Stok Gudang</th>
+                    <th className="py-4 px-4 text-right">Harga Modal / HPP</th>
+                    <th className="py-4 px-4 text-right">Aksi</th>
+                  </tr>
+                </thead>
+                <tbody className="divide-y divide-slate-50">
+                  {data.barang.filter(item => !item.kategori.includes('Barang Jadi')).map(item => {
+                    const stokTampil = `${item.stok_saat_ini} ${item.satuan || 'Kg'}`;
+                    
+                    return (
+                      <tr key={item.id} className="hover:bg-slate-50/50 transition-colors">
+                        <td className="py-3 px-4"><span className="text-[10px] font-bold px-2 py-0.5 rounded bg-slate-100 text-slate-600">{item.kategori}</span></td>
+                        <td className="py-3 px-4 font-bold text-slate-800">{item.nama_barang}</td>
+                        <td className="py-3 px-4 font-mono text-emerald-700">{item.kode_sku}</td>
+                        <td className="py-3 px-4 text-right font-black text-slate-700">{stokTampil}</td>
+                        <td className="py-3 px-4 text-right font-bold text-slate-500">
+                          <div>Rp {item.harga_modal?.toLocaleString('id-ID')} <span className="text-[10px] font-normal text-slate-400">/ {item.satuan || 'Kg'}</span></div>
+                        </td>
+                        <td className="py-3 px-4 text-right">
+                          <button onClick={() => openModal('edit_barang', item)} className="text-emerald-600 hover:bg-emerald-50 p-2 rounded-lg transition-all" title="Quick Edit / Stock Opname">
+                            <span className="material-symbols-rounded text-[20px]">edit_square</span>
+                          </button>
+                          <button onClick={() => handleDelete('barang', item.id)} className="text-red-400 hover:bg-red-50 p-2 rounded-lg transition-all" title="Hapus Barang">
+                            <span className="material-symbols-rounded text-[20px]">delete</span>
+                          </button>
+                        </td>
+                      </tr>
+                    );
+                  })}
+                </tbody>
+              </table>
+              {data.barang.filter(item => !item.kategori.includes('Barang Jadi')).length === 0 && <div className="text-center py-20 text-slate-400 font-medium">Belum ada data bahan baku.</div>}
             </div>
           </div>
         )}
@@ -259,8 +328,11 @@ export default function MasterData() {
                       <td className="py-3 px-4">{karyawan.tipe_gaji}</td>
                       <td className="py-3 px-4 text-right text-red-600 font-semibold">Rp {karyawan.saldo_kasbon?.toLocaleString('id-ID')}</td>
                       <td className="py-3 px-4 text-right">
-                        <button onClick={() => handleDelete('karyawan', karyawan.id)} className="text-red-500 hover:bg-red-50 p-2 rounded-full">
-                          <span className="material-symbols-rounded text-[18px]">person_remove</span>
+                        <button onClick={() => openModal('edit_karyawan', karyawan)} className="text-emerald-600 hover:bg-emerald-50 p-2 rounded-lg transition-all mr-1">
+                          <span className="material-symbols-rounded text-[20px]">edit_square</span>
+                        </button>
+                        <button onClick={() => handleDelete('karyawan', karyawan.id)} className="text-red-400 hover:bg-red-50 p-2 rounded-lg transition-all">
+                          <span className="material-symbols-rounded text-[20px]">person_remove</span>
                         </button>
                       </td>
                     </tr>
@@ -307,6 +379,9 @@ export default function MasterData() {
                         {m.saldo_piutang === 0 && m.saldo_utang === 0 && <span className="text-slate-300">Clean</span>}
                       </td>
                       <td className="py-3 px-4 text-right">
+                        <button onClick={() => openModal('edit_mitra', m)} className="text-emerald-600 hover:bg-emerald-50 p-2 rounded-lg transition-all mr-1">
+                           <span className="material-symbols-rounded text-[20px]">edit_square</span>
+                        </button>
                         <button onClick={() => handleDelete('mitra', m.id)} className="text-slate-300 hover:text-red-500 p-2 rounded-lg transition-all">
                            <span className="material-symbols-rounded text-[20px]">delete</span>
                         </button>
@@ -372,7 +447,9 @@ export default function MasterData() {
                 {modal.type === 'add_barang' && 'Tambah Master Barang'}
                 {modal.type === 'edit_barang' && 'Edit / Adjust Barang (Stock Opname)'}
                 {modal.type === 'add_karyawan' && 'Register Karyawan'}
+                {modal.type === 'edit_karyawan' && 'Edit Data Karyawan'}
                 {modal.type === 'add_mitra' && 'Tambah Mitra Baru'}
+                {modal.type === 'edit_mitra' && 'Edit Profil Mitra Bisnis'}
                 {modal.type === 'add_akun' && 'Chart of Account (COA)'}
                 {modal.type === 'saldo_awal' && 'Input Saldo Kas Awal'}
                 {modal.type === 'import_excel' && 'Import Excel Stok'}
@@ -525,8 +602,26 @@ export default function MasterData() {
                     <input type="text" name="kode_sku" value={formData.kode_sku || ''} onChange={handleInputChange} className="w-full p-2.5 border border-slate-200 rounded-lg text-sm" required />
                   </div>
                   <div className="col-span-1">
-                    <label className="block text-xs font-semibold text-slate-500 mb-1">Harga Jual</label>
-                    <input type="text" name="harga_jual" value={formatInputNumber(formData.harga_jual || '')} onChange={handleInputChange} className="w-full p-2.5 border border-slate-200 rounded-lg text-sm" />
+                    <label className={`block text-xs font-semibold text-slate-500 mb-1 ${formData.kategori?.includes('Barang Jadi') ? '' : 'opacity-30'}`}>Harga Jual (PER LUSIN) {formData.kategori?.includes('Barang Jadi') ? '' : '(Khusus Barang Jadi)'}</label>
+                    <input 
+                      type="text" 
+                      name="harga_jual" 
+                      value={formatInputNumber(formData.harga_jual || '')} 
+                      onChange={handleInputChange} 
+                      className={`w-full p-2.5 border border-slate-200 rounded-lg text-sm font-bold text-emerald-700 ${formData.kategori?.includes('Barang Jadi') ? 'bg-white' : 'bg-slate-100'}`} 
+                      disabled={!formData.kategori?.includes('Barang Jadi')}
+                      placeholder={formData.kategori?.includes('Barang Jadi') ? 'Rp 0' : 'Hanya untuk Produk Jadi'}
+                    />
+                    {formData.kategori?.includes('Barang Jadi') && <p className="text-[10px] text-slate-400 mt-1">Sama dengan Rp {(Number(formData.harga_jual || 0) / 12).toLocaleString('id-ID')} / Pcs</p>}
+                  </div>
+                  <div className="col-span-1">
+                    <label className="block text-xs font-semibold text-slate-500 mb-1">Harga Modal / HPP (PER PCS)</label>
+                    <input type="text" name="harga_modal" value={formatInputNumber(formData.harga_modal || '')} onChange={handleInputChange} className="w-full p-2.5 border border-slate-200 rounded-lg text-sm bg-slate-50 font-bold" readOnly={modal.type === 'edit_barang' && formData.kategori === 'Barang Jadi (Baju)'} />
+                    {modal.type === 'edit_barang' && formData.kategori === 'Barang Jadi (Baju)' ? (
+                        <p className="text-[10px] text-emerald-600 font-medium mt-1">HPP dihitung otomatis dari produksi</p>
+                    ) : (
+                        <p className="text-[10px] text-slate-400 mt-1">Sama dengan Rp {(Number(formData.harga_modal || 0) * 12).toLocaleString('id-ID')} / Lusin</p>
+                    )}
                   </div>
                   
                   {modal.type === 'edit_barang' && (
@@ -543,7 +638,7 @@ export default function MasterData() {
               )}
 
               {/* === INPUTS FOR KARYAWAN === */}
-              {modal.type === 'add_karyawan' && (
+              {(modal.type === 'add_karyawan' || modal.type === 'edit_karyawan') && (
                 <div className="grid grid-cols-2 gap-4">
                   <div className="col-span-2">
                     <label className="block text-xs font-semibold text-slate-500 mb-1">Nama Lengkap</label>
@@ -592,7 +687,7 @@ export default function MasterData() {
               )}
 
               {/* MITRA */}
-              {modal.type === 'add_mitra' && (
+              {(modal.type === 'add_mitra' || modal.type === 'edit_mitra') && (
                 <div className="space-y-4">
                   <div>
                     <label className="block text-xs font-semibold text-slate-500 mb-1">Nama Mitra / Toko</label>
@@ -612,8 +707,14 @@ export default function MasterData() {
                         <input type="text" name="no_hp" value={formData.no_hp || ''} onChange={handleInputChange} className="w-full p-2 border border-slate-200 rounded-lg text-sm" />
                     </div>
                     <div className="col-span-1">
-                        <label className="block text-xs font-semibold text-slate-500 mb-1">Saldo Awal Piutang/Utang</label>
-                        <input type="text" name="saldo_awal" value={formatInputNumber(formData.saldo_awal || 0)} onChange={handleInputChange} className="w-full p-2 border border-slate-200 rounded-lg text-sm" />
+                        <label className="block text-xs font-semibold text-slate-500 mb-1">Email Address</label>
+                        <input type="email" name="email" value={formData.email || ''} onChange={handleInputChange} className="w-full p-2 border border-slate-200 rounded-lg text-sm" placeholder="kantor@mitra.com" />
+                    </div>
+                  </div>
+                  <div className="grid grid-cols-2 gap-4">
+                    <div className="col-span-2">
+                        <label className="block text-xs font-semibold text-slate-500 mb-1">Saldo Awal Piutang/Utang (Rp)</label>
+                        <input type="text" name="saldo_awal" value={formatInputNumber(formData.saldo_awal || 0)} onChange={handleInputChange} className="w-full p-2 border border-slate-200 rounded-lg text-sm font-bold text-emerald-700" />
                     </div>
                   </div>
                   <div>

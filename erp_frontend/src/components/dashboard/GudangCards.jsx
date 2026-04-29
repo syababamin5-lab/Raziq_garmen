@@ -1,106 +1,149 @@
+import React from 'react'
+
 /**
- * GudangCards.jsx — Seksi "Status Gudang Akhir" (3 kartu bawah)
- * Meniru persis desain di gambar: 1 dark card + 2 light cards.
+ * GudangCards.jsx — Seksi "Status Gudang Akhir"
+ * Desain Full Gradient, 20% Lebih Besar & Bold
  */
-export default function GudangCards({ gudang, loading = false }) {
+export default function GudangCards({ gudang, loading = false, onSetTarget }) {
   if (loading || !gudang) {
     return (
-      <div className="grid grid-cols-3 gap-4">
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
         {[1, 2, 3].map((i) => (
-          <div key={i} className="rounded-2xl p-5 animate-pulse bg-slate-100 h-36" />
+          <div key={i} className="rounded-[1.5rem] p-7 animate-pulse bg-slate-100 h-40 border border-slate-200" />
         ))}
       </div>
     )
   }
 
-  const cuttingPct = gudang.cutting_pct || 0
-  const delta = gudang.persediaan_baju_jadi_lusin >= 0
+  const cuttingPct = Math.min(Math.round(gudang.cutting_pct || 0), 100)
+  const isTargetAchieved = cuttingPct >= 100
 
   return (
-    <div className="grid grid-cols-3 gap-4">
+    <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
 
-      {/* ── Kartu 1: Cutting (DARK / Emerald) ─────────── */}
+      {/* ── Kartu 1: Cutting (DARK EMERALD) ─────────── */}
       <div className="
-        relative rounded-2xl p-5 overflow-hidden
-        bg-gradient-to-br from-emerald-900 to-emerald-700
-        text-white shadow-lg
+        relative rounded-[1.5rem] p-7 overflow-hidden min-h-[160px]
+        bg-gradient-to-br from-[#064E3B] to-[#065F46] text-white shadow-xl
+        border border-emerald-800/50 group transition-all duration-300
+        hover:scale-[1.02]
       ">
-        {/* Dekoratif scissors besar di belakang */}
-        <span className="absolute -bottom-4 -right-4 text-[100px] opacity-10 select-none material-symbols-rounded">
+        <span className="absolute -bottom-4 -right-4 text-8xl opacity-10 select-none material-symbols-rounded rotate-12 group-hover:rotate-0 transition-transform duration-500">
           content_cut
         </span>
 
-        <p className="text-[9px] font-extrabold tracking-widest uppercase text-emerald-300 mb-2">
-          Cutting Minggu Ini
-        </p>
-        <div className="flex items-baseline gap-1 mb-1">
-          <span className="text-4xl font-black leading-none">
-            {(gudang.cutting_minggu_ini_pcs || 0).toLocaleString('id-ID')}
-          </span>
-          <span className="text-base font-medium text-emerald-200">Pcs</span>
-        </div>
+        <div className="relative z-10">
+          <div className="flex justify-between items-start mb-3">
+            <p className="text-[11px] font-black tracking-widest uppercase text-emerald-300">
+              Cutting Minggu Ini
+            </p>
+            {!JSON.parse(localStorage.getItem('user') || '{}').role?.includes('bos') && (
+              <button 
+                onClick={onSetTarget}
+                className="w-7 h-7 rounded-lg bg-white/10 flex items-center justify-center hover:bg-white/20 transition-colors border border-white/10"
+                title="Set Target Mingguan"
+              >
+                <span className="material-symbols-rounded text-base">settings</span>
+              </button>
+            )}
+          </div>
 
-        {/* Progress Bar */}
-        <div className="mt-3 h-1.5 bg-emerald-800 rounded-full overflow-hidden">
-          <div
-            className="h-full bg-white/80 rounded-full transition-all duration-700"
-            style={{ width: `${cuttingPct}%` }}
-          />
-        </div>
-        <p className="text-[10px] text-emerald-300 mt-1.5">
-          {cuttingPct}% dari target mingguan
-        </p>
-      </div>
+          <div className="flex items-baseline gap-2 mb-3">
+            <span className="text-4xl font-black tracking-tighter">
+              {(gudang.cutting_minggu_ini_pcs || 0).toLocaleString('id-ID')}
+            </span>
+            <span className="text-sm font-bold text-emerald-200/60 uppercase">Pcs</span>
+          </div>
 
-      {/* ── Kartu 2: Persediaan Baju Jadi (LIGHT) ──────── */}
-      <div className="card">
-        <p className="text-[9px] font-extrabold tracking-widest uppercase text-slate-400 mb-2">
-          Persediaan Baju Jadi
-        </p>
-        <div className="flex items-baseline gap-1 mb-1">
-          <span className="text-4xl font-black text-slate-800 leading-none">
-            {gudang.persediaan_baju_jadi_lusin}
-          </span>
-          <span className="text-base font-medium text-slate-400">Lusin</span>
-        </div>
-        <p className="text-[11px] text-slate-400">Ready</p>
-        <div className={`mt-2 text-xs font-bold ${delta ? 'text-emerald-600' : 'text-red-500'}`}>
-          <span className="inline-flex items-center gap-0.5">
-            {delta ? '↑' : '↓'} Tersedia &nbsp;
-          </span>
-          <span className="text-slate-400 font-normal">
-            Nilai: Rp {(gudang.persediaan_baju_jadi_nilai || 0).toLocaleString('id-ID')}
-          </span>
+          <div className="h-2 bg-black/20 rounded-full overflow-hidden border border-white/5">
+            <div
+              className={`h-full rounded-full transition-all duration-1000 ease-out ${
+                isTargetAchieved ? 'bg-emerald-400 shadow-[0_0_10px_rgba(52,211,153,0.5)]' : 'bg-emerald-300'
+              }`}
+              style={{ width: `${cuttingPct}%` }}
+            />
+          </div>
+          <div className="flex justify-between mt-2 text-[10px] font-bold uppercase tracking-tight text-emerald-300/80">
+            <span>Progress {cuttingPct}%</span>
+            <span>Target {gudang.cutting_target_pcs?.toLocaleString('id-ID')}</span>
+          </div>
         </div>
       </div>
 
-      {/* ── Kartu 3: Sisa Kain (LIGHT) ─────────────────── */}
-      <div className="card">
-        <p className="text-[9px] font-extrabold tracking-widest uppercase text-slate-400 mb-2">
-          Sisa Kain
-        </p>
-        <div className="flex items-baseline gap-1 mb-3">
-          <span className="text-4xl font-black text-slate-800 leading-none">
-            {(gudang.sisa_kain_kg || 0).toLocaleString('id-ID')}
-          </span>
-          <span className="text-base font-medium text-slate-400">Kg</span>
-        </div>
+      {/* ── Kartu 2: Baju Jadi (DARK BLUE) ─────────── */}
+      <div className="
+        relative rounded-[1.5rem] p-7 overflow-hidden min-h-[160px]
+        bg-gradient-to-br from-[#1E3A8A] to-[#1E40AF] text-white shadow-xl
+        border border-blue-800/50 group transition-all duration-300
+        hover:scale-[1.02]
+      ">
+        <span className="absolute -bottom-4 -right-4 text-8xl opacity-10 select-none material-symbols-rounded group-hover:scale-110 transition-transform duration-500">
+          checkroom
+        </span>
 
-        {/* Detail per jenis kain */}
-        {gudang.detail_kain && gudang.detail_kain.length > 0 && (
-          <div className="flex gap-3 flex-wrap">
-            {gudang.detail_kain.slice(0, 3).map((k, i) => (
-              <div key={i} className="text-left">
-                <p className="text-[9px] text-slate-400 font-semibold truncate max-w-[56px]">
-                  {k.nama?.slice(0, 8)}:
-                </p>
-                <p className="text-xs font-extrabold text-slate-700">{k.kg}kg</p>
+        <div className="relative z-10">
+          <p className="text-[11px] font-black tracking-widest uppercase text-blue-300 mb-3">
+            Persediaan Baju Jadi
+          </p>
+
+          <div className="flex items-baseline gap-2 mb-2">
+            <span className="text-4xl font-black tracking-tighter">
+              {(gudang.persediaan_baju_jadi_lusin || 0).toFixed(1)}
+            </span>
+            <span className="text-sm font-bold text-blue-200/60 uppercase">Lusin</span>
+          </div>
+          
+          <p className="text-xs font-bold text-emerald-300 flex items-center gap-1.5 mb-3">
+            <span className="w-2 h-2 rounded-full bg-emerald-400 animate-pulse"></span>
+            Ready Stock
+          </p>
+
+          <div className="pt-3 border-t border-white/10">
+            <p className="text-[11px] font-bold text-blue-200/60 uppercase tracking-tighter">
+              Estimasi Nilai: <span className="text-white font-black text-sm">{formatRp_local(gudang.persediaan_baju_jadi_nilai)}</span>
+            </p>
+          </div>
+        </div>
+      </div>
+
+      {/* ── Kartu 3: Sisa Kain (DARK AMBER/ORANGE) ─────────── */}
+      <div className="
+        relative rounded-[1.5rem] p-7 overflow-hidden min-h-[160px]
+        bg-gradient-to-br from-[#92400E] to-[#B45309] text-white shadow-xl
+        border border-amber-800/50 group transition-all duration-300
+        hover:scale-[1.02]
+      ">
+        <span className="absolute -bottom-4 -right-4 text-8xl opacity-10 select-none material-symbols-rounded group-hover:scale-110 transition-transform duration-500">
+          texture
+        </span>
+
+        <div className="relative z-10">
+          <p className="text-[11px] font-black tracking-widest uppercase text-amber-200 mb-3">
+            Sisa Kain Produksi
+          </p>
+          
+          <div className="flex items-baseline gap-2 mb-3">
+            <span className="text-4xl font-black tracking-tighter">
+              {(gudang.sisa_kain_kg || 0).toLocaleString('id-ID')}
+            </span>
+            <span className="text-sm font-bold text-amber-100/60 uppercase">Kg</span>
+          </div>
+
+          <div className="grid grid-cols-3 gap-3">
+            {gudang.detail_kain?.slice(0, 3).map((k, i) => (
+              <div key={i} className="flex flex-col bg-white/5 p-2 rounded-xl border border-white/10">
+                <span className="text-[9px] font-bold text-amber-100/70 truncate uppercase">{k.nama?.split(' ')[0]}</span>
+                <span className="text-xs font-black text-white leading-none">{k.kg} <span className="text-[9px] font-normal opacity-50">Kg</span></span>
               </div>
             ))}
           </div>
-        )}
+        </div>
       </div>
 
     </div>
   )
+}
+
+function formatRp_local(angka) {
+  return "Rp " + (angka || 0).toLocaleString('id-ID');
 }

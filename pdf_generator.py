@@ -230,45 +230,86 @@ def export_invoice_pdf(header_inv, detail_items, terbilang_teks):
     # TOTALAN
     pdf.set_font('Arial', 'B', 10)
     total_sebelum = sum(r.subtotal for r in detail_items)
-    
+    uang_muka = getattr(header_inv, 'uang_muka', 0.0) or 0.0
+    sisa_piutang = header_inv.total_tagihan - uang_muka
+    is_tempo = header_inv.metode_bayar == "Piutang (Tempo)"
+
     pdf.cell(120, 8, '', 0, 0) # Kosong di kiri
     pdf.cell(35, 8, 'Subtotal', 1, 0, 'R')
     pdf.cell(35, 8, format_rp_pdf(total_sebelum), 1, 1, 'R')
-    
+
     if header_inv.diskon > 0:
-        pdf.cell(120, 8, '', 0, 0) 
+        pdf.cell(120, 8, '', 0, 0)
         pdf.cell(35, 8, 'Diskon', 1, 0, 'R')
         pdf.cell(35, 8, f"- {format_rp_pdf(header_inv.diskon)}", 1, 1, 'R')
-        
+
+    # Baris Total Tagihan (setelah diskon, sebelum DP)
+    pdf.set_text_color(0, 0, 0)
+    pdf.cell(120, 8, '', 0, 0)
+    pdf.cell(35, 8, 'Total Tagihan', 1, 0, 'R')
+    pdf.cell(35, 8, format_rp_pdf(header_inv.total_tagihan), 1, 1, 'R')
+
+    # Baris Uang Muka / DP (jika ada)
+    if uang_muka > 0:
+        pdf.set_text_color(80, 80, 80)
+        pdf.cell(120, 8, '', 0, 0)
+        pdf.cell(35, 8, 'Uang Muka (DP)', 1, 0, 'R')
+        pdf.cell(35, 8, f"- {format_rp_pdf(uang_muka)}", 1, 1, 'R')
+
+    # Baris utama berwarna: Sisa Piutang (Tempo) / Total Tagihan (Tunai)
     pdf.set_fill_color(41, 128, 185)
     pdf.set_text_color(255, 255, 255)
-    pdf.cell(120, 8, '', 0, 0) 
-    pdf.cell(35, 8, 'TOTAL TAGIHAN', 1, 0, 'R', 1)
-    pdf.cell(35, 8, format_rp_pdf(header_inv.total_tagihan), 1, 1, 'R', 1)
-    
+    pdf.cell(120, 8, '', 0, 0)
+    if is_tempo and uang_muka > 0:
+        pdf.cell(35, 8, 'SISA PIUTANG', 1, 0, 'R', 1)
+        pdf.cell(35, 8, format_rp_pdf(sisa_piutang), 1, 1, 'R', 1)
+    elif is_tempo:
+        pdf.cell(35, 8, 'TOTAL PIUTANG', 1, 0, 'R', 1)
+        pdf.cell(35, 8, format_rp_pdf(header_inv.total_tagihan), 1, 1, 'R', 1)
+    else:
+        pdf.cell(35, 8, 'TOTAL TAGIHAN', 1, 0, 'R', 1)
+        pdf.cell(35, 8, format_rp_pdf(header_inv.total_tagihan), 1, 1, 'R', 1)
+
     pdf.ln(5)
-    
-    # KOTAK TERBILANG (SEPERTI DI GAMBAR REFERENSI)
+
+    # KOTAK TERBILANG
     pdf.set_text_color(0, 0, 0)
     pdf.set_font('Arial', 'I', 10)
     pdf.set_fill_color(240, 240, 240)
     pdf.multi_cell(120, 8, f"Terbilang: \n{terbilang_teks} Rupiah", 1, 'C', 1)
-    
+
     pdf.ln(5)
-    
-    # KOTAK PEMBAYARAN & TTD
-    # Info Pembayaran Kiri
+
+    # KOTAK INFO BAWAH KIRI & TTD KANAN
     y_before = pdf.get_y()
-    pdf.set_font('Arial', 'B', 9)
-    pdf.cell(80, 5, 'Pembayaran ditujukan kepada:', 'LTR', 1, 'L')
-    pdf.set_font('Arial', '', 9)
-    pdf.cell(80, 5, 'Nama Bank : BCA', 'LR', 1, 'L')
-    pdf.cell(80, 5, 'Atas Nama : Raziq Garment / Yana', 'LR', 1, 'L')
-    pdf.cell(80, 5, 'No Rekening: 123-456-7890', 'LBR', 1, 'L')
-    
+    pdf.set_text_color(0, 0, 0)
+
+    if is_tempo:
+        # Info jatuh tempo untuk Piutang/Tempo
+        import datetime as _dt
+        tgl_inv = header_inv.tanggal if hasattr(header_inv.tanggal, 'strftime') else _dt.datetime.now()
+        tgl_jatuh_tempo = tgl_inv + _dt.timedelta(days=30)
+        pdf.set_font('Arial', 'B', 9)
+        pdf.set_text_color(180, 0, 0)
+        pdf.cell(80, 5, 'Informasi Pembayaran (Piutang/Tempo):', 'LTR', 1, 'L')
+        pdf.set_font('Arial', '', 9)
+        pdf.set_text_color(200, 50, 50)
+        pdf.cell(80, 5, f"Jatuh Tempo: {tgl_jatuh_tempo.strftime('%d %b %Y')}", 'LR', 1, 'L')
+        pdf.cell(80, 5, 'Mohon lakukan pelunasan tepat waktu.', 'LBR', 1, 'L')
+    else:
+        # Info rekening untuk Tunai/Transfer
+        pdf.set_font('Arial', 'B', 9)
+        pdf.set_text_color(0, 0, 0)
+        pdf.cell(80, 5, 'Pembayaran ditujukan kepada:', 'LTR', 1, 'L')
+        pdf.set_font('Arial', '', 9)
+        pdf.cell(80, 5, 'Nama Bank : BCA', 'LR', 1, 'L')
+        pdf.cell(80, 5, 'Atas Nama : Raziq Garment / Yana', 'LR', 1, 'L')
+        pdf.cell(80, 5, 'No Rekening: 123-456-7890', 'LBR', 1, 'L')
+
     # TTD Kanan
     pdf.set_y(y_before)
     pdf.set_x(120)
+    pdf.set_text_color(0, 0, 0)
     pdf.set_font('Arial', '', 10)
     pdf.cell(70, 5, 'Hormat Kami,', 0, 1, 'C')
     pdf.ln(15)

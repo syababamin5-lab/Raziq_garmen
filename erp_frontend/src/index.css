@@ -1,4 +1,5 @@
 @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;600;800;900&display=swap');
 
 @tailwind base;
 @tailwind components;
@@ -15,9 +16,42 @@
   html, body, #root {
     height: 100%;
     font-family: 'Inter', system-ui, sans-serif;
-    background-color: #F8FAFC;
+    /* ── Enhanced Mesh Background ────────────────── */
+    background-color: #F1F5F9;
+    background-image: 
+      radial-gradient(at 0% 0%, hsla(161, 84%, 75%, 0.25) 0px, transparent 50%),
+      radial-gradient(at 100% 0%, hsla(199, 89%, 75%, 0.25) 0px, transparent 50%),
+      radial-gradient(at 100% 100%, hsla(161, 84%, 75%, 0.2) 0px, transparent 50%),
+      radial-gradient(at 0% 100%, hsla(199, 89%, 75%, 0.2) 0px, transparent 50%);
     color: #1E293B;
     -webkit-font-smoothing: antialiased;
+    overflow-x: hidden;
+  }
+
+  /* Stronger Texture Overlay */
+  body::before {
+    content: "";
+    position: fixed;
+    top: 0; left: 0; width: 100%; height: 100%;
+    background-image: url("https://www.transparenttextures.com/patterns/cubes.png");
+    opacity: 0.04;
+    pointer-events: none;
+    z-index: -1;
+  }
+
+  /* ── Background Moving Spotlight ────────────────── */
+  body::after {
+    content: "";
+    position: fixed;
+    top: var(--y, 0);
+    left: var(--x, 0);
+    width: 800px;
+    height: 800px;
+    background: radial-gradient(circle, rgba(16, 185, 129, 0.08) 0%, transparent 70%);
+    transform: translate(-50%, -50%);
+    pointer-events: none;
+    z-index: -1;
+    transition: width 0.5s, height 0.5s;
   }
 
   /* Scrollbar tipis elegan */
@@ -29,53 +63,65 @@
 
 /* ── Utility Classes ────────────────────────────────────── */
 @layer components {
-  /* Card standar */
+  .font-outfit { font-family: 'Outfit', sans-serif; }
+
+  /* Card dengan Glassmorphism yang lebih tegas */
   .card {
-    @apply bg-white rounded-2xl shadow-card border border-surface-border p-5;
-    transition: box-shadow 0.25s ease, transform 0.25s ease;
+    @apply bg-white/70 backdrop-blur-xl rounded-[2rem] shadow-[0_4px_25px_rgba(0,0,0,0.03)] border border-white/60 p-6;
+    transition: all 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
   }
   .card:hover {
-    @apply shadow-card-hover;
-    transform: translateY(-2px);
+    @apply shadow-[0_25px_60px_rgba(16,185,129,0.12)] border-emerald-500/30 bg-white/90;
+    transform: translateY(-6px) scale(1.01);
   }
 
   /* Badge status transaksi */
   .badge {
-    @apply inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-bold tracking-wide;
+    @apply inline-flex items-center px-3 py-1 rounded-full text-[10px] font-black tracking-[0.15em] uppercase;
   }
-  .badge-success { @apply badge bg-emerald-50 text-emerald-800; }
-  .badge-warning { @apply badge bg-amber-50 text-amber-700; }
-  .badge-info    { @apply badge bg-blue-50 text-blue-700; }
-  .badge-danger  { @apply badge bg-red-50 text-red-700; }
+  .badge-success { @apply badge bg-emerald-500/10 text-emerald-700 border border-emerald-500/20; }
+  .badge-warning { @apply badge bg-amber-500/10 text-amber-700 border border-amber-500/20; }
+  .badge-info    { @apply badge bg-blue-500/10 text-blue-700 border border-blue-500/20; }
+  .badge-danger  { @apply badge bg-red-500/10 text-red-700 border border-red-500/20; }
 
-  /* Tombol primer */
   .btn-primary {
-    @apply bg-emerald-500 hover:bg-emerald-700 text-white font-semibold px-4 py-2 
-           rounded-xl transition-all duration-200 hover:shadow-md;
+    @apply bg-emerald-600 hover:bg-black text-white font-black px-6 py-3 
+           rounded-2xl transition-all duration-300 hover:shadow-xl hover:shadow-emerald-900/10 active:scale-95;
   }
 
-  /* Number besar pada kartu keuangan */
   .fin-value {
-    @apply text-2xl font-black text-slate-800 leading-tight;
+    @apply text-2xl font-black text-slate-800 leading-tight tracking-tighter font-outfit;
   }
   .fin-label {
-    @apply text-xs font-medium text-surface-muted uppercase tracking-wider;
+    @apply text-[10px] font-bold text-slate-400 uppercase tracking-[0.25em];
   }
 }
 
 /* ── Animasi ─────────────────────────────────────────────── */
 @keyframes fadeInUp {
-  from { opacity: 0; transform: translateY(16px); }
+  from { opacity: 0; transform: translateY(30px); }
   to   { opacity: 1; transform: translateY(0); }
 }
 .animate-fade-in-up {
-  animation: fadeInUp 0.4s ease forwards;
+  animation: fadeInUp 0.8s cubic-bezier(0.16, 1, 0.3, 1) forwards;
 }
 
 @keyframes pulse-dot {
-  0%, 100% { opacity: 1; }
-  50% { opacity: 0.4; }
+  0%, 100% { opacity: 1; transform: scale(1); }
+  50% { opacity: 0.4; transform: scale(0.85); }
 }
 .live-dot {
-  animation: pulse-dot 1.5s ease-in-out infinite;
+  animation: pulse-dot 2.5s ease-in-out infinite;
+}
+
+/* Custom Scrollbar */
+.custom-scrollbar::-webkit-scrollbar {
+  width: 4px;
+}
+.custom-scrollbar::-webkit-scrollbar-thumb {
+  background: rgba(16, 185, 129, 0.2);
+  border-radius: 10px;
+}
+.custom-scrollbar::-webkit-scrollbar-thumb:hover {
+  background: rgba(16, 185, 129, 0.5);
 }

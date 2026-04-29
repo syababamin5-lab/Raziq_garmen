@@ -24,3 +24,8 @@ export const getInvoiceDetails = async (noInv) => {
     const { data } = await api.get(`/penjualan/details/${noInv}`);
     return data;
 };
+
+export const bayarInvoiceCepat = async (payload) => {
+    const { data } = await api.post('/penjualan/bayar-invoice-cepat', payload);
+    return data;
+};

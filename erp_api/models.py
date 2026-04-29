@@ -121,7 +121,9 @@ class HeaderPenjualan(Base):
     tipe_transaksi = Column(String, default="NORMAL")
     diskon = Column(Float, default=0.0)
     pajak = Column(Float, default=0.0)
-    total_tagihan = Column(Float, default=0.0)
+    uang_muka = Column(Float, default=0.0)  # DP yang dibayar saat penerbitan invoice
+    total_tagihan = Column(Float, default=0.0)  # Total setelah diskon (sebelum DP)
+    status = Column(String, default="Lunas")  # "Lunas" | "Tempo"
 
 
 class DetailPenjualan(Base):
@@ -148,7 +150,10 @@ class HeaderPembelian(Base):
     tipe_transaksi = Column(String, default="NORMAL")
     diskon = Column(Float, default=0.0)
     pajak = Column(Float, default=0.0)
+    uang_muka = Column(Float, default=0.0)
     total_tagihan = Column(Float, default=0.0)
+    status = Column(String, default="Lunas") # "Lunas" | "Tempo"
+
 
 
 class DetailPembelian(Base):
@@ -160,6 +165,18 @@ class DetailPembelian(Base):
     qty_kg = Column(Float)
     harga_per_kg = Column(Float)
     subtotal = Column(Float)
+
+
+class ProductionLog(Base):
+    __tablename__ = "production_logs"
+    id = Column(Integer, primary_key=True, index=True)
+    tanggal = Column(DateTime, default=datetime.datetime.utcnow)
+    divisi = Column(String)  # "Cutting", "Jahit", etc.
+    kode_sku = Column(String)
+    nama_barang = Column(String)
+    qty_hasil = Column(Integer)  # Pcs hasil cutting atau Lusin hasil jahit
+    karyawan_id = Column(Integer, nullable=True)
+    keterangan = Column(String, nullable=True)
 
 
 # ==========================================
@@ -218,4 +235,9 @@ class CompanyConfig(Base):
     nama_pemilik = Column(String, default="Yana Taryana")
     jabatan_pemilik = Column(String, default="Direktur Operasional")
     logo_url = Column(String, nullable=True)
+    nama_bank = Column(String, default="BCA")
+    no_rekening = Column(String, default="123-456-7890")
+    atas_nama_bank = Column(String, default="PABRIK RAZIQ GARMENT")
+    target_cutting_mingguan = Column(Integer, default=1000)
+    ttd_url = Column(String, nullable=True)
 

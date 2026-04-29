@@ -1,15 +1,22 @@
 import { useEffect, useState } from 'react'
-import { getDashboardSummary } from '../api/dashboardApi'
+import { getDashboardSummary, updateTarget } from '../api/dashboardApi'
 import { formatRp } from '../utils/formatters'
 import KeuanganCard from '../components/dashboard/KeuanganCard'
 import PenjualanPanel from '../components/dashboard/PenjualanPanel'
 import GudangCards from '../components/dashboard/GudangCards'
 import ProduksiPanel from '../components/dashboard/ProduksiPanel'
+import InvoiceDetailModal from '../components/dashboard/InvoiceDetailModal'
 
 export default function Dashboard() {
   const [data, setData] = useState(null)
   const [loading, setLoading] = useState(true)
+  const [selectedInvoice, setSelectedInvoice] = useState(null)
+  const [isModalOpen, setIsModalOpen] = useState(false)
   const user = JSON.parse(localStorage.getItem('user') || '{}');
+  const [dashSettings] = useState(() => {
+    const saved = localStorage.getItem('dashboard_settings');
+    return saved ? JSON.parse(saved) : { showProduksi: true, showPenjualan: true, showKeuangan: true };
+  });
 
   const quotes = [
     "Kesuksesan adalah hasil dari persiapan, kerja keras, dan belajar dari kegagalan.",
@@ -67,6 +74,33 @@ export default function Dashboard() {
       })
   }, [])
 
+  const handleSetTarget = async () => {
+    const currentTarget = data?.gudang?.cutting_target_pcs || 1000;
+    const res = prompt("Masukkan Target Cutting Mingguan Baru (Pcs):", currentTarget);
+    if (res !== null) {
+      const newTarget = parseInt(res);
+      if (isNaN(newTarget)) return alert("Masukkan angka yang valid!");
+      
+      try {
+        setLoading(true);
+        const apiRes = await updateTarget(newTarget);
+        if (apiRes.success) {
+          // Refresh data
+          const refreshedData = await getDashboardSummary();
+          setData(refreshedData);
+          alert(apiRes.message);
+        } else {
+          alert("Gagal: " + apiRes.message);
+        }
+      } catch (err) {
+        console.error(err);
+        alert("Terjadi kesalahan koneksi.");
+      } finally {
+        setLoading(false);
+      }
+    }
+  };
+
   return (
     <div className="space-y-6">
       {/* ── Welcome Header (Khusus BOS) ────────────────────────── */}
@@ -104,56 +138,69 @@ export default function Dashboard() {
 
 
       {/* ── Row 1: Keuangan Cards ────────────────────────────── */}
-      <div className="grid grid-cols-4 gap-4">
-        <KeuanganCard
-          label="Sisa Saldo Tunai"
-          value={formatRp(data?.keuangan?.sisa_saldo_tunai)}
-          icon="payments"
-          badge="LIVE"
-          badgeType="live"
-          loading={loading}
-        />
-        <KeuanganCard
-          label="Sisa Saldo Bank"
-          value={formatRp(data?.keuangan?.sisa_saldo_bank)}
-          icon="account_balance"
-          badge="LIVE"
-          badgeType="live"
-          loading={loading}
-        />
-        <KeuanganCard
-          label="Total Uang Masuk"
-          value={formatRp(data?.keuangan?.total_uang_masuk_bulan_ini)}
-          icon="trending_up"
-          badge="+Masuk"
-          badgeType="up"
-          sub="Bulan Ini"
-          loading={loading}
-        />
-        <KeuanganCard
-          label="Total Uang Keluar"
-          value={formatRp(data?.keuangan?.total_uang_keluar_bulan_ini)}
-          icon="trending_down"
-          badge="-Keluar"
-          badgeType="down"
-          sub="Bulan Ini"
-          loading={loading}
-        />
-      </div>
+      {dashSettings.showKeuangan && (
+        <div className="grid grid-cols-4 gap-4">
+          <KeuanganCard
+            label="Sisa Saldo Tunai"
+            value={formatRp(data?.keuangan?.sisa_saldo_tunai)}
+            icon="payments"
+            badge="LIVE"
+            badgeType="live"
+            loading={loading}
+          />
+          <KeuanganCard
+            label="Sisa Saldo Bank"
+            value={formatRp(data?.keuangan?.sisa_saldo_bank)}
+            icon="account_balance"
+            badge="LIVE"
+            badgeType="live"
+            loading={loading}
+          />
+          <KeuanganCard
+            label="Total Uang Masuk"
+            value={formatRp(data?.keuangan?.total_uang_masuk_bulan_ini)}
+            icon="trending_up"
+            badge="+Masuk"
+            badgeType="up"
+            sub="Bulan Ini"
+            loading={loading}
+          />
+          <KeuanganCard
+            label="Total Uang Keluar"
+            value={formatRp(data?.keuangan?.total_uang_keluar_bulan_ini)}
+            icon="trending_down"
+            badge="-Keluar"
+            badgeType="down"
+            sub="Bulan Ini"
+            loading={loading}
+          />
+        </div>
+      )}
 
       {/* ── Row 2: Penjualan & Produksi Panels ────────────────── */}
-      <div className="grid grid-cols-2 gap-4">
-        {/* Panel Kiri -> Penjualan */}
-        <PenjualanPanel
-          data={data?.penjualan_terkini}
-          loading={loading}
-        />
-        {/* Panel Kanan -> Produksi */}
-        <ProduksiPanel
-          gudang={data?.gudang}
-          loading={loading}
-        />
-      </div>
+      {(dashSettings.showPenjualan || dashSettings.showProduksi) && (
+        <div className={`grid gap-4 ${dashSettings.showPenjualan && dashSettings.showProduksi ? 'grid-cols-2' : 'grid-cols-1'}`}>
+          {/* Panel Kiri -> Penjualan */}
+          {dashSettings.showPenjualan && (
+            <PenjualanPanel
+              data={data?.penjualan_terkini}
+              loading={loading}
+              onItemClick={(item) => {
+                setSelectedInvoice(item)
+                setIsModalOpen(true)
+              }}
+            />
+          )}
+          {/* Panel Kanan -> Produksi */}
+          {dashSettings.showProduksi && (
+            <ProduksiPanel
+              gudang={data?.gudang}
+              salesAnalytics={data?.sales_analytics}
+              loading={loading}
+            />
+          )}
+        </div>
+      )}
 
       {/* ── Row 3: Status Gudang Akhir ────────────────────────── */}
       <div className="space-y-4 pt-2">
@@ -164,6 +211,7 @@ export default function Dashboard() {
         <GudangCards
            gudang={data?.gudang}
            loading={loading}
+           onSetTarget={handleSetTarget}
         />
       </div>
 
@@ -251,6 +299,11 @@ export default function Dashboard() {
         </div>
       </div>
 
+      <InvoiceDetailModal 
+        isOpen={isModalOpen}
+        onClose={() => setIsModalOpen(false)}
+        invoice={selectedInvoice}
+      />
     </div>
   )
 }
