@@ -95,6 +95,7 @@ const PrayerTimesCompact = () => {
     return () => clearInterval(interval);
   }, [timings, lastNotified]);
 
+  if (!timings) return <div className="text-[10px] text-slate-300 animate-pulse font-bold uppercase tracking-widest">Menghubungkan Jadwal...</div>;
   if (!nextPrayer) return null;
 
   return (

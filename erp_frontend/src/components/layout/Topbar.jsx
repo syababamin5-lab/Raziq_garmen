@@ -35,7 +35,7 @@ export default function Topbar({ title, onToggleSidebar, isSidebarOpen }) {
       </div>
 
       {/* Middle Section: Prayer Times */}
-      <div className="hidden lg:flex items-center justify-center flex-1">
+      <div className="hidden md:flex items-center justify-center flex-1">
         <PrayerTimesCompact />
       </div>
 
