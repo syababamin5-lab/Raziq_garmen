@@ -282,7 +282,7 @@ def jalankan():
                             st.error(f"🚨 Gagal mencatat aset. Error: {str(e)}")
 
         st.markdown("---")
-        st.subheader("📋 Daftar Aset Pabrik Raziq Garment")
+        st.subheader("📋 Daftar Aset Raziq Garment")
         
         jurnal_aset = db.query(JurnalUmum).filter(
             JurnalUmum.kode_akun.in_(["13110", "13210", "13310", "13410"]),

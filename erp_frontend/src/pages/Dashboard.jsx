@@ -7,6 +7,7 @@ import GudangCards from '../components/dashboard/GudangCards'
 import ProduksiPanel from '../components/dashboard/ProduksiPanel'
 import TotalProduksiPanel from '../components/dashboard/TotalProduksiPanel'
 import InvoiceDetailModal from '../components/dashboard/InvoiceDetailModal'
+import PrayerTimes from '../components/dashboard/PrayerTimes'
 
 export default function Dashboard() {
   const [data, setData] = useState(null)
@@ -50,7 +51,25 @@ export default function Dashboard() {
     "Teruslah bertumbuh, karena di dalam pertumbuhan ada kehidupan.",
     "Keadilan dalam memimpin adalah pondasi loyalitas tim.",
     "Bersama kesulitan ada kemudahan, maka jangan pernah menyerah.",
-    "Doa adalah senjata orang mukmin, iringilah setiap usahamu dengan doa."
+    "Doa adalah senjata orang mukmin, iringilah setiap usahamu dengan doa.",
+    "Kunci kebahagiaan adalah bersyukur dalam setiap keadaan.",
+    "Berbuat baiklah kepada bawahanmu, karena mereka adalah tangan kanan kesuksesanmu.",
+    "Rencana yang matang adalah separuh dari keberhasilan.",
+    "Jangan menunda pekerjaan hari ini untuk besok, karena esok punya tantangan sendiri.",
+    "Kekuatan sebuah tim terletak pada kesamaan visi dan rasa saling percaya.",
+    "Keberanian untuk memulai adalah langkah terbesar menuju kemenangan.",
+    "Jadilah pemimpin yang menginspirasi, bukan sekadar memerintah.",
+    "Detail kecil seringkali menentukan hasil besar.",
+    "Pertumbuhan bisnis yang sehat dimulai dari pengelolaan keuangan yang jujur.",
+    "Syukuri setiap pcss produk yang terjual, karena itu adalah pintu rezeki yang terbuka.",
+    "Berikan yang terbaik hari ini, Allah akan memberikan yang terbaik untukmu esok.",
+    "Tekunlah dalam kebaikan, niscaya kebaikan akan datang kepadamu berlipat ganda.",
+    "Etika bisnis yang tinggi adalah aset yang tak ternilai harganya.",
+    "Saling menghormati antar divisi adalah kunci kelancaran produksi.",
+    "Jadikan setiap komplain pelanggan sebagai guru untuk perbaikan kita.",
+    "Ketenangan dalam bekerja membuahkan hasil yang maksimal.",
+    "Jangan pernah berhenti belajar, karena dunia bisnis selalu berputar.",
+    "Keberkahan usaha terletak pada niat yang lurus dan cara yang benar."
   ];
 
   const getGreeting = () => {
@@ -61,7 +80,8 @@ export default function Dashboard() {
     return "Selamat Malam";
   };
 
-  const randomQuote = quotes[new Date().getDate() % quotes.length];
+  // Gunakan state agar quote tidak berubah-ubah saat render ulang di sesi yang sama
+  const [randomQuote] = useState(() => quotes[Math.floor(Math.random() * quotes.length)]);
 
   useEffect(() => {
     getDashboardSummary()
@@ -127,7 +147,9 @@ export default function Dashboard() {
               </div>
             </div>
 
-            <div className="bg-white/10 backdrop-blur-md border border-white/10 p-5 rounded-3xl max-w-md self-stretch flex items-center gap-4 hover:bg-white/15 transition-colors">
+            <div className="flex flex-col sm:flex-row items-stretch md:items-center gap-4 w-full md:w-auto">
+              <PrayerTimes />
+              <div className="bg-white/10 backdrop-blur-md border border-white/10 p-5 rounded-3xl max-w-md flex items-center gap-4 hover:bg-white/15 transition-colors group/quote">
               <span className="material-symbols-rounded text-emerald-300 text-3xl">format_quote</span>
               <p className="italic text-white text-xs font-medium leading-relaxed leading-snug">
                 "{randomQuote}"

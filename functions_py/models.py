@@ -197,7 +197,7 @@ class User(Base):
 class CompanyConfig(Base):
     __tablename__ = "company_config"
     id = Column(Integer, primary_key=True, index=True)
-    nama_perusahaan = Column(String, default="PABRIK RAZIQ GARMENT")
+    nama_perusahaan = Column(String, default="RAZIQ GARMENT")
     alamat = Column(String, default="Bandung - Jawa Barat")
     no_telp = Column(String, default="0812-1491-4641")
     email = Column(String, default="raziqgarment@gmail.com")

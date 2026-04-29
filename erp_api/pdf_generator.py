@@ -390,7 +390,7 @@ def export_purchase_pdf(header_po, detail_items, terbilang_teks, config=None):
     
     pdf.set_font('Arial', 'B', 20)
     pdf.set_text_color(6, 78, 59)
-    pdf.cell(0, 10, config.nama_perusahaan if config else 'PABRIK RAZIQ GARMENT', 0, 1, 'L')
+    pdf.cell(0, 10, config.nama_perusahaan if config else 'PRAZIQ GARMENT', 0, 1, 'L')
     
     pdf.set_font('Arial', '', 10)
     pdf.set_text_color(50, 50, 50)
