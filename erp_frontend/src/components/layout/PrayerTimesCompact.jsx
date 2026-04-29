@@ -74,10 +74,10 @@ const PrayerTimesCompact = () => {
       const diffMins = Math.floor(diffMs / 60000);
       const diffSecs = Math.floor((diffMs % 60000) / 1000);
 
-      setTimeLeft(`${String(Math.floor(diffMins / 60)).padStart(2, '0')}:${String(diffMins % 60).padStart(2, '0')}:${String(diffSecs).padStart(2, '0')}`);
+      setTimeLeft(`${String(Math.floor(Math.max(0, diffMins) / 60)).padStart(2, '0')}:${String(Math.max(0, diffMins) % 60).padStart(2, '0')}:${String(Math.max(0, diffSecs)).padStart(2, '0')}`);
       
-      // Trigger Pop-up saat waktu Shalat Tiba (00:00:00)
-      if (diffMins === 0 && diffSecs === 0 && lastNotified !== upcoming.name) {
+      // Trigger Pop-up saat waktu Shalat Tiba (Toleransi 2 detik)
+      if (diffMs <= 0 && diffMs > -2000 && lastNotified !== upcoming.name) {
         setIsModalOpen(true);
         setLastNotified(upcoming.name);
       }
@@ -99,33 +99,47 @@ const PrayerTimesCompact = () => {
 
   return (
     <>
-      <div className={`
-        flex items-center gap-3 px-4 py-1.5 rounded-full border transition-all duration-500
-        ${isWarning 
-          ? 'bg-red-50 border-red-200 animate-pulse scale-105 shadow-lg shadow-red-500/10' 
-          : 'bg-emerald-50 border-emerald-100 shadow-sm'}
-      `}>
-        <div className={`
-          flex items-center justify-center w-7 h-7 rounded-full 
-          ${isWarning ? 'bg-red-500 text-white' : 'bg-emerald-500 text-white'}
-        `}>
-          <span className="material-symbols-rounded text-base">mosque</span>
+      <div className="flex items-center gap-2">
+        <div 
+          onClick={() => setIsModalOpen(true)}
+          className={`
+            flex items-center gap-3 px-4 py-1.5 rounded-full border transition-all duration-500 cursor-pointer group
+            ${isWarning 
+              ? 'bg-red-50 border-red-200 animate-pulse scale-105 shadow-lg shadow-red-500/10' 
+              : 'bg-emerald-50 border-emerald-100 shadow-sm hover:bg-emerald-100'}
+          `}
+          title="Klik untuk Simulasi Pop-up"
+        >
+          <div className={`
+            flex items-center justify-center w-7 h-7 rounded-full transition-transform group-hover:scale-110
+            ${isWarning ? 'bg-red-500 text-white' : 'bg-emerald-500 text-white'}
+          `}>
+            <span className="material-symbols-rounded text-base">mosque</span>
+          </div>
+          
+          <div className="flex flex-col">
+            <div className="flex items-center gap-1.5">
+              <span className={`text-[9px] font-black uppercase tracking-widest ${isWarning ? 'text-red-600' : 'text-emerald-700'}`}>
+                {isWarning ? 'PERSIAPAN ADZAN' : 'MENUJU'} {nextPrayer.name}
+              </span>
+              {isWarning && <span className="w-1 h-1 rounded-full bg-red-500 animate-ping"></span>}
+            </div>
+            <div className="flex items-center gap-2 -mt-1">
+              <span className={`text-xs font-black tabular-nums ${isWarning ? 'text-red-800' : 'text-slate-800'}`}>
+                {timeLeft}
+              </span>
+              <span className="text-[10px] font-bold text-slate-400">Lagi</span>
+            </div>
+          </div>
         </div>
         
-        <div className="flex flex-col">
-          <div className="flex items-center gap-1.5">
-            <span className={`text-[9px] font-black uppercase tracking-widest ${isWarning ? 'text-red-600' : 'text-emerald-700'}`}>
-              {isWarning ? 'PERSIAPAN ADZAN' : 'MENUJU'} {nextPrayer.name}
-            </span>
-            {isWarning && <span className="w-1 h-1 rounded-full bg-red-500 animate-ping"></span>}
-          </div>
-          <div className="flex items-center gap-2 -mt-1">
-            <span className={`text-xs font-black tabular-nums ${isWarning ? 'text-red-800' : 'text-slate-800'}`}>
-              {timeLeft}
-            </span>
-            <span className="text-[10px] font-bold text-slate-400">Lagi</span>
-          </div>
-        </div>
+        {/* Tombol Simulasi Kecil */}
+        <button 
+          onClick={() => setIsModalOpen(true)}
+          className="text-[8px] font-bold text-slate-300 hover:text-emerald-500 transition-colors uppercase tracking-tighter"
+        >
+          [ Test ]
+        </button>
       </div>
 
       <PrayerModal 
