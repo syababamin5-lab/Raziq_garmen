@@ -2,15 +2,19 @@ from fpdf import FPDF
 import datetime
 
 class PDF(FPDF):
-    def __init__(self, judul_laporan, periode="", orientation='P', config=None):
+    def __init__(self, judul_laporan, periode="", orientation='P', config=None, use_default_header=True):
         # Membuka opsi kertas Portrait ('P') atau Landscape ('L')
         super().__init__(orientation=orientation, unit='mm', format='A4')
         self.judul_laporan = judul_laporan
         self.periode = periode
         self.config = config
+        self.use_default_header = use_default_header
         self.headers_data = None # Memori untuk menyimpan Print Titles (Header Tabel)
 
     def header(self):
+        if not self.use_default_header:
+            return
+            
         # Background Header Color (Premium Emerald)
         self.set_fill_color(6, 78, 59) # Emerald 900
         self.rect(0, 0, self.w, 40, 'F')
@@ -244,7 +248,7 @@ def export_dataframe_pdf(judul, periode, df, col_widths, config=None):
 # 4. ENGINE INVOICE PROFESIONAL (PORTRAIT)
 # ====================================================================
 def export_invoice_pdf(header_inv, detail_items, terbilang_teks, config, customer):
-    pdf = FPDF('P', 'mm', 'A4')
+    pdf = PDF("INVOICE", "", 'P', config, use_default_header=False)
     pdf.set_auto_page_break(auto=True, margin=15)
     pdf.add_page()
     
@@ -400,7 +404,7 @@ def export_invoice_pdf(header_inv, detail_items, terbilang_teks, config, custome
 # 5. ENGINE PURCHASE ORDER (PO) PROFESIONAL
 # ====================================================================
 def export_purchase_pdf(header_po, detail_items, terbilang_teks, config=None):
-    pdf = FPDF('P', 'mm', 'A4')
+    pdf = PDF("PURCHASE ORDER", "", 'P', config, use_default_header=False)
     pdf.add_page()
     
     pdf.set_font('Arial', 'B', 20)
