@@ -260,9 +260,18 @@ def export_laporan_pdf(tipe: str, bulan: int, tahun: int, db: Session = Depends(
             from pdf_generator import export_neraca_skontro_pdf
             pdf_bytes = export_neraca_skontro_pdf(
                 judul, periode_str, left_list, right_list, 
-                data["neraca"]["total_aset"], data["neraca"]["total_kewajiban_modal"], config
+                data["neraca"]["total_aset"], data["neraca"]["total_pasiva"], config
             )
             return Response(content=pdf_bytes, media_type="application/pdf", headers={"Content-Disposition": f"inline; filename=Neraca_{bulan}_{tahun}.pdf"})
+
+        elif tipe == "EKUITAS":
+            judul = "LAPORAN PERUBAHAN EKUITAS"
+            pdf_list.append(("MODAL AWAL / DISETOR", data["ekuitas"]["modal_awal"], False))
+            pdf_list.append(("LABA DITAHAN & BERJALAN", data["ekuitas"]["laba_akumulasi"], False))
+            pdf_list.append(("PRIVE (PENGAMBILAN PRIBADI) (-)", -data["ekuitas"]["prive"], False))
+            
+            label_total = "MODAL AKHIR"
+            val_total = data["ekuitas"]["modal_akhir"]
 
         # DEFAULT (HPP / LR) - Tetap 2 Kolom
         # Ambil Profil
