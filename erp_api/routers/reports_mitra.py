@@ -97,6 +97,10 @@ def cetak_semua_saldo(
         n_ttd = config.ttd_laporan_nama if (config and config.ttd_laporan_nama) else (config.nama_pemilik if config else "Yana Taryana")
         j_ttd = config.ttd_laporan_jabatan if (config and config.ttd_laporan_jabatan) else (config.jabatan_pemilik if config else "Direktur Operasional")
 
+        # Tanda Tangan Admin
+        n_admin = config.ttd_admin_nama if (config and config.ttd_admin_nama) else "Admin Keuangan"
+        j_admin = config.ttd_admin_jabatan if (config and config.ttd_admin_jabatan) else "Administrasi"
+
         rows = []
         grand_total = 0
         
@@ -141,7 +145,7 @@ def cetak_semua_saldo(
             f"Per Tanggal: {datetime.datetime.now().strftime('%d %B %Y')}", 
             df, 
             [15, 120, 55], 
-            config, n_ttd, j_ttd
+            config, n_ttd, j_ttd, n_admin, j_admin
         )
         
         return Response(content=pdf_bytes, media_type="application/pdf", headers={"Content-Disposition": f"inline; filename=Kumulatif_{type}.pdf"})
