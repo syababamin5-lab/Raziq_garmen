@@ -41,6 +41,13 @@ def get_password_hash(password):
 from fastapi import Request, BackgroundTasks
 import jwt
 
+# Jalankan Sinkronisasi DB Startup
+from db_sync_admin import sync_db
+try:
+    sync_db()
+except Exception as e:
+    print(f"Startup DB Sync Warning: {e}")
+
 app = FastAPI()
 
 # Fungsi pendukung untuk mencatat log di background (agar aplikasi tidak macet)
