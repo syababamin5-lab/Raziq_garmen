@@ -55,10 +55,11 @@ const PrayerTimesCompact = () => {
           const prayerTime = new Date();
           prayerTime.setHours(parseInt(hour), parseInt(minute), 0);
           
-          // Cek apakah ada adzan yang tiba (dalam 2 detik terakhir agar tidak terlewat)
+          // Trigger Pop-up: Jika waktu shalat tiba (toleransi 1 menit agar tidak terlewat)
           const diffToPrayer = prayerTime - now;
-          if (diffToPrayer <= 0 && diffToPrayer > -2000) {
-            justReached = p.label;
+          if (diffToPrayer <= 500 && diffToPrayer > -60000 && lastNotified !== p.label) {
+            setIsModalOpen(true);
+            setLastNotified(p.label);
           }
 
           if (!upcoming && prayerTime > now) {
@@ -78,19 +79,17 @@ const PrayerTimesCompact = () => {
 
       // Hitung selisih untuk countdown
       const diffMs = upcoming.timeObj - now;
-      const diffMins = Math.floor(diffMs / 60000);
-      const diffSecs = Math.floor((diffMs % 60000) / 1000);
+      const diffMins = Math.floor(Math.max(0, diffMs) / 60000);
+      const diffSecs = Math.floor((Math.max(0, diffMs) % 60000) / 1000);
 
-      setTimeLeft(`${String(Math.floor(Math.max(0, diffMins) / 60)).padStart(2, '0')}:${String(Math.max(0, diffMins) % 60).padStart(2, '0')}:${String(Math.max(0, diffSecs)).padStart(2, '0')}`);
+      // Format countdown yang presisi
+      const h = String(Math.floor(diffMins / 60)).padStart(2, '0');
+      const m = String(diffMins % 60).padStart(2, '0');
+      const s = String(diffSecs).padStart(2, '0');
+      setTimeLeft(`${h}:${m}:${s}`);
       
-      // Trigger Pop-up saat waktu Shalat Tiba
-      if (justReached && lastNotified !== justReached) {
-        setIsModalOpen(true);
-        setLastNotified(justReached);
-      }
-
-      // Warning 7 menit (sebelumnya 10 menit)
-      if (diffMins <= 7 && diffMins >= 0) {
+      // Warning 7 menit
+      if (diffMins <= 7 && diffMs > 0) {
         setIsWarning(true);
       } else {
         setIsWarning(false);
