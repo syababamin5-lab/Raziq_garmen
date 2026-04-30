@@ -100,37 +100,42 @@ def cetak_semua_saldo(
         rows = []
         grand_total = 0
         
+        # Fungsi pembantu untuk format Rp
+        def fmt(num):
+            return f"Rp {int(num):,}".replace(",", ".")
+
         if type == 'hutang':
             data = db.query(Mitra).filter(Mitra.saldo_utang != 0).all()
             judul = "LAPORAN KUMULATIF HUTANG SUPPLIER"
             label = "Nama Supplier"
             for i, m in enumerate(data):
-                rows.append([i+1, m.nama_mitra, m.saldo_utang])
+                rows.append([i+1, m.nama_mitra, fmt(m.saldo_utang)])
                 grand_total += m.saldo_utang
         elif type == 'piutang':
             data = db.query(Mitra).filter(Mitra.saldo_piutang != 0).all()
             judul = "LAPORAN KUMULATIF PIUTANG CUSTOMER"
             label = "Nama Customer"
             for i, m in enumerate(data):
-                rows.append([i+1, m.nama_mitra, m.saldo_piutang])
+                rows.append([i+1, m.nama_mitra, fmt(m.saldo_piutang)])
                 grand_total += m.saldo_piutang
         else:
             data = db.query(Karyawan).filter(Karyawan.saldo_kasbon != 0).all()
             judul = "LAPORAN KUMULATIF KASBON KARYAWAN"
             label = "Nama Karyawan"
             for i, m in enumerate(data):
-                rows.append([i+1, m.nama_karyawan, m.saldo_kasbon])
+                rows.append([i+1, m.nama_karyawan, fmt(m.saldo_kasbon)])
                 grand_total += m.saldo_kasbon
 
         if not rows:
             return {"success": False, "message": "Tidak ada data saldo aktif untuk laporan kumulatif ini."}
 
         # Tambahkan Baris TOTAL di paling bawah
-        rows.append(["", "TOTAL KUMULATIF", grand_total])
+        rows.append(["", "TOTAL KUMULATIF", fmt(grand_total)])
 
         import pandas as pd
         df = pd.DataFrame(rows, columns=["No", label, "Total Saldo"])
         
+        # Kirim data yang sudah diformat ke PDF generator
         pdf_bytes = pdf_generator.export_dataframe_pdf(
             judul, 
             f"Per Tanggal: {datetime.datetime.now().strftime('%d %B %Y')}", 

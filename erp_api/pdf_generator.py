@@ -225,76 +225,46 @@ def export_neraca_skontro_pdf(judul, periode, left_data, right_data, total_left,
 # 3. ENGINE TABEL PANJANG (LANDSCAPE) - UNTUK DAFTAR BARANG/STOK
 # ====================================================================
 def export_dataframe_pdf(judul, periode, df, col_widths, config=None, nama_ttd=None, jabatan_ttd=None):
-    pdf = PDF(judul, periode, orientation='L', config=config)
+    # Gunakan Orientasi Portrait jika kolom sedikit, Landscape jika banyak
+    orient = 'P' if len(df.columns) <= 5 else 'L'
+    pdf = PDF(judul, periode, orientation=orient, config=config)
     
-    # --- LOGIKA TAMBAHAN: HITUNG NILAI STOK (JIKA LAPORAN STOK) ---
-    is_stok_report = "STOK" in judul.upper()
-    if is_stok_report and "Stok" in df.columns and "Harga Jual/LS" in df.columns:
-        # Buat kolom baru Nilai Stok
-        def clean_val(v):
-            if isinstance(v, str):
-                return float(v.replace('Rp ', '').replace('.', '').replace(',', '.').replace(' Pcs', '').replace(' LS', ''))
-            return float(v or 0)
-        
-        df['Nilai Stok'] = df.apply(lambda r: clean_val(r['Stok']) * clean_val(r['Harga Jual/LS']), axis=1)
-        # Update col_widths dan headers
-        col_widths = list(col_widths) + [40] # Tambah lebar untuk Nilai Stok
-        
     total_w = sum(col_widths)
-    usable_width = 277 
+    usable_width = 190 if orient == 'P' else 277 
     actual_widths = [(w / total_w) * usable_width for w in col_widths]
     cols = df.columns.tolist()
     
-    # Daftarkan Headers agar otomatis terulang di setiap halaman (via pdf.header())
     pdf.headers_data = []
     for i, col in enumerate(cols):
         pdf.headers_data.append((actual_widths[i], col, 'C'))
     
     pdf.add_page()
-    
-    running_total_nominal = 0.0
-    page_subtotal = 0.0
-    
     pdf.set_font('Arial', '', 9)
-    pdf.set_text_color(0, 0, 0)
     
     for _, row in df.iterrows():
-        # Cek apakah akan ganti halaman
-        if pdf.get_y() > 180: # Batas aman untuk landscape sebelum footer
-            # Cetak Subtotal Halaman sebelum pindah
-            pdf.set_font('Arial', 'B', 8)
+        # Cek apakah baris ini adalah baris TOTAL (biasanya ditandai di kolom kedua)
+        is_total_row = "TOTAL" in str(row.iloc[1]).upper()
+        
+        if is_total_row:
+            pdf.set_font('Arial', 'B', 10)
             pdf.set_fill_color(240, 240, 240)
-            pdf.cell(sum(actual_widths[:-1]), 7, 'Subtotal sampai baris ini (Halaman Ini): ', 1, 0, 'R', 1)
-            pdf.cell(actual_widths[-1], 7, format_rp_pdf(page_subtotal), 1, 1, 'R', 1)
-            
-            pdf.add_page()
-            page_subtotal = 0.0 # Reset subtotal per halaman baru
+        else:
             pdf.set_font('Arial', '', 9)
 
         for i, col in enumerate(cols):
             val = row[col]
-            text = format_rp_pdf(val) if col == 'Nilai Stok' else str(val)
+            text = str(val)
             
-            # Hitung subtotal jika ini kolom finansial terakhir
-            if col == 'Nilai Stok' or (not is_stok_report and i == len(cols)-1):
-                try:
-                    num_val = val if isinstance(val, (int, float)) else clean_val(val)
-                    page_subtotal += num_val
-                    running_total_nominal += num_val
-                except: pass
-
-            align = 'R' if any(x in text for x in ['Rp', 'Pcs', 'LS']) or any(x in col for x in ['Debit', 'Kredit', 'Saldo', 'Harga', 'Nilai']) else 'L'
-            if len(text) > 85: text = text[:82] + "..."
-            pdf.cell(actual_widths[i], 7, text, 1, 0, align)
+            # Auto-align: Kanan untuk angka/Rupiah, Kiri untuk teks
+            align = 'L'
+            if any(x in text for x in ['Rp', 'Pcs', 'LS']) or isinstance(val, (int, float)):
+                align = 'R'
+            
+            fill = 1 if is_total_row else 0
+            pdf.cell(actual_widths[i], 8, text, 1, 0, align, fill)
         pdf.ln()
 
-    # Cetak Total Akhir
-    pdf.set_font('Arial', 'B', 10)
-    pdf.set_fill_color(6, 78, 59)
-    pdf.set_text_color(255, 255, 255)
-    pdf.cell(sum(actual_widths[:-1]), 10, 'TOTAL KESELURUHAN NILAI ASET: ', 1, 0, 'R', 1)
-    pdf.cell(actual_widths[-1], 10, format_rp_pdf(running_total_nominal), 1, 1, 'R', 1)
-
+    pdf.set_font('Arial', '', 9)
     pdf.set_text_color(0, 0, 0)
     pdf.add_ttd(config, nama=nama_ttd, jabatan=jabatan_ttd)
     return pdf.output(dest='S').encode('latin-1')
