@@ -16,6 +16,13 @@ export default function Sidebar({ isOpen }) {
         const filtered = data.filter(m => {
           const isRoleMatch = m.roles.split(',').includes(user?.role);
           const isNotPanel = m.path !== 'DASHBOARD_PANEL';
+          
+          // Filter khusus Owner & GM (Hanya Dashboard, Laporan, Riwayat, Profile)
+          if (user?.role === 'owner' || user?.role === 'gm') {
+             const allowed = ['dashboard', 'laporan', 'riwayat', 'profile'];
+             return m.is_active === 1 && allowed.includes(m.id_menu) && isNotPanel;
+          }
+
           return m.is_active === 1 && isRoleMatch && isNotPanel;
         });
         setMenus(filtered);

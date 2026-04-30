@@ -6,6 +6,9 @@ import { formatRp } from '../utils/formatters';
 const user = JSON.parse(localStorage.getItem('user') || '{}');
 const isSuperAdmin = user.role === 'super_admin';
 const isBos = user.role === 'bos';
+const isPimpinan = ['bos', 'owner', 'gm'].includes(user.role);
+const canAction = ['super_admin', 'admin', 'bos'].includes(user.role);
+const cannotEdit = ['owner', 'gm'].includes(user.role);
 
 export default function RiwayatEdit() {
   const [loading, setLoading] = useState(false);
@@ -147,9 +150,9 @@ export default function RiwayatEdit() {
                       <td className="py-3 px-5 text-right font-bold text-emerald-600">{row.debit > 0 ? formatRp(row.debit) : '-'}</td>
                       <td className="py-3 px-5 text-right font-bold text-red-600">{row.kredit > 0 ? formatRp(row.kredit) : '-'}</td>
                       <td className="py-3 px-5 text-center">
-                        {!isBos && (
+                        {!cannotEdit && (
                           <div className="flex items-center justify-center gap-1">
-                            {isVoidable(row) && (
+                            {isVoidable(row) && canAction && (
                               <button 
                                 onClick={() => openModal('void', row)} 
                                 className="p-1.5 rounded-lg text-amber-500 hover:bg-amber-50 hover:text-amber-700 transition-all"

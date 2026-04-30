@@ -134,8 +134,8 @@ export default function Dashboard() {
 
   return (
     <div className="space-y-6">
-      {/* ── Welcome Header (Khusus BOS) ────────────────────────── */}
-      {user.role === 'bos' && (
+      {/* ── Welcome Header (Khusus BOS / OWNER / GM) ────────────────────────── */}
+      {['bos', 'owner', 'gm'].includes(user.role) && (
         <div className="relative overflow-hidden bg-gradient-to-r from-[#064E3B] to-[#10B981] p-8 rounded-[2.5rem] shadow-xl shadow-emerald-900/10 mb-8 border border-white/10 group transition-all duration-500 hover:scale-[1.01]">
           {/* Abstract Decorations */}
           <div className="absolute top-[-20%] right-[-10%] w-64 h-64 bg-white/10 rounded-full blur-3xl group-hover:bg-white/20 transition-all duration-700"></div>

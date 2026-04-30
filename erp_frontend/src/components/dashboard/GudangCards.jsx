@@ -37,7 +37,7 @@ export default function GudangCards({ gudang, loading = false, onSetTarget }) {
             <p className="text-[11px] font-black tracking-widest uppercase text-emerald-300">
               Cutting Minggu Ini
             </p>
-            {!JSON.parse(localStorage.getItem('user') || '{}').role?.includes('bos') && (
+            {['super_admin', 'admin', 'bos'].includes(JSON.parse(localStorage.getItem('user') || '{}').role) && (
               <button 
                 onClick={onSetTarget}
                 className="w-7 h-7 rounded-lg bg-white/10 flex items-center justify-center hover:bg-white/20 transition-colors border border-white/10"
