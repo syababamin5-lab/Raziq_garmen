@@ -574,3 +574,65 @@ def _draw_qr_to_pdf(pdf, config, x_pos, nama_p="Yana Taryana"):
             pdf.ln(22)
         else: pdf.ln(22)
     except: pdf.ln(22)
+
+def export_buku_besar_massal_pdf(data_per_akun, periode, config=None, nama_ttd=None, jabatan_ttd=None):
+    """
+    data_per_akun: List of dict { "nama_akun": str, "kode_akun": str, "rows": list }
+    """
+    pdf = PDF("BUKU BESAR LENGKAP", periode, orientation='P', config=config)
+    pdf.set_auto_page_break(auto=True, margin=15)
+    
+    col_widths = [25, 75, 30, 30, 30] # Tgl, Keterangan, Debit, Kredit, Saldo
+    actual_widths = [(w / sum(col_widths)) * 190 for w in col_widths]
+    headers = ["Tanggal", "Keterangan", "Debit", "Kredit", "Saldo"]
+
+    for item in data_per_akun:
+        pdf.add_page()
+        
+        # Subheader Akun
+        pdf.set_font('Arial', 'B', 12)
+        pdf.set_text_color(6, 78, 59)
+        pdf.cell(0, 10, f"AKUN: {item['nama_akun']} ({item['kode_akun']})", 0, 1, 'L')
+        pdf.ln(2)
+        
+        # Header Tabel
+        pdf.set_font('Arial', 'B', 9)
+        pdf.set_fill_color(6, 78, 59)
+        pdf.set_text_color(255, 255, 255)
+        for i, h in enumerate(headers):
+            pdf.cell(actual_widths[i], 8, h, 1, 0, 'C', 1)
+        pdf.ln()
+        
+        # Rows
+        pdf.set_font('Arial', '', 8)
+        pdf.set_text_color(0, 0, 0)
+        
+        def fmt(v):
+            if not v or v == 0: return "-"
+            try:
+                return f"{int(v):,}".replace(",", ".")
+            except:
+                return str(v)
+
+        for row in item['rows']:
+            # Cek ganti halaman
+            if pdf.get_y() > 260:
+                pdf.add_page()
+                # Re-print Header
+                pdf.set_font('Arial', 'B', 9)
+                pdf.set_fill_color(6, 78, 59)
+                pdf.set_text_color(255, 255, 255)
+                for i, h in enumerate(headers):
+                    pdf.cell(actual_widths[i], 8, h, 1, 0, 'C', 1)
+                pdf.ln()
+                pdf.set_font('Arial', '', 8)
+                pdf.set_text_color(0, 0, 0)
+
+            pdf.cell(actual_widths[0], 7, row['tanggal'][:10], 1, 0, 'C')
+            pdf.cell(actual_widths[1], 7, (row['keterangan'][:45] + '..') if len(row['keterangan']) > 45 else row['keterangan'], 1, 0, 'L')
+            pdf.cell(actual_widths[2], 7, fmt(row['debit']), 1, 0, 'R')
+            pdf.cell(actual_widths[3], 7, fmt(row['kredit']), 1, 0, 'R')
+            pdf.cell(actual_widths[4], 7, fmt(row['saldo']), 1, 1, 'R')
+            
+    pdf.add_ttd(config, nama=nama_ttd, jabatan=jabatan_ttd)
+    return pdf.output(dest='S').encode('latin-1')
