@@ -10,7 +10,7 @@ export default function SettingsUsers() {
     username: '',
     password: '',
     nama_lengkap: '',
-    role: 'user'
+    role: 'staff'
   });
 
   const [editingUser, setEditingUser] = useState(null);
@@ -60,14 +60,19 @@ export default function SettingsUsers() {
       
       if (res.data.status === 'success') {
         alert(editingUser ? 'User diperbarui!' : 'User berhasil ditambahkan!');
-        setFormData({ username: '', password: '', nama_lengkap: '', role: 'user', foto_url: '' });
+        setFormData({ username: '', password: '', nama_lengkap: '', role: 'staff', foto_url: '' });
         setShowAdd(false);
         setEditingUser(null);
         fetchUsers();
       } else {
-        alert(res.data.message);
+        // Tampilkan pesan error spesifik dari backend
+        alert("Gagal: " + (res.data.message || "Terjadi kesalahan sistem"));
       }
-    } catch (err) { alert('Gagal memproses user'); }
+    } catch (err) { 
+      console.error(err);
+      const msg = err.response?.data?.message || err.message || 'Koneksi ke server terputus';
+      alert('Error: ' + msg); 
+    }
   };
 
   const handleEdit = (user) => {
@@ -97,11 +102,19 @@ export default function SettingsUsers() {
   const getRoleBadge = (role) => {
     const map = {
       'super_admin': 'bg-purple-100 text-purple-700',
+      'owner': 'bg-amber-100 text-amber-700',
+      'gm': 'bg-blue-100 text-blue-700',
       'admin': 'bg-emerald-100 text-emerald-700',
-      'bos': 'bg-amber-100 text-amber-700',
-      'user': 'bg-slate-100 text-slate-700'
+      'staff': 'bg-slate-100 text-slate-700'
     };
-    return <span className={`px-3 py-1 rounded-full text-[10px] font-black uppercase tracking-wider ${map[role] || map.user}`}>{role.replace('_', ' ')}</span>;
+    const labels = {
+      'super_admin': 'SUPER ADMIN',
+      'owner': 'OWNER',
+      'gm': 'GENERAL MANAGER / KEPALA OPERASIONAL',
+      'admin': 'ADMIN',
+      'staff': 'STAFF'
+    };
+    return <span className={`px-3 py-1 rounded-full text-[10px] font-black uppercase tracking-wider ${map[role] || map.staff}`}>{labels[role] || role}</span>;
   };
 
   return (
@@ -179,10 +192,11 @@ export default function SettingsUsers() {
                 <div>
                   <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest pl-2 mb-2 block">Role Akses</label>
                   <select className="w-full bg-slate-50 border-none rounded-xl p-4 font-bold text-slate-800 outline-none focus:ring-2 focus:ring-emerald-500/20" value={formData.role} onChange={e => setFormData({...formData, role: e.target.value})}>
-                    <option value="user">USER (Staff)</option>
-                    <option value="admin">ADMIN (Kantor)</option>
-                    <option value="bos">BOS (Investor/View Only)</option>
                     <option value="super_admin">SUPER ADMIN</option>
+                    <option value="owner">OWNER</option>
+                    <option value="gm">GENERAL MANAGER / KEPALA OPERASIONAL</option>
+                    <option value="admin">ADMIN</option>
+                    <option value="staff">STAFF</option>
                   </select>
                 </div>
                 <button type="submit" className="w-full bg-emerald-600 text-white p-4 rounded-xl font-black text-sm hover:bg-black transition-all shadow-lg shadow-emerald-900/10 mt-4">

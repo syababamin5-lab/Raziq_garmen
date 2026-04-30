@@ -255,3 +255,19 @@ class CompanyConfig(Base):
     target_cutting_mingguan = Column(Integer, default=1000)
     ttd_url = Column(String, nullable=True)
 
+
+# ==========================================
+# 7. DYNAMIC MENU REGISTRY
+# ==========================================
+class MenuRegistry(Base):
+    __tablename__ = "menu_registry"
+    id = Column(Integer, primary_key=True, index=True)
+    id_menu = Column(String, unique=True, index=True) # ID unik menu, contoh: "dashboard"
+    nama_menu = Column(String)                      # Nama yang tampil di sidebar
+    path = Column(String)                           # URL routing
+    icon = Column(String)                           # Ikon Material Symbols
+    is_active = Column(Integer, default=1)          # 1=Aktif, 0=Nonaktif
+    roles = Column(String)                          # Role yang diizinkan (comma separated)
+    order_priority = Column(Integer, default=0)     # Urutan tampilan di sidebar
+    is_divider = Column(Integer, default=0)         # Apakah ini divider (0=Bukan, 1=Ya)
+

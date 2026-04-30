@@ -17,6 +17,12 @@ const api = axios.create({
 // ── Request Interceptor: Set Content-Type untuk JSON requests ────────────
 api.interceptors.request.use(
   (config) => {
+    // Ambil token dari localStorage
+    const token = localStorage.getItem('token');
+    if (token) {
+      config.headers['Authorization'] = `Bearer ${token}`;
+    }
+
     // Jangan set Content-Type jika data adalah FormData (untuk file upload)
     if (!(config.data instanceof FormData)) {
       config.headers['Content-Type'] = 'application/json'

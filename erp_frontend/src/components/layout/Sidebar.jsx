@@ -1,32 +1,34 @@
+import { useState, useEffect } from 'react'
 import { NavLink } from 'react-router-dom'
 import { getCurrentUser } from '../../api/authApi'
 import api, { getFileUrl } from '../../api/api'
 
-const MENU_ITEMS = [
-  { path: '/',               icon: 'dashboard',  label: 'Dashboard', roles: ['super_admin', 'admin', 'bos'] },
-  { path: '/master',         icon: 'inventory_2', label: 'Master Data & SKU', roles: ['super_admin', 'admin'] },
-  { path: '/persediaan',     icon: 'view_in_ar', label: 'Persediaan Awal', roles: ['super_admin', 'admin'] },
-  { path: '/produksi',       icon: 'content_cut', label: 'Produksi Harian', roles: ['super_admin', 'admin', 'user'] },
-  { path: '/pembelian',      icon: 'shopping_cart', label: 'Pembelian & Biaya', roles: ['super_admin', 'admin', 'user'] },
-  { path: '/penjualan',      icon: 'local_shipping', label: 'Penjualan', roles: ['super_admin', 'admin', 'user'] },
-  { path: '/kas',            icon: 'account_balance_wallet', label: 'Kas & Piutang', roles: ['super_admin', 'admin'] },
-  { path: '/laporan',        icon: 'monitoring', label: 'Laporan Keuangan', roles: ['super_admin', 'admin', 'bos'] },
-  { path: '/kasbon',         icon: 'person', label: 'Kasbon Karyawan', roles: ['super_admin', 'admin', 'user'] },
-  { path: '/riwayat',        icon: 'history', label: 'Riwayat & Edit', roles: ['super_admin', 'admin', 'bos'] },
-  
-  // SUPER ADMIN SECTION
-  { isDivider: true, label: 'Super Admin Control', roles: ['super_admin'] },
-  { path: '/settings/users', icon: 'manage_accounts', label: 'Pengaturan User', roles: ['super_admin'] },
-  { path: '/settings/company', icon: 'business_center', label: 'Profil Perusahaan', roles: ['super_admin'] },
-  { path: '/super-admin',     icon: 'database', label: 'Database & Admin', roles: ['super_admin'] },
-  
-  { isDivider: true, roles: ['super_admin', 'admin', 'user', 'bos'] },
-  { path: '/profile',        icon: 'account_circle', label: 'Profil Saya', roles: ['super_admin', 'admin', 'user', 'bos'] },
-]
-
 export default function Sidebar({ isOpen }) {
   const user = getCurrentUser();
-  const filteredMenu = MENU_ITEMS.filter(item => item.roles.includes(user?.role));
+  const [menus, setMenus] = useState([]);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    const fetchMenus = async () => {
+      try {
+        const { data } = await api.get('/menus');
+        // Filter: Hanya yang aktif, sesuai role user, DAN bukan merupakan panel dashboard
+        const filtered = data.filter(m => {
+          const isRoleMatch = m.roles.split(',').includes(user?.role);
+          const isNotPanel = m.path !== 'DASHBOARD_PANEL';
+          return m.is_active === 1 && isRoleMatch && isNotPanel;
+        });
+        setMenus(filtered);
+      } catch (err) {
+        console.error("Gagal mengambil menu:", err);
+      } finally {
+        setLoading(false);
+      }
+    };
+    fetchMenus();
+  }, [user]);
+
+  if (loading) return null;
 
   return (
     <aside className={`
@@ -51,7 +53,13 @@ export default function Sidebar({ isOpen }) {
           {isOpen && (
              <div className="animate-in fade-in duration-500 overflow-hidden">
                 <p className="text-white font-extrabold text-sm leading-tight truncate">{user?.nama_lengkap || 'User'} </p>
-                <p className="text-emerald-400 text-[10px] font-bold uppercase tracking-widest truncate">{user?.role?.replace('_', ' ') || 'Admin'}</p>
+                <p className="text-emerald-400 text-[10px] font-bold uppercase tracking-widest truncate">
+                  {user?.role === 'super_admin' ? 'Super Admin' : 
+                   user?.role === 'gm' ? 'General Manager' : 
+                   user?.role === 'owner' ? 'Owner' : 
+                   user?.role === 'admin' ? 'Admin' : 
+                   user?.role === 'staff' ? 'Staff' : user?.role?.replace('_', ' ')}
+                </p>
              </div>
           )}
         </div>
@@ -59,14 +67,14 @@ export default function Sidebar({ isOpen }) {
 
       {/* ── Navigasi Utama ── */}
       <nav className="flex-1 overflow-y-auto px-3 py-4 space-y-1 custom-scrollbar">
-        {filteredMenu.map((item, index) => {
-          if (item.isDivider) {
+        {menus.map((item, index) => {
+          if (item.is_divider) {
             return (
               <div key={`divider-${index}`} className="pt-6 pb-2 px-4">
                 <div className="border-t border-white/10 mb-3"></div>
-                {isOpen && item.label && (
+                {isOpen && item.nama_menu && (
                   <p className="text-[10px] font-black text-emerald-400 uppercase tracking-[0.3em] mb-1">
-                    {item.label}
+                    {item.nama_menu}
                   </p>
                 )}
               </div>
@@ -75,7 +83,7 @@ export default function Sidebar({ isOpen }) {
 
           return (
             <NavLink
-              key={item.path}
+              key={item.id_menu}
               to={item.path}
               end={item.path === '/'}
               className={({ isActive }) =>
@@ -87,16 +95,16 @@ export default function Sidebar({ isOpen }) {
                 }
                 ${!isOpen ? 'justify-center p-0 h-10 w-10 mx-auto mb-1' : ''}`
               }
-              title={!isOpen ? item.label : ''}
+              title={!isOpen ? item.nama_menu : ''}
             >
               <span className={`material-symbols-rounded text-[22px] flex-shrink-0 transition-transform duration-200 group-hover:scale-110`}>
                 {item.icon}
               </span>
-              {isOpen && <span className="truncate animate-in slide-in-from-left-2">{item.label}</span>}
+              {isOpen && <span className="truncate animate-in slide-in-from-left-2">{item.nama_menu}</span>}
               
               {!isOpen && (
                 <div className="absolute left-14 bg-emerald-800 text-white text-[10px] px-2 py-1 rounded opacity-0 group-hover:opacity-100 pointer-events-none transition-opacity whitespace-nowrap z-50 shadow-xl border border-emerald-700 font-bold uppercase tracking-widest">
-                    {item.label}
+                    {item.nama_menu}
                 </div>
               )}
             </NavLink>

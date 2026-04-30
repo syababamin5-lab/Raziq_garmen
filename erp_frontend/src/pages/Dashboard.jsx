@@ -1,4 +1,5 @@
 import { useEffect, useState } from 'react'
+import api from '../api/api'
 import { getDashboardSummary, updateTarget } from '../api/dashboardApi'
 import { formatRp } from '../utils/formatters'
 import KeuanganCard from '../components/dashboard/KeuanganCard'
@@ -15,10 +16,7 @@ export default function Dashboard() {
   const [selectedInvoice, setSelectedInvoice] = useState(null)
   const [isModalOpen, setIsModalOpen] = useState(false)
   const user = JSON.parse(localStorage.getItem('user') || '{}');
-  const [dashSettings] = useState(() => {
-    const saved = localStorage.getItem('dashboard_settings');
-    return saved ? JSON.parse(saved) : { showProduksi: true, showPenjualan: true, showKeuangan: true };
-  });
+  const [dashSettings, setDashSettings] = useState({ showProduksi: true, showPenjualan: true, showKeuangan: true });
 
   const quotes = [
     "Kesuksesan adalah hasil dari persiapan, kerja keras, dan belajar dari kegagalan.",
@@ -84,6 +82,18 @@ export default function Dashboard() {
   const [randomQuote] = useState(() => quotes[Math.floor(Math.random() * quotes.length)]);
 
   useEffect(() => {
+    // Fetch Dash Settings from Menu Registry
+    api.get('/menus').then(({ data }) => {
+      // Mapping visibility dari MenuRegistry (is_active = 1 berarti muncul)
+      // Default ke true jika id_menu tidak ditemukan agar tidak hilang saat transisi database
+      const settings = {
+        showKeuangan: data.find(m => m.id_menu === 'dash_keuangan') ? data.find(m => m.id_menu === 'dash_keuangan').is_active === 1 : true,
+        showPenjualan: data.find(m => m.id_menu === 'dash_penjualan') ? data.find(m => m.id_menu === 'dash_penjualan').is_active === 1 : true,
+        showProduksi: data.find(m => m.id_menu === 'dash_produksi') ? data.find(m => m.id_menu === 'dash_produksi').is_active === 1 : true
+      };
+      setDashSettings(settings);
+    }).catch(err => console.error("Gagal memuat setting dashboard:", err));
+
     getDashboardSummary()
       .then((res) => {
         setData(res)

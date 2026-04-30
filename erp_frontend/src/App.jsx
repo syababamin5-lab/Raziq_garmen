@@ -1,6 +1,7 @@
-import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom'
+import { BrowserRouter, Routes, Route, Navigate, useLocation } from 'react-router-dom'
 import React, { useEffect } from 'react'
 import AppLayout from './components/layout/AppLayout'
+import api from './api/api'
 import Dashboard from './pages/Dashboard'
 import Produksi from './pages/Produksi'
 import MasterData from './pages/MasterData'

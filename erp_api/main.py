@@ -52,13 +52,23 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
+# TIMEZONE CONFIG (WIB)
+from datetime import timezone, timedelta
+WIB = timezone(timedelta(hours=7))
+
+def get_now_wib():
+    return datetime.now(WIB)
+
 # USER ACTIVITY TRACKING MIDDLEWARE
 @app.middleware("http")
 async def log_user_activity(request: Request, call_next):
     response = await call_next(request)
     
     path = request.url.path
-    if path.startswith("/api/") and not path.endswith("/logs"):
+    method = request.method
+    
+    # Hanya catat jika ada perubahan data (POST, PUT, DELETE)
+    if path.startswith("/api/") and not path.endswith("/logs") and method in ["POST", "PUT", "DELETE"]:
         try:
             auth = request.headers.get("Authorization")
             if auth and auth.startswith("Bearer "):
@@ -66,8 +76,6 @@ async def log_user_activity(request: Request, call_next):
                 payload = jwt.decode(token, SECRET_KEY, algorithms=[ALGORITHM])
                 username = payload.get("sub")
                 nama = payload.get("nama", username)
-                
-                method = request.method
                 
                 menu = "Sistem"
                 if "dashboard" in path: menu = "Dashboard"
@@ -80,17 +88,29 @@ async def log_user_activity(request: Request, call_next):
                 elif "users" in path: menu = "User Management"
                 elif "auth" in path: menu = "Autentikasi"
                 
-                aksi = "Melihat Data"
-                if method == "POST": aksi = "Menambahkan Data"
-                elif method == "PUT": aksi = "Mengubah Data"
+                # Role Mapping Update
+                if "super_admin" in path: menu = "Super Admin"
+                elif "owner" in path: menu = "Owner"
+                elif "gm" in path: menu = "General Manager"
+                
+                aksi = "Menambahkan Data"
+                if method == "PUT": aksi = "Mengubah Data"
                 elif method == "DELETE": aksi = "Menghapus Data"
                 
                 db = models.SessionLocal()
-                new_log = models.UserLog(username=username, nama_lengkap=nama, aksi=aksi, menu=menu)
+                # Gunakan WIB dan pastikan nama kolom benar (waktu)
+                new_log = models.UserLog(
+                    username=username, 
+                    nama_lengkap=nama, 
+                    aksi=aksi, 
+                    menu=menu,
+                    waktu=get_now_wib()
+                )
                 db.add(new_log)
                 db.commit()
                 db.close()
-        except Exception:
+        except Exception as e:
+            print(f"Log Error: {str(e)}")
             pass
             
     return response
@@ -104,10 +124,11 @@ async def startup_event():
         # 1. AUTO-SEED USERS (Hanya jika tabel kosong)
         if db.query(models.User).count() == 0:
             users = [
-                models.User(username="superadmin", password_hash=get_password_hash("admin123"), nama_lengkap="Syabaab (Admin Super)", role="super_admin"),
+                models.User(username="superadmin", password_hash=get_password_hash("admin123"), nama_lengkap="Syabaab (Super Admin)", role="super_admin"),
+                models.User(username="owner", password_hash=get_password_hash("admin123"), nama_lengkap="Owner / Pemilik", role="owner"),
+                models.User(username="gm", password_hash=get_password_hash("admin123"), nama_lengkap="Kepala Operasional", role="gm"),
                 models.User(username="admin", password_hash=get_password_hash("admin123"), nama_lengkap="Administrator", role="admin"),
-                models.User(username="user", password_hash=get_password_hash("user123"), nama_lengkap="Staff User", role="user"),
-                models.User(username="bos", password_hash=get_password_hash("bos123"), nama_lengkap="Owner / Investor", role="bos")
+                models.User(username="staff", password_hash=get_password_hash("user123"), nama_lengkap="Staff Operasional", role="staff")
             ]
             db.add_all(users)
             db.commit()
@@ -163,7 +184,43 @@ async def startup_event():
             db.add_all([models.AkunBukuBesar(**c) for c in coa_data])
             db.commit()
 
-        # 3. AUTO-SEED / UPDATE COMPANY CONFIG
+        # 3. AUTO-SEED MENU REGISTRY (Penting untuk Navigasi Dinamis)
+        existing_menus = [m[0] for m in db.query(models.MenuRegistry.id_menu).all()]
+        new_menus = [
+            {"id_menu": "dashboard", "nama_menu": "Dashboard", "path": "/", "icon": "dashboard", "roles": "super_admin,owner,gm,admin,staff", "order_priority": 1},
+            {"id_menu": "master", "nama_menu": "Master Data & SKU", "path": "/master", "icon": "inventory_2", "roles": "super_admin,owner,gm,admin", "order_priority": 2},
+            {"id_menu": "persediaan", "nama_menu": "Persediaan Awal", "path": "/persediaan", "icon": "view_in_ar", "roles": "super_admin,owner,gm,admin", "order_priority": 3},
+            {"id_menu": "produksi", "nama_menu": "Produksi Harian", "path": "/produksi", "icon": "content_cut", "roles": "super_admin,owner,gm,admin,staff", "order_priority": 4},
+            {"id_menu": "pembelian", "nama_menu": "Pembelian & Biaya", "path": "/pembelian", "icon": "shopping_cart", "roles": "super_admin,owner,gm,admin,staff", "order_priority": 5},
+            {"id_menu": "penjualan", "nama_menu": "Penjualan", "path": "/penjualan", "icon": "local_shipping", "roles": "super_admin,owner,gm,admin,staff", "order_priority": 6},
+            {"id_menu": "kas", "nama_menu": "Kas & Piutang", "path": "/kas", "icon": "account_balance_wallet", "roles": "super_admin,owner,gm,admin", "order_priority": 7},
+            {"id_menu": "laporan", "nama_menu": "Laporan Keuangan", "path": "/laporan", "icon": "monitoring", "roles": "super_admin,owner,gm,admin", "order_priority": 8},
+            {"id_menu": "kasbon", "nama_menu": "Kasbon Karyawan", "path": "/kasbon", "icon": "person", "roles": "super_admin,owner,gm,admin,staff", "order_priority": 9},
+            {"id_menu": "riwayat", "nama_menu": "Riwayat & Edit", "path": "/riwayat", "icon": "history", "roles": "super_admin,owner,gm,admin", "order_priority": 10},
+            {"id_menu": "div_admin", "nama_menu": "Super Admin Control", "path": "", "icon": "", "roles": "super_admin", "order_priority": 11, "is_divider": 1},
+            {"id_menu": "settings_users", "nama_menu": "Pengaturan User", "path": "/settings/users", "icon": "manage_accounts", "roles": "super_admin", "order_priority": 12},
+            {"id_menu": "settings_company", "nama_menu": "Profil Perusahaan", "path": "/settings/company", "icon": "business_center", "roles": "super_admin", "order_priority": 13},
+            {"id_menu": "super_admin", "nama_menu": "Database & Admin", "path": "/super-admin", "icon": "database", "roles": "super_admin", "order_priority": 14},
+            {"id_menu": "div_profile", "nama_menu": "", "path": "", "icon": "", "roles": "super_admin,owner,gm,admin,staff", "order_priority": 15, "is_divider": 1},
+            {"id_menu": "profile", "nama_menu": "Profil Saya", "path": "/profile", "icon": "account_circle", "roles": "super_admin,owner,gm,admin,staff", "order_priority": 16},
+            
+            # Dashboard Panels (Non-Sidebar)
+            {"id_menu": "dash_keuangan", "nama_menu": "Panel Keuangan (Dashboard)", "path": "DASHBOARD_PANEL", "icon": "account_balance", "roles": "super_admin,owner,gm,admin", "order_priority": 100},
+            {"id_menu": "dash_penjualan", "nama_menu": "Panel Penjualan (Dashboard)", "path": "DASHBOARD_PANEL", "icon": "shopping_cart", "roles": "super_admin,owner,gm,admin", "order_priority": 101},
+            {"id_menu": "dash_produksi", "nama_menu": "Panel Produksi (Dashboard)", "path": "DASHBOARD_PANEL", "icon": "factory", "roles": "super_admin,owner,gm,admin", "order_priority": 102},
+        ]
+        
+        for m in new_menus:
+            if m["id_menu"] not in existing_menus:
+                db.add(models.MenuRegistry(**m))
+            else:
+                # Force update roles even if menu exists
+                menu_obj = db.query(models.MenuRegistry).filter(models.MenuRegistry.id_menu == m["id_menu"]).first()
+                if menu_obj:
+                    menu_obj.roles = m["roles"]
+        db.commit()
+
+        # 4. AUTO-SEED / UPDATE COMPANY CONFIG
         config = db.query(models.CompanyConfig).first()
         if not config:
             config = models.CompanyConfig()
@@ -280,6 +337,29 @@ def get_company_config(db: Session = Depends(get_db)):
         db.commit()
         db.refresh(config)
     return config
+
+@app.get("/api/menus")
+def get_menus(db: Session = Depends(get_db)):
+    return db.query(models.MenuRegistry).order_by(models.MenuRegistry.order_priority).all()
+
+@app.put("/api/menus/{menu_id}")
+def update_menu(menu_id: int, data: dict, db: Session = Depends(get_db)):
+    menu = db.query(models.MenuRegistry).filter(models.MenuRegistry.id == menu_id).first()
+    if not menu: return {"status": "error", "message": "Menu tidak ditemukan"}
+    
+    if "is_active" in data:
+        menu.is_active = 1 if data["is_active"] else 0
+    if "nama_menu" in data:
+        menu.nama_menu = data["nama_menu"]
+    if "icon" in data:
+        menu.icon = data["icon"]
+    if "roles" in data:
+        menu.roles = data["roles"]
+    if "order_priority" in data:
+        menu.order_priority = data["order_priority"]
+        
+    db.commit()
+    return {"status": "success", "message": "Menu diperbarui"}
 
 @app.post("/api/company-config")
 def update_company_config(data: dict, db: Session = Depends(get_db)):
@@ -738,9 +818,8 @@ def prune_database(start_date: str, end_date: str, db: Session = Depends(get_db)
             db.query(models.DetailPembelian).filter(models.DetailPembelian.no_po.in_(po_list)).delete(synchronize_session=False)
             db.query(models.HeaderPembelian).filter(models.HeaderPembelian.no_po.in_(po_list)).delete(synchronize_session=False)
             
-        # Catatan: Produksi dan Kasbon terekam di JurnalUmum, jadi otomatis terhapus jika masuk range.
-        # Saldo Mitra/Barang mungkin perlu rekalkulasi jika pruning dilakukan di tengah jalan, 
-        # namun instruksi hanya meminta penghapusan.
+        # 4. Prune Production Logs
+        db.query(models.ProductionLog).filter(models.ProductionLog.tanggal >= sd, models.ProductionLog.tanggal <= ed).delete(synchronize_session=False)
         
         db.commit()
         return {"status": "success", "message": f"Data transaksi periode {start_date} s/d {end_date} berhasil dibersihkan!"}
@@ -765,8 +844,11 @@ def export_full_database(db: Session = Depends(get_db)):
                 "Invoice_Detail": models.DetailPenjualan,
                 "PO_Header": models.HeaderPembelian,
                 "PO_Detail": models.DetailPembelian,
+                "Log_Produksi": models.ProductionLog,
                 "User_Sistem": models.User,
-                "Config_Perusahaan": models.CompanyConfig
+                "Config_Perusahaan": models.CompanyConfig,
+                "Registry_Menu": models.MenuRegistry,
+                "User_Activity_Logs": models.UserLog
             }
             
             for sheet_name, model in tables.items():
@@ -790,6 +872,12 @@ def export_full_database(db: Session = Depends(get_db)):
         )
     except Exception as e:
         return {"status": "error", "message": str(e)}
+
+# LOGS MANAGEMENT
+@app.get("/api/admin/logs")
+def get_user_logs(db: Session = Depends(get_db)):
+    """Ambil daftar aktivitas user terbaru."""
+    return db.query(models.UserLog).order_by(models.UserLog.id.desc()).limit(100).all()
 
 @app.get("/api/admin/database/export-category/{name}")
 def export_database_category(name: str, db: Session = Depends(get_db)):

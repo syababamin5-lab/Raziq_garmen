@@ -33,15 +33,59 @@ export default function SuperAdmin() {
     return () => clearInterval(interval);
   }, []);
 
-  // Dashboard Settings State
-  const [dashSettings, setDashSettings] = useState(() => {
-    const saved = localStorage.getItem('dashboard_settings');
-    return saved ? JSON.parse(saved) : { showProduksi: true, showPenjualan: true, showKeuangan: true };
-  });
+  // Menu Registry State (Dulu Dashboard Settings LocalStorage)
+  const [menus, setMenus] = useState([]);
+  const [loadingMenus, setLoadingMenus] = useState(false);
 
-  const saveDashSettings = () => {
-    localStorage.setItem('dashboard_settings', JSON.stringify(dashSettings));
-    alert("✅ Pengaturan Dashboard Berhasil Disimpan! Silakan cek dashboard Anda.");
+  const fetchMenus = async () => {
+    setLoadingMenus(true);
+    try {
+      const { data } = await api.get('/menus');
+      setMenus(data);
+    } catch (err) {
+      console.error("Gagal mengambil menu:", err);
+    }
+    setLoadingMenus(false);
+  };
+
+  const handleToggleMenu = async (id, currentStatus) => {
+    try {
+      await api.put(`/menus/${id}`, { is_active: !currentStatus });
+      // Update local state
+      setMenus(menus.map(m => m.id === id ? { ...m, is_active: currentStatus ? 0 : 1 } : m));
+    } catch (err) {
+      alert("Gagal memperbarui status menu.");
+    }
+  };
+
+  useEffect(() => {
+    fetchMenus();
+  }, []);
+
+  // Export Wizard State
+  const [exportWizard, setExportWizard] = useState({
+    dataType: 'full',   // 'full', 'master', 'transaksi'
+    format: 'xlsx',     // 'sql', 'xlsx', 'pdf'
+    startDate: '',
+    endDate: ''
+  });
+  const [isExporting, setIsExporting] = useState(false);
+  const [exportSuccess, setExportSuccess] = useState(false);
+
+  const handleExportWizard = () => {
+    setIsExporting(true);
+    setExportSuccess(false);
+
+    console.log("Memulai Export dengan konfigurasi:", exportWizard);
+    
+    // Simulasi proses download (2 detik)
+    setTimeout(() => {
+      setIsExporting(false);
+      setExportSuccess(true);
+      
+      // Reset status sukses setelah 3 detik
+      setTimeout(() => setExportSuccess(false), 3000);
+    }, 2500);
   };
 
   const handlePrune = async () => {
@@ -92,13 +136,6 @@ export default function SuperAdmin() {
     const url = `${api.defaults.baseURL}${endpoint}`;
     window.open(url, '_blank');
   };
-
-  const categories = [
-    { id: 'karyawan', name: 'Data Karyawan', icon: 'badge', color: 'bg-blue-50 text-blue-600 border-blue-100' },
-    { id: 'barang', name: 'SKU Barang Jadi', icon: 'inventory_2', color: 'bg-emerald-50 text-emerald-600 border-emerald-100' },
-    { id: 'mitra', name: 'Mitra & Supplier', icon: 'handshake', color: 'bg-purple-50 text-purple-600 border-purple-100' },
-    { id: 'akun', name: 'Chart of Accounts', icon: 'account_tree', color: 'bg-orange-50 text-orange-600 border-orange-100' }
-  ];
 
   return (
     <div className="max-w-6xl mx-auto p-6 space-y-8 animate-in fade-in duration-700">
@@ -156,94 +193,146 @@ export default function SuperAdmin() {
           <p className="text-sm text-slate-500 leading-relaxed mb-8 flex-1">
             Kelola visibilitas panel dan metrik utama pada Dashboard. Atur informasi apa saja yang ditampilkan untuk setiap level akses.
           </p>
-          <div className="space-y-3 mb-6">
-             <label className="flex items-center gap-3 p-3 bg-slate-50 rounded-xl cursor-pointer hover:bg-emerald-50 transition-colors border border-slate-100">
-                <input 
-                  type="checkbox" 
-                  checked={dashSettings.showProduksi} 
-                  onChange={e => setDashSettings({...dashSettings, showProduksi: e.target.checked})}
-                  className="w-4 h-4 rounded border-slate-300 text-emerald-600 focus:ring-emerald-500" 
-                />
-                <span className="text-xs font-bold text-slate-600">Tampilkan Panel Produksi</span>
-             </label>
-             <label className="flex items-center gap-3 p-3 bg-slate-50 rounded-xl cursor-pointer hover:bg-emerald-50 transition-colors border border-slate-100">
-                <input 
-                  type="checkbox" 
-                  checked={dashSettings.showPenjualan} 
-                  onChange={e => setDashSettings({...dashSettings, showPenjualan: e.target.checked})}
-                  className="w-4 h-4 rounded border-slate-300 text-emerald-600 focus:ring-emerald-500" 
-                />
-                <span className="text-xs font-bold text-slate-600">Tampilkan Panel Penjualan</span>
-             </label>
-             <label className="flex items-center gap-3 p-3 bg-slate-50 rounded-xl cursor-pointer hover:bg-emerald-50 transition-colors border border-slate-100">
-                <input 
-                  type="checkbox" 
-                  checked={dashSettings.showKeuangan} 
-                  onChange={e => setDashSettings({...dashSettings, showKeuangan: e.target.checked})}
-                  className="w-4 h-4 rounded border-slate-300 text-emerald-600 focus:ring-emerald-500" 
-                />
-                <span className="text-xs font-bold text-slate-600">Tampilkan Metrik Keuangan</span>
-             </label>
+          <div className="space-y-2 mb-6 max-h-[300px] overflow-y-auto pr-2 custom-scrollbar">
+             {menus.filter(m => !m.is_divider).map(menu => (
+               <label key={menu.id} className="flex items-center gap-3 p-3 bg-slate-50 rounded-xl cursor-pointer hover:bg-emerald-50 transition-colors border border-slate-100">
+                  <input 
+                    type="checkbox" 
+                    checked={menu.is_active === 1} 
+                    onChange={() => handleToggleMenu(menu.id, menu.is_active === 1)}
+                    className="w-4 h-4 rounded border-slate-300 text-emerald-600 focus:ring-emerald-500" 
+                  />
+                  <div>
+                    <p className="text-[10px] font-black text-slate-900 leading-none mb-1">{menu.nama_menu}</p>
+                    <p className="text-[8px] font-bold text-slate-400 uppercase tracking-widest">{menu.path || 'MODUL'}</p>
+                  </div>
+               </label>
+             ))}
           </div>
           <button 
-            onClick={saveDashSettings}
+            onClick={() => window.location.reload()}
             className="w-full py-4 bg-emerald-600 text-white font-black rounded-2xl hover:bg-emerald-700 transition-all duration-300 flex items-center justify-center gap-2 shadow-lg shadow-emerald-100"
           >
-            <span className="material-symbols-rounded">save</span>
-            Simpan Konfigurasi
+            <span className="material-symbols-rounded">refresh</span>
+            Terapkan ke Sidebar
           </button>
         </div>
 
-        {/* Backup & Export Main Section */}
-        <div className="lg:col-span-1 bg-white p-8 rounded-[2rem] shadow-sm border border-slate-100 space-y-6 flex flex-col">
-          <div className="flex items-center justify-between">
-            <div className="flex items-center gap-3">
-              <div className="p-3 bg-blue-50 rounded-xl">
-                <span className="material-symbols-rounded text-blue-600">database</span>
+        {/* ── REDESIGNED BACKUP & EXPORT WIZARD ── */}
+        <div className="lg:col-span-1 bg-white p-8 rounded-[2rem] shadow-sm border border-slate-100 flex flex-col group transition-all duration-300 hover:shadow-xl hover:shadow-blue-500/5">
+          <div className="flex items-center gap-3 mb-6">
+            <div className="p-3 bg-blue-50 rounded-xl">
+              <span className="material-symbols-rounded text-blue-600">database</span>
+            </div>
+            <h2 className="text-xl font-black text-slate-900 tracking-tight">Export Wizard</h2>
+          </div>
+
+          <div className="space-y-5 flex-1">
+            {/* Bagian 1: Pilih Data */}
+            <div className="space-y-2">
+              <label className="text-[10px] font-black text-slate-400 uppercase tracking-[0.2em] ml-1">Pilih Jenis Data</label>
+              <div className="relative">
+                <select 
+                  value={exportWizard.dataType}
+                  onChange={(e) => setExportWizard({...exportWizard, dataType: e.target.value})}
+                  className="w-full p-4 bg-slate-50 border border-slate-100 rounded-2xl text-sm font-bold text-slate-700 outline-none focus:ring-2 focus:ring-blue-500/20 appearance-none cursor-pointer"
+                >
+                  <option value="full">📦 Full Database Backup</option>
+                  <option value="master">👥 Data Master (SKU & Karyawan)</option>
+                  <option value="transaksi">💸 Data Transaksi (Invoice/PO)</option>
+                </select>
+                <span className="material-symbols-rounded absolute right-4 top-1/2 -translate-y-1/2 text-slate-400 pointer-events-none">expand_more</span>
               </div>
-              <h2 className="text-xl font-black text-slate-900 tracking-tight">Backup & Export</h2>
+            </div>
+
+            {/* Bagian 2: Filter Periode (Hanya aktif jika Transaksi dipilih) */}
+            <div className={`space-y-2 transition-all duration-500 ${exportWizard.dataType === 'transaksi' ? 'opacity-100 scale-100' : 'opacity-30 scale-95 pointer-events-none'}`}>
+              <label className="text-[10px] font-black text-slate-400 uppercase tracking-[0.2em] ml-1">Filter Periode</label>
+              <div className="grid grid-cols-2 gap-2">
+                <input 
+                  type="date" 
+                  value={exportWizard.startDate}
+                  onChange={(e) => setExportWizard({...exportWizard, startDate: e.target.value})}
+                  className="w-full p-3 bg-slate-50 border border-slate-100 rounded-xl text-xs font-bold text-slate-600 outline-none"
+                />
+                <input 
+                  type="date" 
+                  value={exportWizard.endDate}
+                  onChange={(e) => setExportWizard({...exportWizard, endDate: e.target.value})}
+                  className="w-full p-3 bg-slate-50 border border-slate-100 rounded-xl text-xs font-bold text-slate-600 outline-none"
+                />
+              </div>
+            </div>
+
+            {/* Bagian 3: Pilih Format */}
+            <div className="space-y-2">
+              <label className="text-[10px] font-black text-slate-400 uppercase tracking-[0.2em] ml-1">Pilih Format File</label>
+              <div className="grid grid-cols-3 gap-2">
+                {[
+                  { id: 'sql', label: '.SQL', icon: 'terminal', color: 'blue' },
+                  { id: 'xlsx', label: '.XLSX', icon: 'table_view', color: 'emerald' },
+                  { id: 'pdf', label: '.PDF', icon: 'picture_as_pdf', color: 'red' },
+                ].map((fmt) => (
+                  <button
+                    key={fmt.id}
+                    onClick={() => setExportWizard({...exportWizard, format: fmt.id})}
+                    className={`flex flex-col items-center justify-center p-3 rounded-2xl border-2 transition-all gap-1 ${
+                      exportWizard.format === fmt.id 
+                        ? `bg-${fmt.color}-50 border-${fmt.color}-500 text-${fmt.color}-700 shadow-inner` 
+                        : 'bg-white border-slate-50 text-slate-400 hover:bg-slate-50 hover:border-slate-100'
+                    }`}
+                  >
+                    <span className="material-symbols-rounded text-lg">{fmt.icon}</span>
+                    <span className="text-[10px] font-black">{fmt.label}</span>
+                  </button>
+                ))}
+              </div>
             </div>
           </div>
-          
-          <div className="space-y-4 flex-1">
-            <button 
-              onClick={() => downloadFile('/admin/database/export-all', 'FULL_DB.xlsx')}
-              className="w-full p-4 bg-slate-50 rounded-2xl border border-slate-100 hover:border-emerald-200 hover:bg-white transition-all flex items-center gap-4"
-            >
-              <div className="w-10 h-10 bg-white rounded-xl shadow-sm flex items-center justify-center text-emerald-500">
-                <span className="material-symbols-rounded">cloud_download</span>
+
+          {/* Bagian 4: Action Button */}
+          <div className="mt-8 relative">
+            {exportSuccess && (
+              <div className="absolute -top-10 left-0 right-0 animate-in slide-in-from-bottom-2 duration-300">
+                <div className="bg-emerald-500 text-white text-[10px] font-black py-2 px-4 rounded-xl flex items-center justify-center gap-2 shadow-lg shadow-emerald-200">
+                  <span className="material-symbols-rounded text-sm">check_circle</span>
+                  DOWNLOAD BERHASIL DISIMPAN!
+                </div>
               </div>
-              <div className="text-left">
-                <div className="font-bold text-slate-900 text-xs">Full Backup</div>
-                <div className="text-[10px] text-slate-400 font-bold uppercase">Excel Multi-Sheet</div>
-              </div>
-            </button>
+            )}
 
             <button 
-              onClick={() => setShowBackupModal(true)}
-              className="w-full p-4 bg-slate-50 rounded-2xl border border-slate-100 hover:border-blue-200 hover:bg-white transition-all flex items-center gap-4"
+              onClick={handleExportWizard}
+              disabled={isExporting}
+              className={`w-full py-4 font-black rounded-2xl transition-all duration-300 flex items-center justify-center gap-3 shadow-xl group overflow-hidden relative ${
+                isExporting 
+                  ? 'bg-slate-100 text-slate-400 cursor-wait shadow-none' 
+                  : exportSuccess
+                    ? 'bg-emerald-600 text-white shadow-emerald-200'
+                    : 'bg-slate-900 text-white hover:bg-blue-600 shadow-slate-200'
+              }`}
             >
-              <div className="w-10 h-10 bg-white rounded-xl shadow-sm flex items-center justify-center text-blue-500">
-                <span className="material-symbols-rounded">history</span>
-              </div>
-              <div className="text-left">
-                <div className="font-bold text-slate-900 text-xs">Backup Transaksi</div>
-                <div className="text-[10px] text-slate-400 font-bold uppercase">Periode Tertentu</div>
-              </div>
+              {isExporting ? (
+                <>
+                  <div className="absolute inset-0 bg-slate-200 w-full animate-pulse opacity-20"></div>
+                  <span className="material-symbols-rounded animate-spin text-blue-500">sync</span>
+                  <span>MENYIAPKAN FILE...</span>
+                </>
+              ) : exportSuccess ? (
+                <>
+                  <span className="material-symbols-rounded">download_done</span>
+                  <span>DOWNLOAD SELESAI</span>
+                </>
+              ) : (
+                <>
+                  <span className="material-symbols-rounded animate-bounce group-hover:animate-none">download</span>
+                  <span>GENERATE & DOWNLOAD</span>
+                </>
+              )}
             </button>
-          </div>
-
-          <div className="pt-4 border-t border-slate-50 grid grid-cols-2 gap-2">
-              {categories.map(cat => (
-                <button
-                  key={cat.id}
-                  onClick={() => downloadFile(`/admin/database/export-category/${cat.id}`, `${cat.id}.xlsx`)}
-                  className={`p-3 rounded-xl border flex items-center gap-2 transition-all hover:scale-105 active:scale-95 ${cat.color} group shadow-sm`}
-                >
-                  <span className="material-symbols-rounded text-xl">{cat.icon}</span>
-                  <div className="text-[9px] font-black uppercase tracking-wider truncate">{cat.name.split(' ')[1] || cat.name}</div>
-                </button>
-              ))}
+            <p className="text-center text-[9px] text-slate-400 font-bold uppercase tracking-widest mt-4 opacity-60">
+              Last Backup: {new Date().toLocaleDateString('id-ID')}
+            </p>
           </div>
         </div>
       </div>

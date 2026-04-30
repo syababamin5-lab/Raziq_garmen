@@ -6,7 +6,7 @@ echo          RAZIQ GARMENT - ERP PRODUCTION SYSTEM
 echo =======================================================
 echo.
 echo [1/2] Memeriksa Database Lokal...
-if exist "D:\sistem_garmen\garmen.db" (
+if exist "d:\sistem_garmen_v2\garmen.db" (
     echo [OK] Database ditemukan.
 ) else (
     echo [!] Database tidak ditemukan! Pastikan garmen.db ada di root.
@@ -14,12 +14,12 @@ if exist "D:\sistem_garmen\garmen.db" (
 
 echo.
 echo [2/2] Menghidupkan Server Tunggal (Backend + UI)...
-cd /d D:\sistem_garmen\erp_api
+cd /d d:\sistem_garmen_v2\erp_api
 
 :: Cek apakah venv ada di root
-if exist "D:\sistem_garmen\.venv\Scripts\activate.bat" (
+if exist "d:\sistem_garmen_v2\.venv\Scripts\activate.bat" (
     echo [INFO] Menggunakan Virtual Environment (.venv)...
-    call D:\sistem_garmen\.venv\Scripts\activate.bat
+    call d:\sistem_garmen_v2\.venv\Scripts\activate.bat
 )
 
 echo.

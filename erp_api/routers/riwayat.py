@@ -52,6 +52,17 @@ async def void_transaksi(payload: schemas.VoidRequest, db: Session = Depends(get
                         elif "Cicilan" in ket:
                              karyawan.saldo_kasbon += nom
 
+            # Balik/Hapus Log Produksi jika relevan (agar dashboard sinkron)
+            if "Cutting" in ket or "Jahit" in ket:
+                # Cari log produksi dengan keterangan/sku yang mirip
+                sku_match = re.search(r'\[SKU:([^\]]+)\]', ket) or re.search(r'pcs\s+(.*?)\s+\(Jahit\)', ket)
+                if sku_match:
+                    sku = sku_match.group(1).strip()
+                    # Kita hapus log produksi terbaru untuk SKU ini yang divoid
+                    log_p = db.query(models.ProductionLog).filter(models.ProductionLog.kode_sku == sku).order_by(models.ProductionLog.id.desc()).first()
+                    if log_p:
+                        db.delete(log_p)
+
         db.commit()
         return schemas.APIResponse(success=True, message=f"VOID '{ket}' berhasil. Jurnal pembalik otomatis telah dibuat.")
     except Exception as e:
