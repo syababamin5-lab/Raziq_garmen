@@ -42,8 +42,8 @@ export default function Topbar({ title, onToggleSidebar, isSidebarOpen }) {
       <div className="flex items-center gap-4">
         <div className="flex items-center gap-3">
           <div className="w-9 h-9 rounded-xl bg-emerald-50 border border-emerald-100 flex items-center justify-center text-emerald-700 font-black text-sm overflow-hidden shadow-sm">
-            {user?.foto_url ? (
-              <img src={getFileUrl(user.foto_url)} className="w-full h-full object-cover" alt="" />
+            {user?.foto_base64 || user?.foto_url ? (
+              <img src={user.foto_base64 || getFileUrl(user.foto_url)} className="w-full h-full object-cover" alt="" />
             ) : (
               user?.nama_lengkap?.charAt(0).toUpperCase() || 'S'
             )}

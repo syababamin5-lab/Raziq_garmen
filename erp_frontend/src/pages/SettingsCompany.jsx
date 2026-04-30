@@ -10,7 +10,9 @@ export default function SettingsCompany() {
     website: '',
     nama_pemilik: '',
     jabatan_pemilik: '',
-    logo_url: ''
+    logo_url: '',
+    logo_base64: '',
+    ttd_base64: ''
   });
   const [loading, setLoading] = useState(false);
   const [success, setSuccess] = useState(false);
@@ -45,8 +47,27 @@ export default function SettingsCompany() {
       {/* Header */}
       <div className="bg-white p-10 rounded-[3rem] shadow-sm border border-slate-100 flex items-center gap-8 relative overflow-hidden">
         <div className="absolute top-0 right-0 w-32 h-full bg-emerald-500/5 -rotate-12 translate-x-10"></div>
-        <div className="w-24 h-24 rounded-3xl bg-emerald-900 flex items-center justify-center text-white shadow-2xl">
-          <span className="material-symbols-rounded text-5xl">business</span>
+        <div className="w-24 h-24 rounded-3xl bg-emerald-900 flex items-center justify-center text-white shadow-2xl overflow-hidden relative group cursor-pointer">
+          {config.logo_base64 || config.logo_url ? (
+            <img src={config.logo_base64 || config.logo_url} className="w-full h-full object-contain p-2" alt="Logo" />
+          ) : <span className="material-symbols-rounded text-5xl">business</span>}
+          
+          <label className="absolute inset-0 bg-black/60 opacity-0 group-hover:opacity-100 transition-opacity flex flex-col items-center justify-center text-white text-[8px] font-bold uppercase cursor-pointer">
+            <span className="material-symbols-rounded text-xl mb-1">upload</span>
+            Ganti Logo
+            <input type="file" className="hidden" accept="image/*" onChange={async (e) => {
+              const file = e.target.files[0];
+              if (!file) return;
+              const formData = new FormData();
+              formData.append('file', file);
+              try {
+                const { data } = await api.post('/company-config/upload-logo', formData);
+                if (data.status === 'success') {
+                  setConfig({...config, logo_base64: data.url});
+                }
+              } catch (err) { alert('Gagal upload logo'); }
+            }} />
+          </label>
         </div>
         <div>
           <h1 className="text-3xl font-black text-slate-800 tracking-tighter font-outfit uppercase">Profil Perusahaan</h1>
@@ -187,9 +208,9 @@ export default function SettingsCompany() {
           <div>
             <h3 className="text-xs font-black text-emerald-600 uppercase tracking-[0.2em] mb-6 border-b pb-2">Tanda Tangan Digital (TTD Pimpinan)</h3>
             <div className="flex flex-col md:flex-row items-start gap-10">
-              <div className="w-full md:w-64 aspect-square bg-slate-100 rounded-[2rem] border-2 border-dashed border-slate-200 flex flex-col items-center justify-center p-6 text-center group hover:border-emerald-500 transition-all cursor-pointer relative overflow-hidden">
-                {config.ttd_url ? (
-                  <img src={config.ttd_url} alt="TTD Preview" className="w-full h-full object-contain" />
+          <div className="w-full md:w-64 aspect-square bg-slate-100 rounded-[2rem] border-2 border-dashed border-slate-200 flex flex-col items-center justify-center p-6 text-center group hover:border-emerald-500 transition-all cursor-pointer relative overflow-hidden">
+                {config.ttd_base64 || config.ttd_url ? (
+                  <img src={config.ttd_base64 || config.ttd_url} alt="TTD Preview" className="w-full h-full object-contain" />
                 ) : (
                   <>
                     <span className="material-symbols-rounded text-4xl text-slate-300 mb-2 group-hover:text-emerald-500 transition-all">signature</span>
@@ -208,7 +229,7 @@ export default function SettingsCompany() {
                     try {
                       const { data } = await api.post('/company-config/upload-ttd', formData);
                       if (data.status === 'success') {
-                        setConfig({...config, ttd_url: data.url});
+                        setConfig({...config, ttd_base64: data.url});
                       }
                     } catch (err) { alert('Gagal upload TTD'); }
                   }}

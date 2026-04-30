@@ -39,24 +39,23 @@ export default function Sidebar({ isOpen }) {
       {/* ── User Profile ── */}
       <div className={`px-5 py-6 border-b border-white/10 transition-opacity duration-300 ${isOpen ? 'opacity-100' : 'opacity-0 md:opacity-100'}`}>
         <div className="flex items-center gap-3 overflow-hidden">
-          {user?.foto_url ? (
+          {(user?.foto_base64 || user?.foto_url) ? (
             <img 
-              src={getFileUrl(user.foto_url)} 
+              src={user.foto_base64 || getFileUrl(user.foto_url)} 
               className="w-10 h-10 rounded-xl object-cover border border-white/20 shadow-inner flex-shrink-0" 
               alt="" 
               onError={(e) => {
                 e.target.onerror = null;
                 e.target.style.display = 'none';
-                // Trigger fallback manually if possible or just hide and let initial show
                 const sibling = e.target.nextSibling;
                 if (sibling) sibling.style.display = 'flex';
               }}
             />
           ) : null}
-          {(!user?.foto_url || user?.foto_url) && (
+          {(!user?.foto_base64 && !user?.foto_url) || (user?.foto_base64 || user?.foto_url) && (
             <div 
               className="w-10 h-10 rounded-xl bg-emerald-700 flex items-center justify-center text-white font-black text-lg shadow-inner flex-shrink-0"
-              style={{ display: user?.foto_url ? 'none' : 'flex' }}
+              style={{ display: (user?.foto_base64 || user?.foto_url) ? 'none' : 'flex' }}
             >
               {user?.nama_lengkap?.charAt(0).toUpperCase() || 'R'}
             </div>

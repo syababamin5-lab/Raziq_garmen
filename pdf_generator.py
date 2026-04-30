@@ -1,5 +1,8 @@
-from fpdf import FPDF
 import datetime
+import base64
+import io
+import os
+from fpdf import FPDF
 
 class PDF(FPDF):
     def __init__(self, judul_laporan, periode="", orientation='P'):
@@ -8,11 +11,32 @@ class PDF(FPDF):
         self.judul_laporan = judul_laporan
         self.periode = periode
         self.headers_data = None # Memori untuk menyimpan Print Titles (Header Tabel)
+        self.logo_base64 = None # Data logo Base64
 
     def header(self):
-        # Kop Perusahaan
+        # 1. Logo Perusahaan (Jika ada)
+        if hasattr(self, 'logo_base64') and self.logo_base64:
+            try:
+                # Bersihkan header data:image/png;base64,
+                if "," in self.logo_base64:
+                    header, encoded = self.logo_base64.split(",", 1)
+                else:
+                    encoded = self.logo_base64
+                
+                img_data = base64.b64decode(encoded)
+                img_file = io.BytesIO(img_data)
+                # Tampilkan logo di kiri atas
+                self.image(img_file, 10, 8, 25) # x=10, y=8, w=25
+                self.set_x(40) # Geser teks ke kanan logo
+            except Exception as e:
+                print(f"Error printing logo: {e}")
+                self.set_x(10)
+        else:
+            self.set_x(10)
+
+        # 2. Nama Perusahaan
         self.set_font('Arial', 'B', 15)
-        self.cell(0, 8, 'RAZIQ GARMENT', 0, 1, 'C')
+        self.cell(0, 8, 'ANSA - ERP (RAZIQ GARMENT)', 0, 1, 'L')
         
         # Judul Laporan & Periode
         self.set_font('Arial', 'B', 12)
@@ -64,6 +88,50 @@ class PDF(FPDF):
         self.cell(self.w / 2 - 10, 5, '', 0, 0)
         self.cell(60, 5, f'{jabatan}', 0, 1, 'C')
 
+    def add_dual_signature(self, nama_admin="Admin Keuangan", jabatan_admin="Administrasi", nama_pimpinan="Yana Taryana", jabatan_pimpinan="Owner", ttd_base64=None):
+        """Menambahkan dua tanda tangan (Admin & Pimpinan) secara berdampingan"""
+        self.check_page_break(50)
+        self.ln(10)
+        y_ttd = self.get_y()
+        
+        # Kolom 1: Pembuat Laporan (Admin)
+        self.set_font('Arial', '', 10)
+        self.set_x(10)
+        self.cell(60, 5, 'Dibuat Oleh,', 0, 1, 'C')
+        self.ln(20)
+        self.set_font('Arial', 'BU', 10)
+        self.cell(60, 5, nama_admin, 0, 1, 'C')
+        self.set_font('Arial', '', 9)
+        self.cell(60, 5, jabatan_admin, 0, 1, 'C')
+        
+        # Kolom 2: Mengetahui (Pimpinan)
+        self.set_y(y_ttd)
+        self.set_x(self.w - 70)
+        self.set_font('Arial', '', 10)
+        self.cell(60, 5, 'Mengetahui,', 0, 1, 'C')
+        
+        # Jika ada gambar TTD Base64 Pimpinan
+        if ttd_base64:
+            try:
+                if "," in ttd_base64:
+                    header, encoded = ttd_base64.split(",", 1)
+                else:
+                    encoded = ttd_base64
+                img_data = base64.b64decode(encoded)
+                img_file = io.BytesIO(img_data)
+                self.image(img_file, self.w - 60, y_ttd + 5, 40)
+                self.ln(20)
+            except:
+                self.ln(20)
+        else:
+            self.ln(20)
+            
+        self.set_x(self.w - 70)
+        self.set_font('Arial', 'BU', 10)
+        self.cell(60, 5, nama_pimpinan, 0, 1, 'C')
+        self.set_font('Arial', '', 9)
+        self.cell(60, 5, jabatan_pimpinan, 0, 1, 'C')
+
 def format_rp_pdf(angka):
     if angka < 0: return f"(Rp {abs(angka):,.0f})".replace(',', '.')
     return f"Rp {angka:,.0f}".replace(',', '.')
@@ -71,8 +139,10 @@ def format_rp_pdf(angka):
 # ====================================================================
 # 1. ENGINE LAPORAN 2 KOLOM (Tetap Portrait)
 # ====================================================================
-def export_laporan_2kolom_pdf(judul, periode, data_list, label_total, val_total, nama_ttd="Yana Taryana", jabatan_ttd="Direktur Operasional"):
+def export_laporan_2kolom_pdf(judul, periode, data_list, label_total, val_total, config=None, nama_ttd="Yana Taryana", jabatan_ttd="Direktur Operasional", nama_admin="Admin Keuangan", jabatan_admin="Administrasi"):
     pdf = PDF(judul, periode, orientation='P')
+    if config:
+        pdf.logo_base64 = config.logo_base64
     
     # Daftarkan Print Title
     pdf.headers_data = [
@@ -100,15 +170,24 @@ def export_laporan_2kolom_pdf(judul, periode, data_list, label_total, val_total,
     pdf.cell(130, 10, label_total, 1, 0, 'R', 1)
     pdf.cell(60, 10, format_rp_pdf(val_total), 1, 1, 'R', 1)
 
-    pdf.add_ttd(nama=nama_ttd, jabatan=jabatan_ttd)
+    # Gunakan Dual Signature (Admin & Pimpinan)
+    pdf.add_dual_signature(
+        nama_admin=nama_admin, 
+        jabatan_admin=jabatan_admin, 
+        nama_pimpinan=nama_ttd, 
+        jabatan_pimpinan=jabatan_ttd,
+        ttd_base64=config.ttd_base64 if config else None
+    )
     return pdf.output(dest='S').encode('latin-1')
 
 # ====================================================================
 # 2. ENGINE TABEL PANJANG (Diubah ke LANDSCAPE & KOLOM MELEBAR)
 # ====================================================================
-def export_dataframe_pdf(judul, periode, df, col_widths, nama_ttd="Yana Taryana", jabatan_ttd="Direktur Operasional"):
+def export_dataframe_pdf(judul, periode, df, col_widths, config=None, nama_ttd="Yana Taryana", jabatan_ttd="Direktur Operasional", nama_admin="Admin Keuangan", jabatan_admin="Administrasi"):
     # Kertas dimiringkan menjadi Landscape (Lebar area bisa dipakai: 277mm)
     pdf = PDF(judul, periode, orientation='L')
+    if config:
+        pdf.logo_base64 = config.logo_base64
     
     # Menghitung ulang rasio lebar kolom agar melar memenuhi full 277mm
     total_w = sum(col_widths)
@@ -149,19 +228,25 @@ def export_dataframe_pdf(judul, periode, df, col_widths, nama_ttd="Yana Taryana"
             pdf.cell(actual_widths[i], 7, text, 1, 0, align)
         pdf.ln()
 
-    pdf.add_ttd(nama=nama_ttd, jabatan=jabatan_ttd)
+    # Tambahkan Footer Tanda Tangan Ganda
+    pdf.add_dual_signature(
+        nama_admin=nama_admin, 
+        jabatan_admin=jabatan_admin, 
+        nama_pimpinan=nama_ttd, 
+        jabatan_pimpinan=jabatan_ttd,
+        ttd_base64=config.ttd_base64 if config else None
+    )
     return pdf.output(dest='S').encode('latin-1')
 # ====================================================================
 # 3. ENGINE INVOICE PROFESIONAL (MIRIP REFERENSI MINEARTH)
 # ====================================================================
-def export_invoice_pdf(header_inv, detail_items, terbilang_teks, nama_ttd="Yana Taryana", jabatan_ttd="Direktur Operasional"):
-    pdf = FPDF('P', 'mm', 'A4')
+def export_invoice_pdf(header_inv, detail_items, terbilang_teks, config=None, nama_ttd="Yana Taryana", jabatan_ttd="Direktur Operasional", nama_admin="Admin Keuangan", jabatan_admin="Administrasi"):
+    pdf = PDF("INVOICE PENJUALAN", orientation='P')
+    if config:
+        pdf.logo_base64 = config.logo_base64
     pdf.add_page()
     
-    # KOP SURAT
-    pdf.set_font('Arial', 'B', 20)
-    pdf.set_text_color(41, 128, 185) # Warna Biru
-    pdf.cell(0, 10, 'RAZIQ GARMENT', 0, 1, 'L')
+    # Header Invoice (Logo & Nama) sudah dihandle oleh class PDF
     
     pdf.set_font('Arial', '', 10)
     pdf.set_text_color(50, 50, 50)

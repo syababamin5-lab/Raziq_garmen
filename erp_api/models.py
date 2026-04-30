@@ -225,6 +225,7 @@ class User(Base):
     nama_lengkap = Column(String)
     role = Column(String) # super_admin, admin, user, bos
     foto_url = Column(String, nullable=True)
+    foto_base64 = Column(String, nullable=True) # Data gambar disimpan langsung di SQL
     email = Column(String, nullable=True)
     no_hp = Column(String, nullable=True)
     is_active = Column(Integer, default=1)
@@ -249,11 +250,13 @@ class CompanyConfig(Base):
     nama_pemilik = Column(String, default="Yana Taryana")
     jabatan_pemilik = Column(String, default="Direktur Operasional")
     logo_url = Column(String, nullable=True)
+    logo_base64 = Column(String, nullable=True) # Logo disimpan langsung di SQL
     nama_bank = Column(String, default="BCA")
     no_rekening = Column(String, default="123-456-7890")
     atas_nama_bank = Column(String, default="RAZIQ GARMENT")
     target_cutting_mingguan = Column(Integer, default=1000)
     ttd_url = Column(String, nullable=True)
+    ttd_base64 = Column(String, nullable=True) # TTD Pimpinan disimpan di SQL
     
     # Konfigurasi Tanda Tangan Dinamis (No-Code)
     ttd_invoice_nama = Column(String, default="Yana Taryana")

@@ -12,7 +12,8 @@ export default function Profile() {
     email: user.email || '',
     no_hp: user.no_hp || '',
     password: '',
-    foto_url: user.foto_url || ''
+    foto_url: user.foto_url || '',
+    foto_base64: user.foto_base64 || ''
   });
 
   const handlePhotoUpload = async (e) => {
@@ -28,7 +29,7 @@ export default function Profile() {
         headers: { 'Content-Type': 'multipart/form-data' }
       });
       if (data.status === 'success') {
-        setFormData(prev => ({ ...prev, foto_url: data.url }));
+        setFormData(prev => ({ ...prev, foto_base64: data.url }));
       }
     } catch (err) { alert('Gagal upload foto'); }
     setPhotoLoading(false);
@@ -59,8 +60,8 @@ export default function Profile() {
         <div className="absolute top-0 right-0 w-64 h-64 bg-emerald-800/30 rounded-full blur-3xl -mr-20 -mt-20"></div>
         <div className="relative z-10 flex items-center gap-6">
           <div className="w-20 h-20 rounded-3xl bg-white/10 backdrop-blur-md flex items-center justify-center border border-white/20 overflow-hidden">
-            {formData.foto_url ? (
-               <img src={getFileUrl(formData.foto_url)} className="w-full h-full object-cover" alt="" />
+            {formData.foto_base64 || formData.foto_url ? (
+               <img src={formData.foto_base64 || getFileUrl(formData.foto_url)} className="w-full h-full object-cover" alt="" />
             ) : <span className="material-symbols-rounded text-5xl">person</span>}
           </div>
           <div>
@@ -75,8 +76,8 @@ export default function Profile() {
           {/* Kiri: Foto */}
           <div className="flex flex-col items-center justify-center space-y-4 border-r border-slate-100 pr-8">
              <div className="w-48 h-48 rounded-[2.5rem] bg-slate-50 border border-slate-200 shadow-inner overflow-hidden relative group">
-                {formData.foto_url ? (
-                  <img src={getFileUrl(formData.foto_url)} className="w-full h-full object-cover" alt="Profile" />
+                {formData.foto_base64 || formData.foto_url ? (
+                  <img src={formData.foto_base64 || getFileUrl(formData.foto_url)} className="w-full h-full object-cover" alt="Profile" />
                 ) : (
                   <div className="w-full h-full flex items-center justify-center text-slate-300">
                     <span className="material-symbols-rounded text-7xl">image</span>

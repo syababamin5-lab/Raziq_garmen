@@ -324,6 +324,7 @@ def login(request: schemas.LoginRequest, db: Session = Depends(get_db)):
             "nama_lengkap": user.nama_lengkap,
             "role": user.role,
             "foto_url": user.foto_url,
+            "foto_base64": user.foto_base64,
             "email": user.email,
             "no_hp": user.no_hp
         }
@@ -341,6 +342,7 @@ def update_my_profile(data: dict, db: Session = Depends(get_db)):
     if "email" in data: user.email = data["email"]
     if "no_hp" in data: user.no_hp = data["no_hp"]
     if "foto_url" in data: user.foto_url = data["foto_url"]
+    if "foto_base64" in data: user.foto_base64 = data["foto_base64"]
     if "password" in data and data["password"]:
         user.password_hash = get_password_hash(data["password"])
         
@@ -416,26 +418,43 @@ def get_users(db: Session = Depends(get_db)):
     return db.query(models.User).all()
 
 @app.post("/api/users/upload-photo")
-async def upload_user_photo(file: UploadFile = File(...)):
+async def upload_user_photo(request: Request, db: Session = Depends(get_db), file: UploadFile = File(...)):
     try:
-        ext = file.filename.split('.')[-1]
-        filename = f"profile_{datetime.now().strftime('%Y%m%d_%H%M%S')}.{ext}"
-        filepath = os.path.join(UPLOAD_DIR, filename)
-        with open(filepath, "wb") as buffer:
-            shutil.copyfileobj(file.file, buffer)
-        return {"status": "success", "url": f"/uploads/profiles/{filename}"}
+        # Baca konten file
+        contents = await file.read()
+        import base64
+        # Tentukan tipe mime (misal image/png)
+        mime_type = file.content_type or "image/png"
+        base64_data = base64.b64encode(contents).decode('utf-8')
+        base64_url = f"data:{mime_type};base64,{base64_data}"
+        
+        # Ambil user dari token jika memungkinkan, tapi untuk update profil biasanya dikirim ID
+        # Namun di sini kita kembalikan URL base64 agar frontend bisa menyimpannya ke user.foto_base64
+        return {"status": "success", "url": base64_url}
+    except Exception as e:
+        return {"status": "error", "message": str(e)}
+
+@app.post("/api/company-config/upload-logo")
+async def upload_company_logo(file: UploadFile = File(...)):
+    try:
+        contents = await file.read()
+        import base64
+        mime_type = file.content_type or "image/png"
+        base64_data = base64.b64encode(contents).decode('utf-8')
+        base64_url = f"data:{mime_type};base64,{base64_data}"
+        return {"status": "success", "url": base64_url}
     except Exception as e:
         return {"status": "error", "message": str(e)}
 
 @app.post("/api/company-config/upload-ttd")
 async def upload_company_ttd(file: UploadFile = File(...)):
     try:
-        ext = file.filename.split('.')[-1]
-        filename = f"ttd_{datetime.now().strftime('%Y%m%d_%H%M%S')}.{ext}"
-        filepath = os.path.join(UPLOAD_DIR, filename)
-        with open(filepath, "wb") as buffer:
-            shutil.copyfileobj(file.file, buffer)
-        return {"status": "success", "url": f"/uploads/profiles/{filename}"}
+        contents = await file.read()
+        import base64
+        mime_type = file.content_type or "image/png"
+        base64_data = base64.b64encode(contents).decode('utf-8')
+        base64_url = f"data:{mime_type};base64,{base64_data}"
+        return {"status": "success", "url": base64_url}
     except Exception as e:
         return {"status": "error", "message": str(e)}
 
@@ -447,6 +466,7 @@ def update_user(user_id: int, data: dict, db: Session = Depends(get_db)):
     if "nama_lengkap" in data: user.nama_lengkap = data["nama_lengkap"]
     if "role" in data: user.role = data["role"]
     if "foto_url" in data: user.foto_url = data["foto_url"]
+    if "foto_base64" in data: user.foto_base64 = data["foto_base64"]
     if "email" in data: user.email = data["email"]
     if "no_hp" in data: user.no_hp = data["no_hp"]
     if "password" in data and data["password"]:
