@@ -521,6 +521,76 @@ def export_purchase_pdf(header_po, detail_items, terbilang_teks, config=None, na
     
     return pdf.output(dest='S').encode('latin-1')
 
+# ====================================================================
+# 6. ENGINE KARTU HUTANG / PIUTANG (MITRA)
+# ====================================================================
+def export_kartu_mitra_pdf(judul, periode, nama_mitra, data_mutasi, running_saldo_akhir, config=None, nama_ttd=None, jabatan_ttd=None):
+    pdf = PDF(judul, periode, orientation='P', config=config)
+    pdf.add_page()
+    
+    # Header Info Mitra
+    pdf.set_font('Arial', 'B', 11)
+    pdf.set_text_color(6, 78, 59)
+    pdf.cell(40, 7, 'Nama Mitra:', 0, 0)
+    pdf.set_font('Arial', '', 11)
+    pdf.set_text_color(0, 0, 0)
+    pdf.cell(100, 7, str(nama_mitra).upper(), 0, 1)
+    
+    pdf.ln(5)
+    
+    # Table Header
+    pdf.set_fill_color(6, 78, 59)
+    pdf.set_text_color(255, 255, 255)
+    pdf.set_font('Arial', 'B', 10)
+    
+    # [Tanggal, Keterangan, Debit, Kredit, Saldo]
+    w_cols = [25, 75, 30, 30, 30]
+    headers = ['Tanggal', 'Keterangan / No Ref', 'Debit', 'Kredit', 'Saldo']
+    
+    for i, h in enumerate(headers):
+        pdf.cell(w_cols[i], 10, h, 1, 0, 'C', 1)
+    pdf.ln()
+    
+    pdf.set_text_color(0, 0, 0)
+    pdf.set_font('Arial', '', 9)
+    
+    for row in data_mutasi:
+        pdf.check_page_break(8)
+        
+        tgl = row.get('tanggal', '')
+        ket = row.get('keterangan', '')
+        debit = row.get('debit', 0)
+        kredit = row.get('kredit', 0)
+        saldo = row.get('saldo', 0)
+        
+        pdf.cell(w_cols[0], 7, str(tgl)[:10], 1, 0, 'C')
+        
+        # Truncate ket if too long
+        display_ket = str(ket)
+        if len(display_ket) > 40: display_ket = display_ket[:37] + "..."
+        pdf.cell(w_cols[1], 7, f" {display_ket}", 1, 0, 'L')
+        
+        pdf.cell(w_cols[2], 7, format_rp_pdf(debit) if debit else '-', 1, 0, 'R')
+        pdf.cell(w_cols[3], 7, format_rp_pdf(kredit) if kredit else '-', 1, 0, 'R')
+        
+        pdf.set_font('Arial', 'B', 9)
+        pdf.cell(w_cols[4], 7, format_rp_pdf(saldo), 1, 1, 'R')
+        pdf.set_font('Arial', '', 9)
+
+    # Summary Line
+    pdf.ln(2)
+    pdf.set_font('Arial', 'B', 10)
+    pdf.set_fill_color(240, 240, 240)
+    pdf.cell(sum(w_cols[:4]), 10, ' SALDO AKHIR SAAT INI', 1, 0, 'R', 1)
+    
+    # Warna Saldo (Merah jika positif untuk hutang/piutang tertentu)
+    pdf.set_text_color(180, 0, 0) if running_saldo_akhir != 0 else pdf.set_text_color(0, 0, 0)
+    pdf.cell(w_cols[4], 10, format_rp_pdf(running_saldo_akhir), 1, 1, 'R', 1)
+    
+    pdf.set_text_color(0, 0, 0)
+    pdf.add_ttd(config, nama=nama_ttd, jabatan=jabatan_ttd)
+    return pdf.output(dest='S').encode('latin-1')
+
 def _draw_qr_to_pdf(pdf, config, x_pos, nama_p="Yana Taryana"):
     try:
         import requests, tempfile

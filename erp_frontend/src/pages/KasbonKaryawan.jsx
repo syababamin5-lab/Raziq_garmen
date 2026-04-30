@@ -118,7 +118,25 @@ export default function KasbonKaryawan() {
 
           {/* LIST SECTION */}
           <div className="space-y-8">
-            <h3 className="text-xl font-black text-[#064E3B] border-l-4 border-emerald-500 pl-4 uppercase tracking-tight">Daftar Saldo Kasbon</h3>
+            <div className="flex items-center justify-between">
+                <h3 className="text-xl font-black text-[#064E3B] border-l-4 border-emerald-500 pl-4 uppercase tracking-tight">Daftar Saldo Kasbon</h3>
+                <div className="flex gap-2">
+                    <button 
+                        onClick={() => window.open(`/api/reports-mitra/cetak-kartu?type=kasbon&mitra_id=${kasbonForm.karyawan_id}`, '_blank')}
+                        disabled={!kasbonForm.karyawan_id}
+                        className="p-2.5 bg-blue-50 text-blue-600 rounded-xl hover:bg-blue-100 disabled:opacity-50 transition-all border border-blue-200 shadow-sm"
+                        title="Cetak Kartu Per Orang"
+                    >
+                        <span className="material-symbols-rounded text-lg">print</span>
+                    </button>
+                    <button 
+                        onClick={() => window.open(`/api/reports-mitra/cetak-semua?type=kasbon`, '_blank')}
+                        className="flex items-center gap-2 px-4 py-2.5 bg-slate-50 text-slate-600 rounded-xl hover:bg-slate-100 transition-all border border-slate-200 shadow-sm font-bold text-xs"
+                    >
+                        <span className="material-symbols-rounded text-sm">summarize</span> CETAK RINGKASAN
+                    </button>
+                </div>
+            </div>
             <div className="bg-white border border-slate-100 rounded-[2.5rem] overflow-hidden shadow-sm">
               <table className="w-full text-left text-sm">
                 <thead className="bg-slate-50 text-slate-500 font-bold uppercase text-[10px] tracking-widest">

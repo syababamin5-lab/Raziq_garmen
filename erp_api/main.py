@@ -17,7 +17,7 @@ import shutil
 # Import Routers
 from routers import (
     dashboard, produksi, pembelian, penjualan, 
-    keuangan, laporan, karyawan, riwayat
+    keuangan, laporan, karyawan, riwayat, reports_mitra
 )
 from passlib.context import CryptContext
 import jwt
@@ -279,6 +279,7 @@ app.include_router(keuangan.router)
 app.include_router(laporan.router)
 app.include_router(karyawan.router)
 app.include_router(riwayat.router)
+app.include_router(reports_mitra.router)
 
 # Folder untuk upload foto profil
 UPLOAD_DIR = os.path.join(os.path.dirname(os.path.abspath(__file__)), "uploads", "profiles")

@@ -120,7 +120,16 @@ export default function KasPiutang() {
             
             {activeTab === 'piutang' && (
                 <div className="max-w-xl space-y-8 animate-in fade-in slide-in-from-bottom-2">
-                    <h2 className="text-xl font-black text-[#064E3B]">Penerimaan Piutang Customer</h2>
+                    <div className="flex items-center justify-between">
+                        <h2 className="text-xl font-black text-[#064E3B]">Penerimaan Piutang Customer</h2>
+                        <button 
+                            onClick={() => window.open(`/api/reports-mitra/cetak-kartu?type=piutang&mitra_id=${piutangForm.customer_id}`, '_blank')}
+                            disabled={!piutangForm.customer_id}
+                            className="flex items-center gap-2 px-4 py-2 bg-emerald-50 text-emerald-700 rounded-xl font-bold text-xs hover:bg-emerald-100 disabled:opacity-50 transition-all border border-emerald-200"
+                        >
+                            <span className="material-symbols-rounded text-sm">print</span> CETAK KARTU PIUTANG
+                        </button>
+                    </div>
                     <div className="grid gap-6">
                         <div className="space-y-1">
                             <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest pl-2">Pilih Customer</label>
@@ -150,13 +159,28 @@ export default function KasPiutang() {
                         <button onClick={() => handleSubmit('piutang')} disabled={loading} className="w-full bg-[#10B981] text-white p-5 rounded-2xl font-black text-lg shadow-xl hover:bg-[#064E3B] hover:scale-[1.02] transition-all">
                             {loading ? 'MEMPROSES...' : 'POSTING PENERIMAAN'}
                         </button>
+                        <button 
+                            onClick={() => window.open(`/api/reports-mitra/cetak-semua?type=piutang`, '_blank')}
+                            className="w-full bg-slate-100 text-slate-600 p-4 rounded-2xl font-bold text-sm hover:bg-slate-200 transition-all border border-slate-200 flex items-center justify-center gap-2"
+                        >
+                            <span className="material-symbols-rounded">summarize</span> CETAK RINGKASAN SEMUA PIUTANG CUSTOMER
+                        </button>
                     </div>
                 </div>
             )}
 
             {activeTab === 'utang' && (
                 <div className="max-w-xl space-y-8 animate-in fade-in slide-in-from-bottom-2 text-slate-800">
-                    <h2 className="text-xl font-black text-[#064E3B]">Pelunasan Utang ke Supplier</h2>
+                    <div className="flex items-center justify-between">
+                        <h2 className="text-xl font-black text-[#064E3B]">Pelunasan Utang ke Supplier</h2>
+                        <button 
+                            onClick={() => window.open(`/api/reports-mitra/cetak-kartu?type=hutang&mitra_id=${utangForm.supplier_id}`, '_blank')}
+                            disabled={!utangForm.supplier_id}
+                            className="flex items-center gap-2 px-4 py-2 bg-red-50 text-red-700 rounded-xl font-bold text-xs hover:bg-red-100 disabled:opacity-50 transition-all border border-red-200"
+                        >
+                            <span className="material-symbols-rounded text-sm">print</span> CETAK KARTU HUTANG
+                        </button>
+                    </div>
                     <div className="grid gap-6">
                         <div className="space-y-1">
                             <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest pl-2">Pilih Supplier</label>
@@ -181,6 +205,12 @@ export default function KasPiutang() {
                         </div>
                         <button onClick={() => handleSubmit('utang')} disabled={loading} className="w-full bg-[#10B981] text-white p-5 rounded-2xl font-black text-lg shadow-xl hover:bg-[#064E3B] hover:scale-[1.02] transition-all">
                             {loading ? 'MEMPROSES...' : 'POSTING PEMBAYARAN UTANG'}
+                        </button>
+                        <button 
+                            onClick={() => window.open(`/api/reports-mitra/cetak-semua?type=hutang`, '_blank')}
+                            className="w-full bg-slate-100 text-slate-600 p-4 rounded-2xl font-bold text-sm hover:bg-slate-200 transition-all border border-slate-200 flex items-center justify-center gap-2"
+                        >
+                            <span className="material-symbols-rounded">summarize</span> CETAK RINGKASAN SEMUA HUTANG SUPPLIER
                         </button>
                     </div>
                 </div>
@@ -231,7 +261,16 @@ export default function KasPiutang() {
 
             {activeTab === 'kasbon' && (
                 <div className="max-w-xl space-y-8 animate-in fade-in slide-in-from-bottom-2">
-                    <h2 className="text-xl font-black text-[#064E3B]">Cicilan Pembayaran Kasbon</h2>
+                    <div className="flex items-center justify-between">
+                        <h2 className="text-xl font-black text-[#064E3B]">Cicilan Pembayaran Kasbon</h2>
+                        <button 
+                            onClick={() => window.open(`/api/reports-mitra/cetak-kartu?type=kasbon&mitra_id=${kasbonForm.karyawan_id}`, '_blank')}
+                            disabled={!kasbonForm.karyawan_id}
+                            className="flex items-center gap-2 px-4 py-2 bg-blue-50 text-blue-700 rounded-xl font-bold text-xs hover:bg-blue-100 disabled:opacity-50 transition-all border border-blue-200"
+                        >
+                            <span className="material-symbols-rounded text-sm">print</span> CETAK KARTU KASBON
+                        </button>
+                    </div>
                     <div className="grid gap-6">
                         <div className="space-y-1">
                             <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest pl-2">Pilih Karyawan</label>
@@ -256,6 +295,12 @@ export default function KasPiutang() {
                         </div>
                         <button onClick={() => handleSubmit('kasbon')} disabled={loading} className="w-full bg-[#10B981] text-white p-5 rounded-2xl font-black text-lg shadow-xl hover:bg-[#064E3B] hover:scale-[1.02] transition-all">
                             {loading ? 'MEMPROSES...' : 'POSTING CICILAN KASBON'}
+                        </button>
+                        <button 
+                            onClick={() => window.open(`/api/reports-mitra/cetak-semua?type=kasbon`, '_blank')}
+                            className="w-full bg-slate-100 text-slate-600 p-4 rounded-2xl font-bold text-sm hover:bg-slate-200 transition-all border border-slate-200 flex items-center justify-center gap-2"
+                        >
+                            <span className="material-symbols-rounded">summarize</span> CETAK RINGKASAN SEMUA KASBON KARYAWAN
                         </button>
                     </div>
                 </div>
