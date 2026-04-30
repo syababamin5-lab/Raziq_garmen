@@ -186,12 +186,55 @@ def get_buku_besar(kode_akun: str, bulan: int, tahun: int, filter_nama: str = ""
         return {"success": False, "message": str(e)}
 
 @router.get("/export-pdf-buku-besar")
-def export_buku_besar_pdf_endpoint(kode_akun: str, bulan: int, tahun: int, filter_nama: str = "", db: Session = Depends(get_db)):
+def export_buku_besar_pdf_endpoint(kode_akun: str = "", bulan: int = 4, tahun: int = 2026, filter_nama: str = "", db: Session = Depends(get_db)):
     try:
-        from pdf_generator import export_dataframe_pdf
+        from pdf_generator import export_dataframe_pdf, export_buku_besar_massal_pdf
         import pandas as pd
         from fastapi.responses import Response
+        from sqlalchemy import func
         
+        config = db.query(models.CompanyConfig).first()
+        n_ttd = config.ttd_laporan_nama if (config and config.ttd_laporan_nama) else (config.nama_pemilik if config else "Yana Taryana")
+        j_ttd = config.ttd_laporan_jabatan if (config and config.ttd_laporan_jabatan) else (config.jabatan_pemilik if config else "Direktur Operasional")
+        periode_str = f"{new_date(2000, bulan, 1).strftime('%B')} {tahun}"
+
+        # MODE: CETAK SEMUA AKUN
+        if not kode_akun or kode_akun == "ALL":
+            # Ambil semua akun yang ada di jurnal umum pada periode ini
+            start_date = datetime.datetime(tahun, bulan, 1)
+            if bulan == 12: end_date = datetime.datetime(tahun+1, 1, 1)
+            else: end_date = datetime.datetime(tahun, bulan+1, 1)
+            
+            akun_aktif = db.query(models.JurnalUmum.kode_akun, models.JurnalUmum.nama_akun)\
+                .filter(models.JurnalUmum.tanggal >= start_date, models.JurnalUmum.tanggal < end_date)\
+                .distinct().all()
+            
+            if not akun_aktif:
+                # Jika tidak ada mutasi, ambil semua akun yang punya saldo awal (transaksi sebelumnya)
+                akun_aktif = db.query(models.JurnalUmum.kode_akun, models.JurnalUmum.nama_akun)\
+                    .filter(models.JurnalUmum.tanggal < end_date)\
+                    .distinct().all()
+
+            if not akun_aktif:
+                return {"status": "error", "message": "Tidak ada data transaksi buku besar untuk periode ini."}
+
+            data_massal = []
+            # Urutkan berdasarkan kode akun
+            akun_aktif = sorted(akun_aktif, key=lambda x: x[0])
+            
+            for k_akun, n_akun in akun_aktif:
+                res = get_buku_besar(k_akun, bulan, tahun, "", db)
+                if res["success"]:
+                    data_massal.append({
+                        "nama_akun": n_akun,
+                        "kode_akun": k_akun,
+                        "rows": res["data"]["list"]
+                    })
+            
+            pdf_bytes = export_buku_besar_massal_pdf(data_massal, periode_str, config, n_ttd, j_ttd)
+            return Response(content=pdf_bytes, media_type="application/pdf", headers={"Content-Disposition": f"inline; filename=BukuBesar_Lengkap_{bulan}_{tahun}.pdf"})
+
+        # MODE: CETAK PER AKUN (INDIVIDU)
         res = get_buku_besar(kode_akun, bulan, tahun, filter_nama, db)
         if not res["success"]: return {"status": "error", "message": "Gagal ambil data"}
         
@@ -208,21 +251,13 @@ def export_buku_besar_pdf_endpoint(kode_akun: str, bulan: int, tahun: int, filte
             
         df = pd.DataFrame(df_list)
         
-        akun = db.query(models.AkunStandard).filter(models.AkunStandard.kode_akun == kode_akun).first()
+        akun = db.query(models.AkunBukuBesar).filter(models.AkunBukuBesar.kode_akun == kode_akun).first()
         nama_akun = akun.nama_akun if akun else kode_akun
-        
         judul = f"BUKU BESAR - {nama_akun}"
-        periode_str = f"{new_date(2000, bulan, 1).strftime('%B')} {tahun}"
-        
-        config = db.query(models.CompanyConfig).first()
-        # [Tanggal, Keterangan, Debit, Kredit, Saldo] Widths
-        # Signer config
-        n_ttd = config.ttd_laporan_nama if (config and config.ttd_laporan_nama) else (config.nama_pemilik if config else "Yana Taryana")
-        j_ttd = config.ttd_laporan_jabatan if (config and config.ttd_laporan_jabatan) else (config.jabatan_pemilik if config else "Direktur Operasional")
 
         pdf_bytes = export_dataframe_pdf(judul, periode_str, df, [30, 95, 40, 40, 45], config, n_ttd, j_ttd)
-        
         return Response(content=pdf_bytes, media_type="application/pdf", headers={"Content-Disposition": f"inline; filename=BukuBesar_{kode_akun}_{bulan}_{tahun}.pdf"})
+
     except Exception as e:
         import traceback
         print(traceback.format_exc())

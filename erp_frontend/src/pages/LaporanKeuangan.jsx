@@ -143,21 +143,15 @@ export default function LaporanKeuangan() {
                     <a 
                         href={
                             activeTab === 'ledger' 
-                            ? `${import.meta.env.VITE_API_BASE_URL || ''}/api/laporan/export-pdf-buku-besar?kode_akun=${selectedAkun}&bulan=${bulan}&tahun=${tahun}&filter_nama=${filterNama}`
+                            ? `${import.meta.env.VITE_API_BASE_URL || ''}/api/laporan/export-pdf-buku-besar?kode_akun=${selectedAkun || 'ALL'}&bulan=${bulan}&tahun=${tahun}&filter_nama=${filterNama}`
                             : `${import.meta.env.VITE_API_BASE_URL || ''}/api/laporan/export-pdf?tipe=${activeTab === 'hpp' ? 'HPP' : activeTab === 'lr' ? 'LR' : activeTab === 'ekuitas' ? 'EKUITAS' : 'NERACA'}&bulan=${bulan}&tahun=${tahun}`
                         }
                         target="_blank"
                         rel="noreferrer"
-                        onClick={(e) => {
-                            if (activeTab === 'ledger' && !selectedAkun) {
-                                e.preventDefault();
-                                alert("Pilih akun terlebih dahulu untuk mencetak Buku Besar!");
-                            }
-                        }}
                         className="bg-slate-800 text-white px-4 py-2.5 rounded-xl text-xs font-black flex items-center gap-2 hover:bg-emerald-600 transition-all shadow-lg shadow-slate-200"
                     >
                         <span className="material-symbols-rounded text-sm">print</span>
-                        CETAK PDF
+                        {activeTab === 'ledger' && !selectedAkun ? 'CETAK SEMUA BUKU BESAR' : 'CETAK PDF'}
                     </a>
                 )}
             </div>
