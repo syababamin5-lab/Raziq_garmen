@@ -124,16 +124,16 @@ export default function KasbonKaryawan() {
                     <button 
                         onClick={() => window.open(`/api/reports-mitra/cetak-kartu?type=kasbon&mitra_id=${kasbonForm.karyawan_id}`, '_blank')}
                         disabled={!kasbonForm.karyawan_id}
-                        className="p-2.5 bg-blue-50 text-blue-600 rounded-xl hover:bg-blue-100 disabled:opacity-50 transition-all border border-blue-200 shadow-sm"
+                        className="flex items-center gap-2 px-3 py-2 bg-emerald-50 text-emerald-700 rounded-xl font-bold text-[10px] hover:bg-emerald-100 disabled:opacity-50 transition-all border border-emerald-200"
                         title="Cetak Kartu Per Orang"
                     >
-                        <span className="material-symbols-rounded text-lg">print</span>
+                        <span className="material-symbols-rounded text-sm">print</span> CETAK KARTU
                     </button>
                     <button 
                         onClick={() => window.open(`/api/reports-mitra/cetak-semua?type=kasbon`, '_blank')}
-                        className="flex items-center gap-2 px-4 py-2.5 bg-slate-50 text-slate-600 rounded-xl hover:bg-slate-100 transition-all border border-slate-200 shadow-sm font-bold text-xs"
+                        className="flex items-center gap-2 px-3 py-2 bg-slate-50 text-slate-600 rounded-xl font-bold text-[10px] hover:bg-slate-100 transition-all border border-slate-200"
                     >
-                        <span className="material-symbols-rounded text-sm">summarize</span> CETAK KUMULATIF
+                        <span className="material-symbols-rounded text-sm">summarize</span> CETAK SEMUA KARTU KASBON
                     </button>
                 </div>
             </div>
