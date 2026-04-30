@@ -36,24 +36,6 @@ export default function Sidebar({ isOpen }) {
       transition-all duration-300 ease-in-out
       ${isOpen ? 'w-64 translate-x-0' : 'w-0 md:w-20 -translate-x-full md:translate-x-0'}
     `}>
-      {/* ── App Logo ── */}
-      <div className={`px-5 pt-8 pb-4 transition-all duration-300 ${isOpen ? 'opacity-100' : 'opacity-0 md:opacity-100 flex justify-center'}`}>
-        <div className="flex items-center gap-3">
-          <img 
-            src="/favicon.png" 
-            className="w-8 h-8 rounded-lg object-contain drop-shadow-lg" 
-            alt="A" 
-            onError={(e) => e.target.style.display = 'none'}
-          />
-          {isOpen && (
-            <div className="animate-in slide-in-from-left-4 duration-500">
-               <h2 className="text-white font-black text-xl tracking-tighter leading-none">ANSA</h2>
-               <p className="text-emerald-400 text-[9px] font-black tracking-[0.2em] uppercase">Enterprise</p>
-            </div>
-          )}
-        </div>
-      </div>
-
       {/* ── User Profile ── */}
       <div className={`px-5 py-6 border-b border-white/10 transition-opacity duration-300 ${isOpen ? 'opacity-100' : 'opacity-0 md:opacity-100'}`}>
         <div className="flex items-center gap-3 overflow-hidden">
