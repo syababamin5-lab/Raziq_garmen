@@ -147,10 +147,10 @@ export default function SettingsCompany() {
                 </div>
               </div>
 
-              {/* TTD Laporan */}
-              <div className="bg-slate-50 p-6 rounded-3xl space-y-4 md:col-span-2">
+              {/* TTD Laporan (Pimpinan) */}
+              <div className="bg-slate-50 p-6 rounded-3xl space-y-4">
                 <h4 className="text-[11px] font-black text-slate-500 uppercase flex items-center gap-2">
-                  <span className="material-symbols-rounded text-sm">analytics</span> TANDA TANGAN LAPORAN KEUANGAN & STOK
+                  <span className="material-symbols-rounded text-sm">analytics</span> TANDA TANGAN LAPORAN (PIMPINAN)
                 </h4>
                 <div className="grid grid-cols-2 gap-4">
                   <div>
@@ -160,6 +160,23 @@ export default function SettingsCompany() {
                   <div>
                     <label className="text-[9px] font-bold text-slate-400 uppercase tracking-widest block mb-1">Jabatan</label>
                     <input type="text" className="w-full bg-white rounded-xl p-3 text-xs font-bold text-slate-700 outline-none border border-slate-100" value={config.ttd_laporan_jabatan || ''} onChange={e => setConfig({...config, ttd_laporan_jabatan: e.target.value})} />
+                  </div>
+                </div>
+              </div>
+
+              {/* TTD Laporan (Admin Pembuat) */}
+              <div className="bg-emerald-50/50 p-6 rounded-3xl space-y-4 border border-emerald-100/50">
+                <h4 className="text-[11px] font-black text-emerald-600 uppercase flex items-center gap-2">
+                  <span className="material-symbols-rounded text-sm">person_edit</span> TANDA TANGAN ADMIN (PEMBUAT)
+                </h4>
+                <div className="grid grid-cols-2 gap-4">
+                  <div>
+                    <label className="text-[9px] font-bold text-emerald-400 uppercase tracking-widest block mb-1">Nama Admin</label>
+                    <input type="text" className="w-full bg-white rounded-xl p-3 text-xs font-bold text-emerald-700 outline-none border border-emerald-100" value={config.ttd_admin_nama || ''} onChange={e => setConfig({...config, ttd_admin_nama: e.target.value})} />
+                  </div>
+                  <div>
+                    <label className="text-[9px] font-bold text-emerald-400 uppercase tracking-widest block mb-1">Jabatan Admin</label>
+                    <input type="text" className="w-full bg-white rounded-xl p-3 text-xs font-bold text-emerald-700 outline-none border border-emerald-100" value={config.ttd_admin_jabatan || ''} onChange={e => setConfig({...config, ttd_admin_jabatan: e.target.value})} />
                   </div>
                 </div>
               </div>

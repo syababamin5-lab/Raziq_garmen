@@ -81,48 +81,62 @@ class PDF(FPDF):
         if self.get_y() + height > page_height - 25: # Sisa margin bawah 25mm
             self.add_page() # Otomatis mencetak ulang header()
 
-    def add_ttd(self, config=None, nama=None, jabatan=None):
+    def add_ttd(self, config=None, nama=None, jabatan=None, nama_admin=None, jabatan_admin=None):
         self.check_page_break(55)
         self.ln(10)
         
         y_pos = self.get_y()
-        # Position TTD on the right side for reports
-        x_pos = self.w - 75
         
+        # LOGIKA NAMA & JABATAN
+        n_p = nama or (config.ttd_laporan_nama if config and config.ttd_laporan_nama else (config.nama_pemilik if config else "Yana Taryana"))
+        j_p = jabatan or (config.ttd_laporan_jabatan if config and config.ttd_laporan_jabatan else (config.jabatan_pemilik if config else "Direktur Operasional"))
+        
+        n_a = nama_admin or (config.ttd_admin_nama if config and config.ttd_admin_nama else "Admin Keuangan")
+        j_a = jabatan_admin or (config.ttd_admin_jabatan if config and config.ttd_admin_jabatan else "Administrasi")
+
+        # 1. KOLOM KIRI: DIBUAT OLEH (ADMIN)
+        self.set_xy(15, y_pos)
         self.set_font('Arial', '', 10)
-        self.set_xy(x_pos, y_pos)
+        self.cell(60, 5, 'Dibuat Oleh,', 0, 1, 'C')
+        y_img_a = self.get_y()
+        _draw_qr_to_pdf(self, config, 33, n_a)
+        
+        self.set_xy(15, y_img_a + 25)
+        self.set_font('Arial', 'BU', 10)
+        self.cell(60, 5, f'{n_a}', 0, 1, 'C')
+        self.set_font('Arial', '', 9)
+        self.set_x(15)
+        self.cell(60, 5, f'{j_a}', 0, 1, 'C')
+
+        # 2. KOLOM KANAN: MENGETAHUI (PIMPINAN)
+        x_pos_p = self.w - 75
+        self.set_xy(x_pos_p, y_pos)
+        self.set_font('Arial', '', 10)
         self.cell(60, 5, 'Mengetahui,', 0, 1, 'C')
+        y_img_p = self.get_y()
         
-        y_img = self.get_y()
-        
-        # JIKA ADA URL TTD, TAMPILKAN GAMBARNYA
+        # JIKA ADA URL TTD, TAMPILKAN GAMBARNYA (Hanya untuk Pimpinan)
         if config and config.ttd_url:
             try:
                 import os
                 base_dir = os.path.dirname(os.path.abspath(__file__))
                 local_path = os.path.join(base_dir, config.ttd_url.lstrip('/'))
                 if os.path.exists(local_path):
-                    self.image(local_path, x=x_pos + 15, y=y_img, w=30)
+                    self.image(local_path, x=x_pos_p + 15, y=y_img_p, w=30)
                     self.ln(20)
                 else:
-                    _draw_qr_to_pdf(self, config, x_pos + 18, nama or config.nama_pemilik)
+                    _draw_qr_to_pdf(self, config, x_pos_p + 18, n_p)
             except:
-                self.ln(20)
+                _draw_qr_to_pdf(self, config, x_pos_p + 18, n_p)
         else:
-            _draw_qr_to_pdf(self, config, x_pos + 18, nama or config.nama_pemilik)
+            _draw_qr_to_pdf(self, config, x_pos_p + 18, n_p)
 
-        self.set_y(y_img + 25)
-        self.set_x(x_pos)
+        self.set_xy(x_pos_p, y_img_p + 25)
         self.set_font('Arial', 'BU', 10)
-        
-        # LOGIKA DYNAMIS: Gunakan parameter jika ada, jika tidak fallback ke config
-        nama_ttd = nama or (config.nama_pemilik if config else "Yana Taryana")
-        jabatan_ttd = jabatan or (config.jabatan_pemilik if config else "Direktur Operasional")
-        
-        self.cell(60, 5, f'{nama_ttd}', 0, 1, 'C')
+        self.cell(60, 5, f'{n_p}', 0, 1, 'C')
         self.set_font('Arial', '', 9)
-        self.set_x(x_pos)
-        self.cell(60, 5, f'{jabatan_ttd}', 0, 1, 'C')
+        self.set_x(x_pos_p)
+        self.cell(60, 5, f'{j_p}', 0, 1, 'C')
 
 def format_rp_pdf(angka):
     if angka is None: return ""
@@ -132,7 +146,7 @@ def format_rp_pdf(angka):
 # ====================================================================
 # 1. ENGINE LAPORAN 2 KOLOM (PORTRAIT) - UNTUK HPP & LABA RUGI
 # ====================================================================
-def export_laporan_2kolom_pdf(judul, periode, data_list, label_total, val_total, config=None, nama_ttd=None, jabatan_ttd=None):
+def export_laporan_2kolom_pdf(judul, periode, data_list, label_total, val_total, config=None, nama_ttd=None, jabatan_ttd=None, nama_admin=None, jabatan_admin=None):
     pdf = PDF(judul, periode, orientation='P', config=config)
     pdf.add_page()
     
@@ -159,13 +173,13 @@ def export_laporan_2kolom_pdf(judul, periode, data_list, label_total, val_total,
     pdf.cell(60, 12, format_rp_pdf(val_total), 1, 1, 'R', 1)
 
     pdf.set_text_color(0, 0, 0) # Reset ke hitam
-    pdf.add_ttd(config, nama=nama_ttd, jabatan=jabatan_ttd)
+    pdf.add_ttd(config, nama=nama_ttd, jabatan=jabatan_ttd, nama_admin=nama_admin, jabatan_admin=jabatan_admin)
     return pdf.output(dest='S').encode('latin-1')
 
 # ====================================================================
 # 2. ENGINE NERACA SKONTRO (LANDSCAPE) - DOUBLE COLUMN
 # ====================================================================
-def export_neraca_skontro_pdf(judul, periode, left_data, right_data, total_left, total_right, config=None, nama_ttd=None, jabatan_ttd=None):
+def export_neraca_skontro_pdf(judul, periode, left_data, right_data, total_left, total_right, config=None, nama_ttd=None, jabatan_ttd=None, nama_admin=None, jabatan_admin=None):
     pdf = PDF(judul, periode, orientation='L', config=config)
     pdf.add_page()
     
@@ -219,13 +233,14 @@ def export_neraca_skontro_pdf(judul, periode, left_data, right_data, total_left,
     pdf.cell(w_col, 10, ' TOTAL PASIVA', 1, 0, 'L', 1)
     pdf.cell(w_val, 10, format_rp_pdf(total_right), 1, 1, 'R', 1)
 
-    pdf.add_ttd(config, nama=nama_ttd, jabatan=jabatan_ttd)
+    pdf.set_text_color(0, 0, 0)
+    pdf.add_ttd(config, nama=nama_ttd, jabatan=jabatan_ttd, nama_admin=nama_admin, jabatan_admin=jabatan_admin)
     return pdf.output(dest='S').encode('latin-1')
 
 # ====================================================================
 # 3. ENGINE TABEL PANJANG (LANDSCAPE) - UNTUK DAFTAR BARANG/STOK
 # ====================================================================
-def export_dataframe_pdf(judul, periode, df, col_widths, config=None, nama_ttd=None, jabatan_ttd=None):
+def export_dataframe_pdf(judul, periode, df, col_widths, config=None, nama_ttd=None, jabatan_ttd=None, nama_admin=None, jabatan_admin=None):
     # Gunakan Orientasi Portrait jika kolom sedikit, Landscape jika banyak
     orient = 'P' if len(df.columns) <= 5 else 'L'
     pdf = PDF(judul, periode, orientation=orient, config=config)
@@ -267,7 +282,7 @@ def export_dataframe_pdf(judul, periode, df, col_widths, config=None, nama_ttd=N
 
     pdf.set_font('Arial', '', 9)
     pdf.set_text_color(0, 0, 0)
-    pdf.add_ttd(config, nama=nama_ttd, jabatan=jabatan_ttd)
+    pdf.add_ttd(config, nama=nama_ttd, jabatan=jabatan_ttd, nama_admin=nama_admin, jabatan_admin=jabatan_admin)
     return pdf.output(dest='S').encode('latin-1')
 
 # ====================================================================
@@ -576,7 +591,7 @@ def _draw_qr_to_pdf(pdf, config, x_pos, nama_p="Yana Taryana"):
         else: pdf.ln(22)
     except: pdf.ln(22)
 
-def export_buku_besar_massal_pdf(data_per_akun, periode, config=None, nama_ttd=None, jabatan_ttd=None):
+def export_buku_besar_massal_pdf(data_per_akun, periode, config=None, nama_ttd=None, jabatan_ttd=None, nama_admin=None, jabatan_admin=None):
     """
     data_per_akun: List of dict { "nama_akun": str, "kode_akun": str, "rows": list }
     """
@@ -635,5 +650,6 @@ def export_buku_besar_massal_pdf(data_per_akun, periode, config=None, nama_ttd=N
             pdf.cell(actual_widths[3], 7, fmt(row['kredit']), 1, 0, 'R')
             pdf.cell(actual_widths[4], 7, fmt(row['saldo']), 1, 1, 'R')
             
-    pdf.add_ttd(config, nama=nama_ttd, jabatan=jabatan_ttd)
+    pdf.set_text_color(0, 0, 0)
+    pdf.add_ttd(config, nama=nama_ttd, jabatan=jabatan_ttd, nama_admin=nama_admin, jabatan_admin=jabatan_admin)
     return pdf.output(dest='S').encode('latin-1')

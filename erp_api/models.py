@@ -262,6 +262,10 @@ class CompanyConfig(Base):
     ttd_po_jabatan = Column(String, default="General Manager")
     ttd_laporan_nama = Column(String, default="Yana Taryana")
     ttd_laporan_jabatan = Column(String, default="Direktur Operasional")
+    
+    # Tanda Tangan Admin (Pembuat Laporan)
+    ttd_admin_nama = Column(String, default="Admin Keuangan")
+    ttd_admin_jabatan = Column(String, default="Administrasi")
 
 
 # ==========================================

@@ -196,6 +196,11 @@ def export_buku_besar_pdf_endpoint(kode_akun: str = "", bulan: int = 4, tahun: i
         config = db.query(models.CompanyConfig).first()
         n_ttd = config.ttd_laporan_nama if (config and config.ttd_laporan_nama) else (config.nama_pemilik if config else "Yana Taryana")
         j_ttd = config.ttd_laporan_jabatan if (config and config.ttd_laporan_jabatan) else (config.jabatan_pemilik if config else "Direktur Operasional")
+        
+        # Tanda Tangan Admin
+        n_admin = config.ttd_admin_nama if (config and config.ttd_admin_nama) else "Admin Keuangan"
+        j_admin = config.ttd_admin_jabatan if (config and config.ttd_admin_jabatan) else "Administrasi"
+        
         periode_str = f"{new_date(2000, bulan, 1).strftime('%B')} {tahun}"
 
         # MODE: CETAK SEMUA AKUN
@@ -231,7 +236,7 @@ def export_buku_besar_pdf_endpoint(kode_akun: str = "", bulan: int = 4, tahun: i
                         "rows": res["data"]["list"]
                     })
             
-            pdf_bytes = export_buku_besar_massal_pdf(data_massal, periode_str, config, n_ttd, j_ttd)
+            pdf_bytes = export_buku_besar_massal_pdf(data_massal, periode_str, config, n_ttd, j_ttd, n_admin, j_admin)
             return Response(content=pdf_bytes, media_type="application/pdf", headers={"Content-Disposition": f"inline; filename=BukuBesar_Lengkap_{bulan}_{tahun}.pdf"})
 
         # MODE: CETAK PER AKUN (INDIVIDU)
@@ -255,7 +260,7 @@ def export_buku_besar_pdf_endpoint(kode_akun: str = "", bulan: int = 4, tahun: i
         nama_akun = akun.nama_akun if akun else kode_akun
         judul = f"BUKU BESAR - {nama_akun}"
 
-        pdf_bytes = export_dataframe_pdf(judul, periode_str, df, [30, 95, 40, 40, 45], config, n_ttd, j_ttd)
+        pdf_bytes = export_dataframe_pdf(judul, periode_str, df, [30, 95, 40, 40, 45], config, n_ttd, j_ttd, n_admin, j_admin)
         return Response(content=pdf_bytes, media_type="application/pdf", headers={"Content-Disposition": f"inline; filename=BukuBesar_{kode_akun}_{bulan}_{tahun}.pdf"})
 
     except Exception as e:
@@ -356,8 +361,11 @@ def export_laporan_pdf(tipe: str, bulan: int, tahun: int, db: Session = Depends(
         config = db.query(models.CompanyConfig).first()
         n_ttd = config.ttd_laporan_nama if (config and config.ttd_laporan_nama) else (config.nama_pemilik if config else "Yana Taryana")
         j_ttd = config.ttd_laporan_jabatan if (config and config.ttd_laporan_jabatan) else (config.jabatan_pemilik if config else "Direktur Operasional")
+        
+        n_admin = config.ttd_admin_nama if (config and config.ttd_admin_nama) else "Admin Keuangan"
+        j_admin = config.ttd_admin_jabatan if (config and config.ttd_admin_jabatan) else "Administrasi"
 
-        pdf_bytes = export_laporan_2kolom_pdf(judul, periode_str, pdf_list, label_total, val_total, config, n_ttd, j_ttd)
+        pdf_bytes = export_laporan_2kolom_pdf(judul, periode_str, pdf_list, label_total, val_total, config, n_ttd, j_ttd, n_admin, j_admin)
         return Response(content=pdf_bytes, media_type="application/pdf", headers={"Content-Disposition": f"inline; filename=Laporan_{tipe}_{bulan}_{tahun}.pdf"})
         
     except Exception as e:
