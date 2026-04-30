@@ -254,6 +254,14 @@ class CompanyConfig(Base):
     atas_nama_bank = Column(String, default="RAZIQ GARMENT")
     target_cutting_mingguan = Column(Integer, default=1000)
     ttd_url = Column(String, nullable=True)
+    
+    # Konfigurasi Tanda Tangan Dinamis (No-Code)
+    ttd_invoice_nama = Column(String, default="Yana Taryana")
+    ttd_invoice_jabatan = Column(String, default="Owner")
+    ttd_po_nama = Column(String, default="Yana Taryana")
+    ttd_po_jabatan = Column(String, default="General Manager")
+    ttd_laporan_nama = Column(String, default="Yana Taryana")
+    ttd_laporan_jabatan = Column(String, default="Direktur Operasional")
 
 
 # ==========================================

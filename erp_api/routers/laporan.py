@@ -216,7 +216,11 @@ def export_buku_besar_pdf_endpoint(kode_akun: str, bulan: int, tahun: int, filte
         
         config = db.query(models.CompanyConfig).first()
         # [Tanggal, Keterangan, Debit, Kredit, Saldo] Widths
-        pdf_bytes = export_dataframe_pdf(judul, periode_str, df, [30, 95, 40, 40, 45], config)
+        # Signer config
+        n_ttd = config.ttd_laporan_nama if (config and config.ttd_laporan_nama) else (config.nama_pemilik if config else "Yana Taryana")
+        j_ttd = config.ttd_laporan_jabatan if (config and config.ttd_laporan_jabatan) else (config.jabatan_pemilik if config else "Direktur Operasional")
+
+        pdf_bytes = export_dataframe_pdf(judul, periode_str, df, [30, 95, 40, 40, 45], config, n_ttd, j_ttd)
         
         return Response(content=pdf_bytes, media_type="application/pdf", headers={"Content-Disposition": f"inline; filename=BukuBesar_{kode_akun}_{bulan}_{tahun}.pdf"})
     except Exception as e:

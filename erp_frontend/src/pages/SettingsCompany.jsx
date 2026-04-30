@@ -109,6 +109,63 @@ export default function SettingsCompany() {
             </div>
           </div>
 
+          {/* Section: Pengaturan TTD Khusus (No-Code) */}
+          <div>
+            <h3 className="text-xs font-black text-emerald-600 uppercase tracking-[0.2em] mb-6 border-b pb-2">Kustomisasi Penanda Tangan (TTD Dokumen)</h3>
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-x-10 gap-y-6">
+              {/* TTD Invoice */}
+              <div className="bg-slate-50 p-6 rounded-3xl space-y-4">
+                <h4 className="text-[11px] font-black text-slate-500 uppercase flex items-center gap-2">
+                  <span className="material-symbols-rounded text-sm">receipt_long</span> TANDA TANGAN INVOICE
+                </h4>
+                <div className="grid grid-cols-2 gap-4">
+                  <div>
+                    <label className="text-[9px] font-bold text-slate-400 uppercase tracking-widest block mb-1">Nama</label>
+                    <input type="text" className="w-full bg-white rounded-xl p-3 text-xs font-bold text-slate-700 outline-none border border-slate-100" value={config.ttd_invoice_nama || ''} onChange={e => setConfig({...config, ttd_invoice_nama: e.target.value})} />
+                  </div>
+                  <div>
+                    <label className="text-[9px] font-bold text-slate-400 uppercase tracking-widest block mb-1">Jabatan</label>
+                    <input type="text" className="w-full bg-white rounded-xl p-3 text-xs font-bold text-slate-700 outline-none border border-slate-100" value={config.ttd_invoice_jabatan || ''} onChange={e => setConfig({...config, ttd_invoice_jabatan: e.target.value})} />
+                  </div>
+                </div>
+              </div>
+
+              {/* TTD PO */}
+              <div className="bg-slate-50 p-6 rounded-3xl space-y-4">
+                <h4 className="text-[11px] font-black text-slate-500 uppercase flex items-center gap-2">
+                  <span className="material-symbols-rounded text-sm">shopping_cart</span> TANDA TANGAN PURCHASE ORDER
+                </h4>
+                <div className="grid grid-cols-2 gap-4">
+                  <div>
+                    <label className="text-[9px] font-bold text-slate-400 uppercase tracking-widest block mb-1">Nama</label>
+                    <input type="text" className="w-full bg-white rounded-xl p-3 text-xs font-bold text-slate-700 outline-none border border-slate-100" value={config.ttd_po_nama || ''} onChange={e => setConfig({...config, ttd_po_nama: e.target.value})} />
+                  </div>
+                  <div>
+                    <label className="text-[9px] font-bold text-slate-400 uppercase tracking-widest block mb-1">Jabatan</label>
+                    <input type="text" className="w-full bg-white rounded-xl p-3 text-xs font-bold text-slate-700 outline-none border border-slate-100" value={config.ttd_po_jabatan || ''} onChange={e => setConfig({...config, ttd_po_jabatan: e.target.value})} />
+                  </div>
+                </div>
+              </div>
+
+              {/* TTD Laporan */}
+              <div className="bg-slate-50 p-6 rounded-3xl space-y-4 md:col-span-2">
+                <h4 className="text-[11px] font-black text-slate-500 uppercase flex items-center gap-2">
+                  <span className="material-symbols-rounded text-sm">analytics</span> TANDA TANGAN LAPORAN KEUANGAN & STOK
+                </h4>
+                <div className="grid grid-cols-2 gap-4">
+                  <div>
+                    <label className="text-[9px] font-bold text-slate-400 uppercase tracking-widest block mb-1">Nama</label>
+                    <input type="text" className="w-full bg-white rounded-xl p-3 text-xs font-bold text-slate-700 outline-none border border-slate-100" value={config.ttd_laporan_nama || ''} onChange={e => setConfig({...config, ttd_laporan_nama: e.target.value})} />
+                  </div>
+                  <div>
+                    <label className="text-[9px] font-bold text-slate-400 uppercase tracking-widest block mb-1">Jabatan</label>
+                    <input type="text" className="w-full bg-white rounded-xl p-3 text-xs font-bold text-slate-700 outline-none border border-slate-100" value={config.ttd_laporan_jabatan || ''} onChange={e => setConfig({...config, ttd_laporan_jabatan: e.target.value})} />
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+
           {/* Section: Tanda Tangan Digital */}
           <div>
             <h3 className="text-xs font-black text-emerald-600 uppercase tracking-[0.2em] mb-6 border-b pb-2">Tanda Tangan Digital (TTD Pimpinan)</h3>

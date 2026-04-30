@@ -496,7 +496,11 @@ def print_master_barang(tipe: str = "all", db: Session = Depends(get_db)):
         # Ambil Profil
         config = db.query(models.CompanyConfig).first()
         
-        pdf_bytes = pdf_generator.export_dataframe_pdf(judul, "", df, col_widths, config)
+        # Signer config
+        n_ttd = config.ttd_laporan_nama if (config and config.ttd_laporan_nama) else (config.nama_pemilik if config else "Yana Taryana")
+        j_ttd = config.ttd_laporan_jabatan if (config and config.ttd_laporan_jabatan) else (config.jabatan_pemilik if config else "Direktur Operasional")
+        
+        pdf_bytes = pdf_generator.export_dataframe_pdf(judul, "", df, col_widths, config, n_ttd, j_ttd)
         
         return StreamingResponse(
             io.BytesIO(pdf_bytes),

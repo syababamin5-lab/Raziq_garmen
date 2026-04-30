@@ -488,7 +488,11 @@ def print_po(no_po: str, db: Session = Depends(get_db)):
         # Ambil Profil
         config = db.query(models.CompanyConfig).first()
         
-        pdf_bytes = export_purchase_pdf(header, items, terbilang_str, config)
+        # Signer config
+        n_ttd = config.ttd_po_nama if (config and config.ttd_po_nama) else (config.nama_pemilik if config else "Yana Taryana")
+        j_ttd = config.ttd_po_jabatan if (config and config.ttd_po_jabatan) else (config.jabatan_pemilik if config else "General Manager")
+        
+        pdf_bytes = export_purchase_pdf(header, items, terbilang_str, config, n_ttd, j_ttd)
 
         res = io.BytesIO(pdf_bytes)
         return StreamingResponse(res, media_type="application/pdf", headers={"Content-Disposition": f"inline; filename={no_po}.pdf"})

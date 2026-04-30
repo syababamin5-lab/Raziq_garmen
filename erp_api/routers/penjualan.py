@@ -126,13 +126,9 @@ def print_invoice(no_inv: str, db: Session = Depends(get_db)):
         nilai_terbilang = header.total_tagihan - uang_muka if header.metode_bayar == "Piutang (Tempo)" else header.total_tagihan
         terbilang_str = terbilang(nilai_terbilang)
         
-        # Logic Penanda Tangan Dinamis: Prioritas Owner -> GM -> Default Config
-        signer = db.query(models.User).filter(models.User.role == 'owner').first()
-        if not signer:
-            signer = db.query(models.User).filter(models.User.role == 'gm').first()
-            
-        nama_ttd = signer.nama_lengkap if signer else (config.nama_pemilik if config else "Yana Taryana")
-        jabatan_ttd = "Owner" if signer and signer.role == 'owner' else ("General Manager" if signer and signer.role == 'gm' else (config.jabatan_pemilik if config else "Direktur Operasional"))
+        # Logic Penanda Tangan No-Code: Mengambil dari Setting Profil Perusahaan
+        nama_ttd = config.ttd_invoice_nama if (config and config.ttd_invoice_nama) else (config.nama_pemilik if config else "Yana Taryana")
+        jabatan_ttd = config.ttd_invoice_jabatan if (config and config.ttd_invoice_jabatan) else (config.jabatan_pemilik if config else "Owner")
 
         pdf_bytes = export_invoice_pdf(header, items_inv, terbilang_str, config, customer, nama_ttd, jabatan_ttd)
 
