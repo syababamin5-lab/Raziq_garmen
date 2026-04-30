@@ -126,7 +126,15 @@ def print_invoice(no_inv: str, db: Session = Depends(get_db)):
         nilai_terbilang = header.total_tagihan - uang_muka if header.metode_bayar == "Piutang (Tempo)" else header.total_tagihan
         terbilang_str = terbilang(nilai_terbilang)
         
-        pdf_bytes = export_invoice_pdf(header, items_inv, terbilang_str, config, customer)
+        # Logic Penanda Tangan Dinamis: Prioritas Owner -> GM -> Default Config
+        signer = db.query(models.User).filter(models.User.role == 'owner').first()
+        if not signer:
+            signer = db.query(models.User).filter(models.User.role == 'gm').first()
+            
+        nama_ttd = signer.nama_lengkap if signer else (config.nama_pemilik if config else "Yana Taryana")
+        jabatan_ttd = "Owner" if signer and signer.role == 'owner' else ("General Manager" if signer and signer.role == 'gm' else (config.jabatan_pemilik if config else "Direktur Operasional"))
+
+        pdf_bytes = export_invoice_pdf(header, items_inv, terbilang_str, config, customer, nama_ttd, jabatan_ttd)
 
         res = io.BytesIO(pdf_bytes)
         return StreamingResponse(res, media_type="application/pdf", headers={"Content-Disposition": f"inline; filename={no_inv}.pdf"})

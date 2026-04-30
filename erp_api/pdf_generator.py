@@ -70,7 +70,7 @@ class PDF(FPDF):
         if self.get_y() + height > page_height - 25: # Sisa margin bawah 25mm
             self.add_page() # Otomatis mencetak ulang header()
 
-    def add_ttd(self, config=None):
+    def add_ttd(self, config=None, nama=None, jabatan=None):
         self.check_page_break(55)
         self.ln(10)
         
@@ -94,18 +94,24 @@ class PDF(FPDF):
                     self.image(local_path, x=x_pos + 15, y=y_img, w=30)
                     self.ln(20)
                 else:
-                    _draw_qr_to_pdf(self, config, x_pos + 18)
+                    _draw_qr_to_pdf(self, config, x_pos + 18, nama or config.nama_pemilik)
             except:
                 self.ln(20)
         else:
-            _draw_qr_to_pdf(self, config, x_pos + 18)
+            _draw_qr_to_pdf(self, config, x_pos + 18, nama or config.nama_pemilik)
 
         self.set_y(y_img + 25)
         self.set_x(x_pos)
         self.set_font('Arial', 'BU', 10)
-        nama_pimpinan = config.nama_pemilik if config else "Yana Taryana"
-        jabatan = config.jabatan_pemilik if config else "Direktur Operasional"
-        self.cell(60, 5, f'{jabatan} / {nama_pimpinan}', 0, 1, 'C')
+        
+        # LOGIKA DYNAMIS: Gunakan parameter jika ada, jika tidak fallback ke config
+        nama_ttd = nama or (config.nama_pemilik if config else "Yana Taryana")
+        jabatan_ttd = jabatan or (config.jabatan_pemilik if config else "Direktur Operasional")
+        
+        self.cell(60, 5, f'{nama_ttd}', 0, 1, 'C')
+        self.set_font('Arial', '', 9)
+        self.set_x(x_pos)
+        self.cell(60, 5, f'{jabatan_ttd}', 0, 1, 'C')
 
 def format_rp_pdf(angka):
     if angka is None: return ""
@@ -115,7 +121,7 @@ def format_rp_pdf(angka):
 # ====================================================================
 # 1. ENGINE LAPORAN 2 KOLOM (PORTRAIT) - UNTUK HPP & LABA RUGI
 # ====================================================================
-def export_laporan_2kolom_pdf(judul, periode, data_list, label_total, val_total, config=None):
+def export_laporan_2kolom_pdf(judul, periode, data_list, label_total, val_total, config=None, nama_ttd=None, jabatan_ttd=None):
     pdf = PDF(judul, periode, orientation='P', config=config)
     pdf.add_page()
     
@@ -141,13 +147,13 @@ def export_laporan_2kolom_pdf(judul, periode, data_list, label_total, val_total,
     pdf.cell(130, 12, f"  {label_total}", 1, 0, 'L', 1)
     pdf.cell(60, 12, format_rp_pdf(val_total), 1, 1, 'R', 1)
 
-    pdf.add_ttd(config)
+    pdf.add_ttd(config, nama=nama_ttd, jabatan=jabatan_ttd)
     return pdf.output(dest='S').encode('latin-1')
 
 # ====================================================================
 # 2. ENGINE NERACA SKONTRO (LANDSCAPE) - DOUBLE COLUMN
 # ====================================================================
-def export_neraca_skontro_pdf(judul, periode, left_data, right_data, total_left, total_right, config=None):
+def export_neraca_skontro_pdf(judul, periode, left_data, right_data, total_left, total_right, config=None, nama_ttd=None, jabatan_ttd=None):
     pdf = PDF(judul, periode, orientation='L', config=config)
     pdf.add_page()
     
@@ -201,13 +207,13 @@ def export_neraca_skontro_pdf(judul, periode, left_data, right_data, total_left,
     pdf.cell(w_col, 10, ' TOTAL PASIVA', 1, 0, 'L', 1)
     pdf.cell(w_val, 10, format_rp_pdf(total_right), 1, 1, 'R', 1)
 
-    pdf.add_ttd(config)
+    pdf.add_ttd(config, nama=nama_ttd, jabatan=jabatan_ttd)
     return pdf.output(dest='S').encode('latin-1')
 
 # ====================================================================
 # 3. ENGINE TABEL PANJANG (LANDSCAPE) - UNTUK DAFTAR BARANG/STOK
 # ====================================================================
-def export_dataframe_pdf(judul, periode, df, col_widths, config=None):
+def export_dataframe_pdf(judul, periode, df, col_widths, config=None, nama_ttd=None, jabatan_ttd=None):
     pdf = PDF(judul, periode, orientation='L', config=config)
     
     total_w = sum(col_widths)
@@ -241,13 +247,13 @@ def export_dataframe_pdf(judul, periode, df, col_widths, config=None):
             pdf.cell(actual_widths[i], 7, text, 1, 0, align)
         pdf.ln()
 
-    pdf.add_ttd(config)
+    pdf.add_ttd(config, nama=nama_ttd, jabatan=jabatan_ttd)
     return pdf.output(dest='S').encode('latin-1')
 
 # ====================================================================
 # 4. ENGINE INVOICE PROFESIONAL (PORTRAIT)
 # ====================================================================
-def export_invoice_pdf(header_inv, detail_items, terbilang_teks, config, customer):
+def export_invoice_pdf(header_inv, detail_items, terbilang_teks, config, customer, nama_ttd=None, jabatan_ttd=None):
     pdf = PDF("INVOICE", "", 'P', config, use_default_header=False)
     pdf.set_auto_page_break(auto=True, margin=15)
     pdf.add_page()
@@ -392,18 +398,26 @@ def export_invoice_pdf(header_inv, detail_items, terbilang_teks, config, custome
     # Tanda Tangan
     pdf.ln(10)
     y_sig = pdf.get_y()
-    _draw_qr_to_pdf(pdf, config, 20)
+    
+    # Gunakan logic dinamis untuk nama dan jabatan
+    n_p = nama_ttd or (config.nama_pemilik if config else 'Yana Taryana')
+    j_p = jabatan_ttd or (config.jabatan_pemilik if config else 'Direktur Operasional')
+    
+    _draw_qr_to_pdf(pdf, config, 20, n_p)
     pdf.set_xy(15, y_sig + 22)
     pdf.set_font('Arial', 'B', 10)
     pdf.set_text_color(180, 0, 0) # Merah sesuai screenshot
-    pdf.cell(100, 6, (config.nama_pemilik if config else 'Yana Taryana').upper(), 0, 1, 'L')
+    pdf.cell(100, 6, n_p.upper(), 0, 1, 'L')
+    pdf.set_font('Arial', '', 9)
+    pdf.set_text_color(50, 50, 50)
+    pdf.cell(100, 5, j_p, 0, 1, 'L')
     
     return pdf.output(dest='S').encode('latin-1')
 
 # ====================================================================
 # 5. ENGINE PURCHASE ORDER (PO) PROFESIONAL
 # ====================================================================
-def export_purchase_pdf(header_po, detail_items, terbilang_teks, config=None):
+def export_purchase_pdf(header_po, detail_items, terbilang_teks, config=None, nama_ttd=None, jabatan_ttd=None):
     pdf = PDF("PURCHASE ORDER", "", 'P', config, use_default_header=False)
     pdf.add_page()
     
@@ -445,16 +459,22 @@ def export_purchase_pdf(header_po, detail_items, terbilang_teks, config=None):
     
     pdf.ln(10)
     y_sig = pdf.get_y()
-    _draw_qr_to_pdf(pdf, config, 145)
+    
+    n_p = nama_ttd or (config.nama_pemilik if config else 'Yana Taryana')
+    j_p = jabatan_ttd or (config.jabatan_pemilik if config else 'Direktur Operasional')
+    
+    _draw_qr_to_pdf(pdf, config, 145, n_p)
     pdf.set_xy(120, y_sig + 22)
-    pdf.cell(70, 5, config.nama_pemilik if config else 'Yana Taryana', 0, 1, 'C')
+    pdf.set_font('Arial', 'B', 10)
+    pdf.cell(70, 5, n_p.upper(), 0, 1, 'C')
+    pdf.set_font('Arial', '', 9)
+    pdf.cell(70, 5, j_p, 0, 1, 'C')
     
     return pdf.output(dest='S').encode('latin-1')
 
-def _draw_qr_to_pdf(pdf, config, x_pos):
+def _draw_qr_to_pdf(pdf, config, x_pos, nama_p="Yana Taryana"):
     try:
         import requests, tempfile
-        nama_p = config.nama_pemilik if config else "Yana Taryana"
         qr_url = f"https://api.qrserver.com/v1/create-qr-code/?size=150x150&data=VALIDATED_BY_{nama_p.replace(' ', '_')}"
         res = requests.get(qr_url, timeout=5)
         if res.status_code == 200:

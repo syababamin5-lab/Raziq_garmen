@@ -50,7 +50,7 @@ class PDF(FPDF):
         if self.get_y() + height > page_height - 20: # Sisa margin bawah 20mm
             self.add_page() # Otomatis mencetak ulang header() dan Print Titles!
 
-    def add_ttd(self):
+    def add_ttd(self, nama="Yana Taryana", jabatan="Direktur Operasional"):
         self.check_page_break(40)
         self.ln(10)
         self.set_font('Arial', '', 10)
@@ -59,7 +59,10 @@ class PDF(FPDF):
         self.ln(20)
         self.cell(self.w / 2 - 10, 5, '', 0, 0)
         self.set_font('Arial', 'BU', 10)
-        self.cell(60, 5, 'Direktur Operasional / Yana Taryana', 0, 1, 'C')
+        self.cell(60, 5, f'{nama}', 0, 1, 'C')
+        self.set_font('Arial', '', 9)
+        self.cell(self.w / 2 - 10, 5, '', 0, 0)
+        self.cell(60, 5, f'{jabatan}', 0, 1, 'C')
 
 def format_rp_pdf(angka):
     if angka < 0: return f"(Rp {abs(angka):,.0f})".replace(',', '.')
@@ -68,7 +71,7 @@ def format_rp_pdf(angka):
 # ====================================================================
 # 1. ENGINE LAPORAN 2 KOLOM (Tetap Portrait)
 # ====================================================================
-def export_laporan_2kolom_pdf(judul, periode, data_list, label_total, val_total):
+def export_laporan_2kolom_pdf(judul, periode, data_list, label_total, val_total, nama_ttd="Yana Taryana", jabatan_ttd="Direktur Operasional"):
     pdf = PDF(judul, periode, orientation='P')
     
     # Daftarkan Print Title
@@ -97,13 +100,13 @@ def export_laporan_2kolom_pdf(judul, periode, data_list, label_total, val_total)
     pdf.cell(130, 10, label_total, 1, 0, 'R', 1)
     pdf.cell(60, 10, format_rp_pdf(val_total), 1, 1, 'R', 1)
 
-    pdf.add_ttd()
+    pdf.add_ttd(nama=nama_ttd, jabatan=jabatan_ttd)
     return pdf.output(dest='S').encode('latin-1')
 
 # ====================================================================
 # 2. ENGINE TABEL PANJANG (Diubah ke LANDSCAPE & KOLOM MELEBAR)
 # ====================================================================
-def export_dataframe_pdf(judul, periode, df, col_widths):
+def export_dataframe_pdf(judul, periode, df, col_widths, nama_ttd="Yana Taryana", jabatan_ttd="Direktur Operasional"):
     # Kertas dimiringkan menjadi Landscape (Lebar area bisa dipakai: 277mm)
     pdf = PDF(judul, periode, orientation='L')
     
@@ -146,12 +149,12 @@ def export_dataframe_pdf(judul, periode, df, col_widths):
             pdf.cell(actual_widths[i], 7, text, 1, 0, align)
         pdf.ln()
 
-    pdf.add_ttd()
+    pdf.add_ttd(nama=nama_ttd, jabatan=jabatan_ttd)
     return pdf.output(dest='S').encode('latin-1')
 # ====================================================================
 # 3. ENGINE INVOICE PROFESIONAL (MIRIP REFERENSI MINEARTH)
 # ====================================================================
-def export_invoice_pdf(header_inv, detail_items, terbilang_teks):
+def export_invoice_pdf(header_inv, detail_items, terbilang_teks, nama_ttd="Yana Taryana", jabatan_ttd="Direktur Operasional"):
     pdf = FPDF('P', 'mm', 'A4')
     pdf.add_page()
     
@@ -315,9 +318,9 @@ def export_invoice_pdf(header_inv, detail_items, terbilang_teks):
     pdf.ln(15)
     pdf.set_x(120)
     pdf.set_font('Arial', 'BU', 10)
-    pdf.cell(70, 5, 'Yana Taryana', 0, 1, 'C')
+    pdf.cell(70, 5, f'{nama_ttd}', 0, 1, 'C')
     pdf.set_x(120)
     pdf.set_font('Arial', '', 9)
-    pdf.cell(70, 5, 'Direktur Operasional', 0, 1, 'C')
+    pdf.cell(70, 5, f'{jabatan_ttd}', 0, 1, 'C')
 
     return pdf.output(dest='S').encode('latin-1')
