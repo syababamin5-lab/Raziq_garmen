@@ -351,10 +351,13 @@ def export_laporan_pdf(tipe: str, bulan: int, tahun: int, db: Session = Depends(
             label_total = "MODAL AKHIR"
             val_total = data["ekuitas"]["modal_akhir"]
 
-        # DEFAULT (HPP / LR) - Tetap 2 Kolom
-        # Ambil Profil
+        # DEFAULT (HPP / LR / EKUITAS) - Tetap 2 Kolom
+        # Ambil Profil & Config TTD
         config = db.query(models.CompanyConfig).first()
-        pdf_bytes = export_laporan_2kolom_pdf(judul, periode_str, pdf_list, label_total, val_total, config)
+        n_ttd = config.ttd_laporan_nama if (config and config.ttd_laporan_nama) else (config.nama_pemilik if config else "Yana Taryana")
+        j_ttd = config.ttd_laporan_jabatan if (config and config.ttd_laporan_jabatan) else (config.jabatan_pemilik if config else "Direktur Operasional")
+
+        pdf_bytes = export_laporan_2kolom_pdf(judul, periode_str, pdf_list, label_total, val_total, config, n_ttd, j_ttd)
         return Response(content=pdf_bytes, media_type="application/pdf", headers={"Content-Disposition": f"inline; filename=Laporan_{tipe}_{bulan}_{tahun}.pdf"})
         
     except Exception as e:

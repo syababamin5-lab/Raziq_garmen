@@ -158,6 +158,7 @@ def export_laporan_2kolom_pdf(judul, periode, data_list, label_total, val_total,
     pdf.cell(130, 12, f"  {label_total}", 1, 0, 'L', 1)
     pdf.cell(60, 12, format_rp_pdf(val_total), 1, 1, 'R', 1)
 
+    pdf.set_text_color(0, 0, 0) # Reset ke hitam
     pdf.add_ttd(config, nama=nama_ttd, jabatan=jabatan_ttd)
     return pdf.output(dest='S').encode('latin-1')
 
