@@ -133,7 +133,7 @@ export default function KasbonKaryawan() {
                         onClick={() => window.open(`/api/reports-mitra/cetak-semua?type=kasbon`, '_blank')}
                         className="flex items-center gap-2 px-4 py-2.5 bg-slate-50 text-slate-600 rounded-xl hover:bg-slate-100 transition-all border border-slate-200 shadow-sm font-bold text-xs"
                     >
-                        <span className="material-symbols-rounded text-sm">summarize</span> CETAK RINGKASAN
+                        <span className="material-symbols-rounded text-sm">summarize</span> CETAK KUMULATIF
                     </button>
                 </div>
             </div>

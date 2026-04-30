@@ -98,39 +98,48 @@ def cetak_semua_saldo(
         j_ttd = config.ttd_laporan_jabatan if (config and config.ttd_laporan_jabatan) else (config.jabatan_pemilik if config else "Direktur Operasional")
 
         rows = []
+        grand_total = 0
+        
         if type == 'hutang':
             data = db.query(Mitra).filter(Mitra.saldo_utang != 0).all()
-            judul = "LAPORAN RINGKASAN HUTANG SUPPLIER"
-            col_headers = ["Nama Supplier", "Total Hutang"]
-            rows = [[m.nama_mitra, m.saldo_utang] for m in data]
+            judul = "LAPORAN KUMULATIF HUTANG SUPPLIER"
+            label = "Nama Supplier"
+            for i, m in enumerate(data):
+                rows.append([i+1, m.nama_mitra, m.saldo_utang])
+                grand_total += m.saldo_utang
         elif type == 'piutang':
             data = db.query(Mitra).filter(Mitra.saldo_piutang != 0).all()
-            judul = "LAPORAN RINGKASAN PIUTANG CUSTOMER"
-            col_headers = ["Nama Customer", "Total Piutang"]
-            rows = [[m.nama_mitra, m.saldo_piutang] for m in data]
+            judul = "LAPORAN KUMULATIF PIUTANG CUSTOMER"
+            label = "Nama Customer"
+            for i, m in enumerate(data):
+                rows.append([i+1, m.nama_mitra, m.saldo_piutang])
+                grand_total += m.saldo_piutang
         else:
             data = db.query(Karyawan).filter(Karyawan.saldo_kasbon != 0).all()
-            judul = "LAPORAN RINGKASAN KASBON KARYAWAN"
-            col_headers = ["Nama Karyawan", "Total Kasbon"]
-            rows = [[m.nama_karyawan, m.saldo_kasbon] for m in data]
+            judul = "LAPORAN KUMULATIF KASBON KARYAWAN"
+            label = "Nama Karyawan"
+            for i, m in enumerate(data):
+                rows.append([i+1, m.nama_karyawan, m.saldo_kasbon])
+                grand_total += m.saldo_kasbon
 
         if not rows:
-            return {"success": False, "message": "Tidak ada data saldo aktif untuk kategori ini."}
+            return {"success": False, "message": "Tidak ada data saldo aktif untuk laporan kumulatif ini."}
+
+        # Tambahkan Baris TOTAL di paling bawah
+        rows.append(["", "TOTAL KUMULATIF", grand_total])
 
         import pandas as pd
-        df = pd.DataFrame(rows, columns=col_headers)
-        # Tambahkan No
-        df.insert(0, 'No', range(1, len(df) + 1))
+        df = pd.DataFrame(rows, columns=["No", label, "Total Saldo"])
         
         pdf_bytes = pdf_generator.export_dataframe_pdf(
             judul, 
-            f"Per {datetime.datetime.now().strftime('%d %B %Y')}", 
+            f"Per Tanggal: {datetime.datetime.now().strftime('%d %B %Y')}", 
             df, 
             [15, 120, 55], 
             config, n_ttd, j_ttd
         )
         
-        return Response(content=pdf_bytes, media_type="application/pdf", headers={"Content-Disposition": f"inline; filename=Ringkasan_{type}.pdf"})
+        return Response(content=pdf_bytes, media_type="application/pdf", headers={"Content-Disposition": f"inline; filename=Kumulatif_{type}.pdf"})
     except Exception as e:
         import traceback
         print(traceback.format_exc())

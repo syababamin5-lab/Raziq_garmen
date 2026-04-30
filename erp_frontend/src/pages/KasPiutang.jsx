@@ -163,7 +163,7 @@ export default function KasPiutang() {
                             onClick={() => window.open(`/api/reports-mitra/cetak-semua?type=piutang`, '_blank')}
                             className="w-full bg-slate-100 text-slate-600 p-4 rounded-2xl font-bold text-sm hover:bg-slate-200 transition-all border border-slate-200 flex items-center justify-center gap-2"
                         >
-                            <span className="material-symbols-rounded">summarize</span> CETAK RINGKASAN SEMUA PIUTANG CUSTOMER
+                            <span className="material-symbols-rounded">summarize</span> CETAK KUMULATIF PIUTANG CUSTOMER
                         </button>
                     </div>
                 </div>
@@ -210,7 +210,7 @@ export default function KasPiutang() {
                             onClick={() => window.open(`/api/reports-mitra/cetak-semua?type=hutang`, '_blank')}
                             className="w-full bg-slate-100 text-slate-600 p-4 rounded-2xl font-bold text-sm hover:bg-slate-200 transition-all border border-slate-200 flex items-center justify-center gap-2"
                         >
-                            <span className="material-symbols-rounded">summarize</span> CETAK RINGKASAN SEMUA HUTANG SUPPLIER
+                            <span className="material-symbols-rounded">summarize</span> CETAK KUMULATIF HUTANG SUPPLIER
                         </button>
                     </div>
                 </div>
@@ -300,7 +300,7 @@ export default function KasPiutang() {
                             onClick={() => window.open(`/api/reports-mitra/cetak-semua?type=kasbon`, '_blank')}
                             className="w-full bg-slate-100 text-slate-600 p-4 rounded-2xl font-bold text-sm hover:bg-slate-200 transition-all border border-slate-200 flex items-center justify-center gap-2"
                         >
-                            <span className="material-symbols-rounded">summarize</span> CETAK RINGKASAN SEMUA KASBON KARYAWAN
+                            <span className="material-symbols-rounded">summarize</span> CETAK KUMULATIF KASBON KARYAWAN
                         </button>
                     </div>
                 </div>
