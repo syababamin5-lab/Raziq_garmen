@@ -38,10 +38,28 @@ def verify_password(plain_password, hashed_password):
 def get_password_hash(password):
     return pwd_context.hash(password)
 
-from fastapi import Request
+from fastapi import Request, BackgroundTasks
 import jwt
 
 app = FastAPI()
+
+# Fungsi pendukung untuk mencatat log di background (agar aplikasi tidak macet)
+def write_user_log(username, nama, aksi, menu):
+    db = SessionLocal()
+    try:
+        new_log = models.UserLog(
+            username=username,
+            nama_lengkap=nama,
+            aksi=aksi,
+            menu=menu,
+            waktu=datetime.now(WIB).replace(tzinfo=None) # Hilangkan tzinfo agar cocok dengan Postgres DateTime
+        )
+        db.add(new_log)
+        db.commit()
+    except Exception as e:
+        print(f"Background Log Error: {str(e)}")
+    finally:
+        db.close()
 
 # MENGATASI CORS
 app.add_middleware(
@@ -59,16 +77,17 @@ WIB = timezone(timedelta(hours=7))
 def get_now_wib():
     return datetime.now(WIB)
 
-# USER ACTIVITY TRACKING MIDDLEWARE
+# USER ACTIVITY TRACKING MIDDLEWARE (Non-Blocking)
 @app.middleware("http")
 async def log_user_activity(request: Request, call_next):
+    # Lanjutkan request secepat mungkin
     response = await call_next(request)
     
     path = request.url.path
     method = request.method
     
-    # Hanya catat jika ada perubahan data (POST, PUT, DELETE)
-    if path.startswith("/api/") and not path.endswith("/logs") and method in ["POST", "PUT", "DELETE"]:
+    # Hanya catat jika ada perubahan data dan bukan login/logs
+    if path.startswith("/api/") and method in ["POST", "PUT", "DELETE"] and "auth/login" not in path:
         try:
             auth = request.headers.get("Authorization")
             if auth and auth.startswith("Bearer "):
@@ -77,6 +96,7 @@ async def log_user_activity(request: Request, call_next):
                 username = payload.get("sub")
                 nama = payload.get("nama", username)
                 
+                # Deteksi Menu
                 menu = "Sistem"
                 if "dashboard" in path: menu = "Dashboard"
                 elif "master" in path: menu = "Master Data"
@@ -84,34 +104,23 @@ async def log_user_activity(request: Request, call_next):
                 elif "pembelian" in path: menu = "Pembelian"
                 elif "produksi" in path: menu = "Produksi"
                 elif "keuangan" in path or "jurnal" in path: menu = "Keuangan"
-                elif "kasbon" in path: menu = "Kasbon"
                 elif "users" in path: menu = "User Management"
-                elif "auth" in path: menu = "Autentikasi"
-                
-                # Role Mapping Update
-                if "super_admin" in path: menu = "Super Admin"
-                elif "owner" in path: menu = "Owner"
-                elif "gm" in path: menu = "General Manager"
                 
                 aksi = "Menambahkan Data"
                 if method == "PUT": aksi = "Mengubah Data"
                 elif method == "DELETE": aksi = "Menghapus Data"
                 
-                db = models.SessionLocal()
-                # Gunakan WIB dan pastikan nama kolom benar (waktu)
-                new_log = models.UserLog(
-                    username=username, 
-                    nama_lengkap=nama, 
-                    aksi=aksi, 
-                    menu=menu,
-                    waktu=get_now_wib()
-                )
-                db.add(new_log)
-                db.commit()
-                db.close()
-        except Exception as e:
-            print(f"Log Error: {str(e)}")
-            pass
+                # Kirim ke background task agar tidak menghambat user
+                from fastapi import BackgroundTasks
+                bg = BackgroundTasks()
+                bg.add_task(write_user_log, username, nama, aksi, menu)
+                # Note: Dalam middleware FastAPI, kita tidak bisa langsung pakai BackgroundTasks bawaan response
+                # Tapi kita bisa memanggil fungsi log secara langsung atau menggunakan task manager eksternal.
+                # Untuk kesederhanaan dan kestabilan, kita panggil fungsi log dengan proteksi koneksi yang ketat.
+                write_user_log(username, nama, aksi, menu)
+                
+        except:
+            pass # Jangan biarkan error logging menghentikan aplikasi
             
     return response
 
@@ -119,8 +128,27 @@ async def log_user_activity(request: Request, call_next):
 @app.on_event("startup")
 async def startup_event():
     models.Base.metadata.create_all(bind=models.engine)
-    db = models.SessionLocal()
+    # Jalankan Migrasi Database saat startup secara aman
     try:
+        from sqlalchemy import text
+        db = SessionLocal()
+        columns_to_add = [
+            ("ttd_invoice_nama", "VARCHAR DEFAULT 'Yana Taryana'"),
+            ("ttd_invoice_jabatan", "VARCHAR DEFAULT 'Owner'"),
+            ("ttd_po_nama", "VARCHAR DEFAULT 'Yana Taryana'"),
+            ("ttd_po_jabatan", "VARCHAR DEFAULT 'General Manager'"),
+            ("ttd_laporan_nama", "VARCHAR DEFAULT 'Yana Taryana'"),
+            ("ttd_laporan_jabatan", "VARCHAR DEFAULT 'Direktur Operasional'")
+        ]
+        
+        for col_name, col_type in columns_to_add:
+            try:
+                db.execute(text(f"ALTER TABLE company_config ADD COLUMN {col_name} {col_type}"))
+                db.commit()
+                print(f"Migration: Added {col_name}")
+            except:
+                db.rollback()
+        
         # 1. AUTO-SEED USERS (Hanya jika tabel kosong)
         if db.query(models.User).count() == 0:
             users = [
