@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import {
   getProduksiOptions, submitCutting, submitJahit, getRekapCutting, getWip 
 } from '../api/produksiApi';
+import { formatInputNumber, parseNumber } from '../utils/formatters';
 
 export default function Produksi() {
   const [activeTab, setActiveTab] = useState('cutting');
@@ -209,7 +210,16 @@ export default function Produksi() {
                 </div>
                 <div>
                   <label className="block text-xs font-bold text-slate-500 mb-1 uppercase tracking-wide">Upah / Pcs (Rp)</label>
-                  <input type="number" step="100" min="0" value={cuttingForm.ongkos_per_pcs} onChange={e => setCuttingForm({...cuttingForm, ongkos_per_pcs: e.target.value})} className="w-full bg-white border border-slate-200 rounded-lg p-2 font-bold text-slate-700 outline-none focus:border-emerald-500"/>
+                  <input 
+                    type="text" 
+                    value={formatInputNumber(cuttingForm.ongkos_per_pcs)} 
+                    onChange={e => setCuttingForm({...cuttingForm, ongkos_per_pcs: parseNumber(e.target.value)})} 
+                    className="w-full bg-white border border-slate-200 rounded-lg p-2 font-bold text-slate-700 outline-none focus:border-emerald-500"
+                    placeholder="Contoh: 1.500"
+                  />
+                  <p className="mt-1 text-[9px] font-black text-blue-600 uppercase tracking-widest">
+                    = Rp {Number(cuttingForm.ongkos_per_pcs).toLocaleString('id-ID')}
+                  </p>
                 </div>
               </div>
             </div>
