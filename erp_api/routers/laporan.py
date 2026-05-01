@@ -675,24 +675,13 @@ def audit_selisih_neraca(db: Session = Depends(get_db)):
     except Exception as e:
         return {"status": "error", "message": str(e)}
 
-@router.post("/fix-hard-delete-invoice")
-def fix_hard_delete_invoice(no_invoice: str, db: Session = Depends(get_db)):
-    """PEMBERSIHAN TOTAL: Hapus invoice dan SEMUA jurnal terkait agar Balance"""
+@router.post("/fix-specific-jurnals")
+def fix_specific_jurnals(ids: list[int], db: Session = Depends(get_db)):
+    """Hapus jurnal berdasarkan ID spesifik (Hasil Audit)"""
     try:
-        # 1. Hapus Jurnal terkait (Penyebab utama jomplang)
-        deleted_jurnal = db.query(models.JurnalUmum).filter(
-            models.JurnalUmum.keterangan.ilike(f"%{no_invoice}%")
-        ).delete(synchronize_session=False)
-        
-        # 2. Hapus Header & Detail (Jika masih ada)
-        db.query(models.DetailPenjualan).filter(models.DetailPenjualan.no_invoice == no_invoice).delete(synchronize_session=False)
-        db.query(models.HeaderPenjualan).filter(models.HeaderPenjualan.no_invoice == no_invoice).delete(synchronize_session=False)
-        
+        deleted = db.query(models.JurnalUmum).filter(models.JurnalUmum.id.in_(ids)).delete(synchronize_session=False)
         db.commit()
-        return {
-            "status": "success", 
-            "message": f"Pembersihan Selesai. {deleted_jurnal} baris jurnal dihapus. Silakan cek Neraca kembali."
-        }
+        return {"status": "success", "message": f"{deleted} jurnal berhasil dibersihkan."}
     except Exception as e:
         db.rollback()
         return {"status": "error", "message": str(e)}
