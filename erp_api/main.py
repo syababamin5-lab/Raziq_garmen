@@ -25,14 +25,14 @@ import jwt
 # Password hashing configuration
 SECRET_KEY = "raziq-garment-secret-key-123"
 ALGORITHM = "HS256"
-# Hashing schemes: Use pbkdf2_sha256 as primary to avoid local bcrypt issues
-# but keep bcrypt for verifying old passwords in production if available.
-schemes = ["pbkdf2_sha256", "sha256_crypt"]
+
+# Prioritaskan bcrypt untuk production, gunakan pbkdf2 sebagai fallback untuk local dev
+schemes = ["bcrypt", "pbkdf2_sha256", "sha256_crypt"]
 try:
     import bcrypt
-    schemes.append("bcrypt")
 except ImportError:
-    pass
+    # Jika bcrypt tidak ada (biasanya di local windows), gunakan pbkdf2
+    schemes = ["pbkdf2_sha256", "sha256_crypt"]
 
 pwd_context = CryptContext(schemes=schemes, deprecated="auto")
 
@@ -165,9 +165,13 @@ async def startup_event():
             except:
                 db.rollback()
         
-        # 1. AUTO-SEED USERS (Khusus Localhost/SQLite)
+        # 1. AUTO-SEED USERS (HANYA UNTUK LOCALHOST / SQLITE)
+        # JANGAN PERNAH JALANKAN DI PRODUCTION (WEB/POSTGRES)
+        is_production = os.environ.get("DATABASE_URL") is not None
         is_sqlite = str(models.engine.url).startswith("sqlite")
-        if is_sqlite:
+        
+        if is_sqlite and not is_production:
+            print("🛠️ Local Environment Detected: Checking default users...")
             default_users = [
                 {"username": "superadmin", "password": "admin123", "nama": "Syabaab (Super Admin)", "role": "super_admin"},
                 {"username": "owner", "password": "admin123", "nama": "Owner / Pemilik", "role": "owner"},
