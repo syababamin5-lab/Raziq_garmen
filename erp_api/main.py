@@ -25,7 +25,16 @@ import jwt
 # Password hashing configuration
 SECRET_KEY = "raziq-garment-secret-key-123"
 ALGORITHM = "HS256"
-pwd_context = CryptContext(schemes=["pbkdf2_sha256", "sha256_crypt"], deprecated="auto")
+# Hashing schemes: Use pbkdf2_sha256 as primary to avoid local bcrypt issues
+# but keep bcrypt for verifying old passwords in production if available.
+schemes = ["pbkdf2_sha256", "sha256_crypt"]
+try:
+    import bcrypt
+    schemes.append("bcrypt")
+except ImportError:
+    pass
+
+pwd_context = CryptContext(schemes=schemes, deprecated="auto")
 
 def verify_password(plain_password, hashed_password):
     try:

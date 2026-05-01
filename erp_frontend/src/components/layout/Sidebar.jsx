@@ -23,6 +23,13 @@ export default function Sidebar({ isOpen }) {
              return m.is_active === 1 && allowed.includes(m.id_menu) && isNotPanel;
           }
 
+          // Filter "Local-Only" menus (Pengaturan & User)
+          const isLocal = window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1';
+          const localOnlyMenus = ['settings_users', 'settings_company', 'super_admin'];
+          if (!isLocal && localOnlyMenus.includes(m.id_menu)) {
+            return false;
+          }
+
           return m.is_active === 1 && isRoleMatch && isNotPanel;
         });
         setMenus(filtered);

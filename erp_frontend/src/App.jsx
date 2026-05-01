@@ -26,6 +26,14 @@ const ProtectedRoute = ({ children }) => {
   return children;
 };
 
+const LocalOnlyRoute = ({ children }) => {
+  const isLocal = window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1';
+  if (!isLocal) {
+    return <div className="p-20 text-center text-slate-500 font-bold uppercase tracking-widest opacity-30">Fitur ini hanya tersedia di Local Host.</div>;
+  }
+  return children;
+};
+
 function App() {
   // ── Global Mouse Move for Background Spotlight ──────────
   useEffect(() => {
@@ -52,10 +60,10 @@ function App() {
           <Route path="laporan" element={<LaporanKeuangan />} />
           <Route path="kasbon" element={<KasbonKaryawan />} />
           <Route path="riwayat" element={<RiwayatEdit />} />
-          <Route path="settings/users" element={<SettingsUsers />} />
-          <Route path="settings/company" element={<SettingsCompany />} />
+          <Route path="settings/users" element={<LocalOnlyRoute><SettingsUsers /></LocalOnlyRoute>} />
+          <Route path="settings/company" element={<LocalOnlyRoute><SettingsCompany /></LocalOnlyRoute>} />
           <Route path="profile" element={<Profile />} />
-          <Route path="super-admin" element={<SuperAdmin />} />
+          <Route path="super-admin" element={<LocalOnlyRoute><SuperAdmin /></LocalOnlyRoute>} />
           <Route path="*" element={<div className="p-10 text-center text-slate-500 font-bold uppercase tracking-widest opacity-30">Halaman sedang dalam pengembangan...</div>} />
         </Route>
       </Routes>
