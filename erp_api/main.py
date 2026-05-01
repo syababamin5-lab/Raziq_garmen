@@ -290,6 +290,13 @@ async def startup_event():
             db.add(config)
             db.commit()
         
+        # Migrasi Detail Penjualan (PENTING untuk Retur)
+        try:
+            db.execute(text("ALTER TABLE detail_penjualan ADD COLUMN qty_retur FLOAT DEFAULT 0.0"))
+            db.commit()
+        except:
+            db.rollback()
+
         # Migrasi data lama jika masih ada kata 'PABRIK'
         if "PABRIK" in config.nama_perusahaan:
             config.nama_perusahaan = "RAZIQ GARMENT"
