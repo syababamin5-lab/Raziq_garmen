@@ -46,9 +46,10 @@ const PrayerTimes = () => {
     
     const calculateNextPrayer = () => {
       const now = new Date();
+      const isFriday = now.getDay() === 5;
       const prayerNames = [
         { key: 'Fajr', label: 'Subuh' },
-        { key: 'Dhuhr', label: 'Dzuhur' },
+        { key: 'Dhuhr', label: isFriday ? 'Jum\'at' : 'Dzuhur' },
         { key: 'Asr', label: 'Ashar' },
         { key: 'Maghrib', label: 'Maghrib' },
         { key: 'Isha', label: 'Isya' }

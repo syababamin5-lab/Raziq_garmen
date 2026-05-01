@@ -39,16 +39,16 @@ const PrayerTimesCompact = () => {
     
     const calculateTime = () => {
       const now = new Date();
+      const isFriday = now.getDay() === 5;
       const prayerNames = [
         { key: 'Fajr', label: 'Subuh' },
-        { key: 'Dhuhr', label: 'Dzuhur' },
+        { key: 'Dhuhr', label: isFriday ? 'Jum\'at' : 'Dzuhur' },
         { key: 'Asr', label: 'Ashar' },
         { key: 'Maghrib', label: 'Maghrib' },
         { key: 'Isha', label: 'Isya' }
       ];
       
       let upcoming = null;
-      let justReached = null;
 
       for (let p of prayerNames) {
           const [hour, minute] = timings[p.key].split(':');
@@ -60,6 +60,16 @@ const PrayerTimesCompact = () => {
           if (diffToPrayer <= 500 && diffToPrayer > -60000 && lastNotified !== p.label) {
             setIsModalOpen(true);
             setLastNotified(p.label);
+          }
+
+          // KHUSUS JUM'AT: Peringatan 15 menit sebelum Dzuhur
+          if (isFriday && p.key === 'Dhuhr') {
+            const warningTime = new Date(prayerTime.getTime() - 15 * 60000);
+            const diffToWarning = warningTime - now;
+            if (diffToWarning <= 500 && diffToWarning > -60000 && lastNotified !== 'Persiapan Jum\'at') {
+              setIsModalOpen(true);
+              setLastNotified('Persiapan Jum\'at');
+            }
           }
 
           if (!upcoming && prayerTime > now) {
@@ -88,8 +98,11 @@ const PrayerTimesCompact = () => {
       const s = String(diffSecs).padStart(2, '0');
       setTimeLeft(`${h}:${m}:${s}`);
       
-      // Warning 7 menit
-      if (diffMins <= 7 && diffMs > 0) {
+      // Warning normal 7 menit
+      // KHUSUS JUM'AT: Warning visual mulai 20 menit sebelum
+      const warningThreshold = (isFriday && upcoming.name === 'Jum\'at') ? 20 : 7;
+      
+      if (diffMins <= warningThreshold && diffMs > 0) {
         setIsWarning(true);
       } else {
         setIsWarning(false);

@@ -15,6 +15,16 @@ const PrayerModal = ({ isOpen, onClose, prayerName }) => {
       quote: "Di tengah penatnya pekerjaan, ingatlah bahwa shalat adalah istirahat terbaik bagi jiwa.",
       sub: "Segarkan kembali semangatmu dengan menghadap Sang Pencipta."
     },
+    "Jum'at": {
+      title: "Jum'at Barokah",
+      quote: "Hari terbaik yang matahari terbit padanya adalah hari Jum'at. Mari raih keberkahan hari ini.",
+      sub: "Segerakan langkah menuju rumah Allah untuk meraih ridha-Nya."
+    },
+    "Persiapan Jum'at": {
+      title: "Waktunya Bersiap",
+      quote: "15 Menit lagi Adzan Jum'at. Mari segera bersuci, mengenakan pakaian terbaik, dan menuju Masjid.",
+      sub: "Jangan terlambat, karena malaikat mencatat siapa yang datang lebih awal."
+    },
     "Ashar": {
       title: "Prioritas Utama",
       quote: "Jangan biarkan kesibukan sore hari melalaikanmu dari kewajiban utama.",

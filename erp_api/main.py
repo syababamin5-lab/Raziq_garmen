@@ -25,7 +25,7 @@ import jwt
 # Password hashing configuration
 SECRET_KEY = "raziq-garment-secret-key-123"
 ALGORITHM = "HS256"
-pwd_context = CryptContext(schemes=["bcrypt", "pbkdf2_sha256", "sha256_crypt"], deprecated="auto")
+pwd_context = CryptContext(schemes=["pbkdf2_sha256", "sha256_crypt"], deprecated="auto")
 
 def verify_password(plain_password, hashed_password):
     try:
@@ -156,16 +156,28 @@ async def startup_event():
             except:
                 db.rollback()
         
-        # 1. AUTO-SEED USERS (Hanya jika tabel kosong)
-        if db.query(models.User).count() == 0:
-            users = [
-                models.User(username="superadmin", password_hash=get_password_hash("admin123"), nama_lengkap="Syabaab (Super Admin)", role="super_admin"),
-                models.User(username="owner", password_hash=get_password_hash("admin123"), nama_lengkap="Owner / Pemilik", role="owner"),
-                models.User(username="gm", password_hash=get_password_hash("admin123"), nama_lengkap="Kepala Operasional", role="gm"),
-                models.User(username="admin", password_hash=get_password_hash("admin123"), nama_lengkap="Administrator", role="admin"),
-                models.User(username="staff", password_hash=get_password_hash("user123"), nama_lengkap="Staff Operasional", role="staff")
+        # 1. AUTO-SEED USERS (Khusus Localhost/SQLite)
+        is_sqlite = str(models.engine.url).startswith("sqlite")
+        if is_sqlite:
+            default_users = [
+                {"username": "superadmin", "password": "admin123", "nama": "Syabaab (Super Admin)", "role": "super_admin"},
+                {"username": "owner", "password": "admin123", "nama": "Owner / Pemilik", "role": "owner"},
+                {"username": "gm", "password": "admin123", "nama": "Kepala Operasional", "role": "gm"},
+                {"username": "admin", "password": "admin123", "nama": "Administrator", "role": "admin"},
+                {"username": "staff", "password": "user123", "nama": "Staff Operasional", "role": "staff"}
             ]
-            db.add_all(users)
+            
+            for u in default_users:
+                cek = db.query(models.User).filter(models.User.username == u["username"]).first()
+                if not cek:
+                    new_u = models.User(
+                        username=u["username"], 
+                        password_hash=get_password_hash(u["password"]), 
+                        nama_lengkap=u["nama"], 
+                        role=u["role"]
+                    )
+                    db.add(new_u)
+                    print(f"✅ Seeding user: {u['username']}")
             db.commit()
 
         # 2. AUTO-SEED CHART OF ACCOUNTS (COA) - PERMANENSI MASTER DATA
@@ -216,7 +228,10 @@ async def startup_event():
                 {"kode_akun": "62190", "nama_akun": "Beban Lain-lain", "kategori": "Beban"},
                 {"kode_akun": "62220", "nama_akun": "Biaya Hosting", "kategori": "Beban"},
             ]
-            db.add_all([models.AkunBukuBesar(**c) for c in coa_data])
+            existing_coas = [c[0] for c in db.query(models.AkunBukuBesar.kode_akun).all()]
+            for c in coa_data:
+                if c["kode_akun"] not in existing_coas:
+                    db.add(models.AkunBukuBesar(**c))
             db.commit()
 
         # 3. AUTO-SEED MENU REGISTRY (Penting untuk Navigasi Dinamis)
@@ -413,9 +428,7 @@ def update_company_config(data: dict, db: Session = Depends(get_db)):
     db.commit()
     return {"status": "success", "message": "Konfigurasi diperbarui"}
 
-@app.get("/api/users")
-def get_users(db: Session = Depends(get_db)):
-    return db.query(models.User).all()
+
 
 @app.post("/api/users/upload-photo")
 async def upload_user_photo(request: Request, db: Session = Depends(get_db), file: UploadFile = File(...)):

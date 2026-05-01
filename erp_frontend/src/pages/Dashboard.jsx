@@ -9,6 +9,7 @@ import ProduksiPanel from '../components/dashboard/ProduksiPanel'
 import TotalProduksiPanel from '../components/dashboard/TotalProduksiPanel'
 import InvoiceDetailModal from '../components/dashboard/InvoiceDetailModal'
 import PrayerTimes from '../components/dashboard/PrayerTimes'
+import IslamicCalendarCard from '../components/dashboard/IslamicCalendarCard'
 
 export default function Dashboard() {
   const [data, setData] = useState(null)
@@ -67,7 +68,7 @@ export default function Dashboard() {
     "Jadikan setiap komplain pelanggan sebagai guru untuk perbaikan kita.",
     "Ketenangan dalam bekerja membuahkan hasil yang maksimal.",
     "Jangan pernah berhenti belajar, karena dunia bisnis selalu berputar.",
-    "Keberkahan usaha terletak pada niat yang lurus dan cara yang benar."
+    "Keberkahan usaha terletak pada niat yang lurus and cara yang benar."
   ];
 
   const getGreeting = () => {
@@ -78,14 +79,10 @@ export default function Dashboard() {
     return "Selamat Malam";
   };
 
-  // Gunakan state agar quote tidak berubah-ubah saat render ulang di sesi yang sama
   const [randomQuote] = useState(() => quotes[Math.floor(Math.random() * quotes.length)]);
 
   useEffect(() => {
-    // Fetch Dash Settings from Menu Registry
     api.get('/menus').then(({ data }) => {
-      // Mapping visibility dari MenuRegistry (is_active = 1 berarti muncul)
-      // Default ke true jika id_menu tidak ditemukan agar tidak hilang saat transisi database
       const settings = {
         showKeuangan: data.find(m => m.id_menu === 'dash_keuangan') ? data.find(m => m.id_menu === 'dash_keuangan').is_active === 1 : true,
         showPenjualan: data.find(m => m.id_menu === 'dash_penjualan') ? data.find(m => m.id_menu === 'dash_penjualan').is_active === 1 : true,
@@ -116,7 +113,6 @@ export default function Dashboard() {
         setLoading(true);
         const apiRes = await updateTarget(newTarget);
         if (apiRes.success) {
-          // Refresh data
           const refreshedData = await getDashboardSummary();
           setData(refreshedData);
           alert(apiRes.message);
@@ -134,10 +130,8 @@ export default function Dashboard() {
 
   return (
     <div className="space-y-6">
-      {/* ── Welcome Header (Khusus BOS / OWNER / GM) ────────────────────────── */}
       {['bos', 'owner', 'gm'].includes(user.role) && (
         <div className="relative overflow-hidden bg-gradient-to-r from-[#064E3B] to-[#10B981] p-8 rounded-[2.5rem] shadow-xl shadow-emerald-900/10 mb-8 border border-white/10 group transition-all duration-500 hover:scale-[1.01]">
-          {/* Abstract Decorations */}
           <div className="absolute top-[-20%] right-[-10%] w-64 h-64 bg-white/10 rounded-full blur-3xl group-hover:bg-white/20 transition-all duration-700"></div>
           <div className="absolute bottom-[-20%] left-[5%] w-32 h-32 bg-emerald-400/20 rounded-full blur-2xl"></div>
 
@@ -158,20 +152,21 @@ export default function Dashboard() {
             </div>
 
             <div className="flex flex-col sm:flex-row items-stretch md:items-center gap-4 w-full md:w-auto">
-              <PrayerTimes />
+              <div className="flex flex-col gap-2">
+                <PrayerTimes />
+                <IslamicCalendarCard />
+              </div>
               <div className="bg-white/10 backdrop-blur-md border border-white/10 p-5 rounded-3xl max-w-md flex items-center gap-4 hover:bg-white/15 transition-colors group/quote">
-              <span className="material-symbols-rounded text-emerald-300 text-3xl">format_quote</span>
-              <p className="italic text-white text-xs font-medium leading-relaxed leading-snug">
-                "{randomQuote}"
-              </p>
+                <span className="material-symbols-rounded text-emerald-300 text-3xl">format_quote</span>
+                <p className="italic text-white text-xs font-medium leading-relaxed">
+                  "{randomQuote}"
+                </p>
+              </div>
             </div>
           </div>
         </div>
-      </div>
-    )}
+      )}
 
-
-      {/* ── Row 1: Keuangan Cards ────────────────────────────── */}
       {dashSettings.showKeuangan && (
         <div className="grid grid-cols-4 gap-4">
           <KeuanganCard
@@ -210,10 +205,8 @@ export default function Dashboard() {
         </div>
       )}
 
-      {/* ── Row 2: Penjualan & Produksi Panels ────────────────── */}
       {(dashSettings.showPenjualan || dashSettings.showProduksi) && (
         <div className={`grid gap-4 ${dashSettings.showPenjualan && dashSettings.showProduksi ? 'grid-cols-1 md:grid-cols-12' : 'grid-cols-1'}`}>
-          {/* Panel Kiri -> Penjualan (Porsi 4/12) */}
           {dashSettings.showPenjualan && (
             <div className={dashSettings.showProduksi ? "md:col-span-4" : "md:col-span-12"}>
               <PenjualanPanel
@@ -226,7 +219,6 @@ export default function Dashboard() {
               />
             </div>
           )}
-          {/* Panel Tengah -> Produksi (Porsi 5/12 - DIBUAT LEBIH LEBAR) */}
           {dashSettings.showProduksi && (
             <div className={dashSettings.showPenjualan ? "md:col-span-5" : "md:col-span-8"}>
               <ProduksiPanel
@@ -236,7 +228,6 @@ export default function Dashboard() {
               />
             </div>
           )}
-          {/* Panel Kanan -> Total Produksi (Porsi 3/12 - DIPERKECIL LEBARNYA) */}
           {dashSettings.showProduksi && (
             <div className={dashSettings.showPenjualan ? "md:col-span-3" : "md:col-span-4"}>
               <TotalProduksiPanel 
@@ -248,7 +239,6 @@ export default function Dashboard() {
         </div>
       )}
 
-      {/* ── Row 3: Status Gudang Akhir ────────────────────────── */}
       <div className="space-y-4 pt-2">
         <div className="flex items-center gap-2">
           <span className="material-symbols-rounded text-[24px] text-emerald-700">factory</span>
@@ -261,9 +251,7 @@ export default function Dashboard() {
         />
       </div>
 
-      {/* ── Row 4: Hutang, Piutang & Kasbon ────────────────────── */}
       <div className="grid grid-cols-1 md:grid-cols-3 gap-6 pb-12">
-        {/* Panel Piutang Klien */}
         <div className="bg-white p-6 rounded-[2.5rem] shadow-sm border border-slate-100 flex flex-col h-full hover:shadow-md transition-shadow">
           <div className="flex items-center gap-4 mb-6">
             <div className="w-12 h-12 rounded-2xl bg-emerald-100 flex items-center justify-center text-emerald-700 shadow-inner">
@@ -290,7 +278,6 @@ export default function Dashboard() {
           </div>
         </div>
 
-        {/* Panel Hutang Supplier */}
         <div className="bg-white p-6 rounded-[2.5rem] shadow-sm border border-slate-100 flex flex-col h-full hover:shadow-md transition-shadow">
           <div className="flex items-center gap-4 mb-6">
             <div className="w-12 h-12 rounded-2xl bg-red-100 flex items-center justify-center text-red-700 shadow-inner">
@@ -317,7 +304,6 @@ export default function Dashboard() {
           </div>
         </div>
 
-        {/* Panel Kasbon Karyawan */}
         <div className="bg-white p-6 rounded-[2.5rem] shadow-sm border border-slate-100 flex flex-col h-full hover:shadow-md transition-shadow">
           <div className="flex items-center gap-4 mb-6">
             <div className="w-12 h-12 rounded-2xl bg-amber-100 flex items-center justify-center text-amber-700 shadow-inner">

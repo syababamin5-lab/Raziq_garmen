@@ -46,7 +46,10 @@ def sync_db():
 
         # 2. Update users
         for col_name, col_type, default_val in [
-            ('foto_base64', 'TEXT', 'NULL')
+            ('foto_base64', 'TEXT', 'NULL'),
+            ('email', 'VARCHAR(255)', 'NULL'),
+            ('no_hp', 'VARCHAR(20)', 'NULL'),
+            ('is_active', 'INTEGER', '1')
         ]:
             try:
                 if "postgresql" in db_url:
