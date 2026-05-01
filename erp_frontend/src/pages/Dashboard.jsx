@@ -10,6 +10,7 @@ import TotalProduksiPanel from '../components/dashboard/TotalProduksiPanel'
 import InvoiceDetailModal from '../components/dashboard/InvoiceDetailModal'
 import PrayerTimes from '../components/dashboard/PrayerTimes'
 import IslamicCalendarCard from '../components/dashboard/IslamicCalendarCard'
+import AIFinancialAnalyzer from '../components/dashboard/AIFinancialAnalyzer'
 
 export default function Dashboard() {
   const [data, setData] = useState(null)
@@ -166,6 +167,9 @@ export default function Dashboard() {
           </div>
         </div>
       )}
+
+      {/* AI FINANCIAL HEALTH ANALYZER MODUL */}
+      <AIFinancialAnalyzer userRole={user.role} />
 
       {dashSettings.showKeuangan && (
         <div className="grid grid-cols-4 gap-4">
