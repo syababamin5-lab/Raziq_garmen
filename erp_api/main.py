@@ -172,7 +172,7 @@ async def startup_event():
         is_sqlite = str(models.engine.url).startswith("sqlite")
         
         if is_sqlite and not is_production:
-            print("🛠️ Local Environment Detected: Checking default users...")
+            print("--- Local Environment Detected: Checking default users ---")
             default_users = [
                 {"username": "superadmin", "password": "admin123", "nama": "Syabaab (Super Admin)", "role": "super_admin"},
                 {"username": "owner", "password": "admin123", "nama": "Owner / Pemilik", "role": "owner"},
@@ -191,7 +191,7 @@ async def startup_event():
                         role=u["role"]
                     )
                     db.add(new_u)
-                    print(f"✅ Seeding user: {u['username']}")
+                    print(f"DONE Seeding user: {u['username']}")
             db.commit()
 
         # 2. AUTO-SEED CHART OF ACCOUNTS (COA) - PERMANENSI MASTER DATA

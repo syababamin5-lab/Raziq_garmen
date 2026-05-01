@@ -218,7 +218,7 @@ export default function LaporanKeuangan() {
                              {renderTable("Barang Terjual (COGS)", reportData.hpp.terjual?.detail, reportData.hpp.terjual?.total)}
                              {reportData.hpp.ikhtisar?.total > 0 && renderTable("Ikhtisar Produksi (-)", reportData.hpp.ikhtisar?.detail, reportData.hpp.ikhtisar?.total, true)}
                              <div className="bg-[#064E3B] p-6 rounded-3xl text-white flex justify-between items-center shadow-xl">
-                                <span className="font-black tracking-widest text-xs">TOTAL HARGA POKOK PRODUKSI (HPP)</span>
+                                <span className="font-black tracking-widest text-xs uppercase">Total Beban Pokok Penjualan (HPP / COGS)</span>
                                 <span className="text-3xl font-black font-outfit">{formatRp(reportData.hpp.total_hpp)}</span>
                              </div>
                         </div>
@@ -228,7 +228,7 @@ export default function LaporanKeuangan() {
                         <div className="animate-in fade-in slide-in-from-bottom-2 space-y-6">
                              {renderTable("Pendapatan Operasional", reportData.laba_rugi.pendapatan?.detail, reportData.laba_rugi.pendapatan?.total)}
                              <div className="flex justify-between items-center px-6 py-4 bg-slate-100 rounded-2xl text-slate-500 font-bold">
-                                <span>HARGA POKOK PRODUKSI (HPP) (-)</span>
+                                <span>BEBAN POKOK PENJUALAN (HPP/COGS) (-)</span>
                                 <span>{formatRp(reportData.laba_rugi.hpp_negatif)}</span>
                              </div>
                              <div className="text-right py-4 border-b-2 border-dashed">

@@ -53,10 +53,10 @@ def get_laporan_keuangan(bulan: int, tahun: int, db: Session = Depends(get_db)):
         ikhtisar_val, d_ikh = get_saldo_sqlite(db, "51199", start_date, end_date)
         terjual_val, d_terjual = get_saldo_sqlite(db, "51120", start_date, end_date) # khusus HPP barang jual
         
-        # Dalam Akuntansi Manufaktur: HPP = Bahan + BTKL + BOP - Ikhtisar (WIP/Output)
-        # Namun di sini Ikhtisar 51199 dicatat di Kredit saat barang jadi masuk gudang.
-        # Jadi total_hpp_produksi = baku + btkl + bop - ikhtisar_val
-        total_hpp_periode = baku_val + btkl_val + bop_val - ikhtisar_val
+        # Dalam Akuntansi Manufaktur: 
+        # total_hpp_produksi = baku + btkl + bop - ikhtisar_val (WIP/Output)
+        # total_cogs = total_hpp_produksi + terjual_val
+        total_hpp_periode = baku_val + btkl_val + bop_val - ikhtisar_val + terjual_val
         
         # 2. Laba Rugi
         omzet, d_omzet = get_saldo_sqlite(db, "411", start_date, end_date)
@@ -634,6 +634,47 @@ def export_produksi_rekap_pdf_endpoint(bulan: int, tahun: int, db: Session = Dep
     except Exception as e:
         import traceback
         print(traceback.format_exc())
+        return {"status": "error", "message": str(e)}
+
+@router.get("/audit-investigasi-kas")
+def audit_investigasi_kas(db: Session = Depends(get_db)):
+    """Mencari sumber uang keluar 15 juta yang mencurigakan"""
+    try:
+        now = datetime.datetime.now()
+        first_day = now.replace(day=1, hour=0, minute=0, second=0)
+        
+        # Cari semua uang keluar (Kas/Bank) bulan ini
+        uang_keluar = db.query(models.JurnalUmum).filter(
+            models.JurnalUmum.kode_akun.startswith('111'),
+            models.JurnalUmum.kredit > 0,
+            models.JurnalUmum.tanggal >= first_day
+        ).all()
+        
+        return {
+            "status": "success",
+            "total_ditemukan": len(uang_keluar),
+            "data": [
+                {
+                    "id": u.id,
+                    "tgl": u.tanggal.isoformat(),
+                    "akun": u.nama_akun,
+                    "ket": u.keterangan,
+                    "kredit": u.kredit
+                } for u in uang_keluar
+            ]
+        }
+    except Exception as e:
+        return {"status": "error", "message": str(e)}
+
+@router.post("/fix-hapus-jurnal-masal")
+def fix_hapus_jurnal_masal(ids: list[int], db: Session = Depends(get_db)):
+    """Hard Delete Jurnal berdasarkan ID (Untuk pembersihan data salah)"""
+    try:
+        deleted = db.query(models.JurnalUmum).filter(models.JurnalUmum.id.in_(ids)).delete(synchronize_session=False)
+        db.commit()
+        return {"status": "success", "message": f"{deleted} baris jurnal telah dihapus selamanya."}
+    except Exception as e:
+        db.rollback()
         return {"status": "error", "message": str(e)}
 
 def new_date(y, m, d):
