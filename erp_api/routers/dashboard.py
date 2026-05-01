@@ -40,7 +40,10 @@ def get_dashboard_summary(db: Session = Depends(get_db)):
             penjualan_terkini = []
             for s in sales:
                 # Dinamis berdasarkan status pembayaran
-                status_display = "SELESAI" if s.status == "Lunas" else "BELUM"
+                if s.status == "RETUR TOTAL":
+                    status_display = "RETUR"
+                else:
+                    status_display = "SELESAI" if s.status == "Lunas" else "BELUM"
                 
                 penjualan_terkini.append(schemas.PenjualanRecentItem(
                     no_invoice=s.no_invoice,
@@ -117,10 +120,13 @@ def get_dashboard_summary(db: Session = Depends(get_db)):
             last_week_start = start_of_week - datetime.timedelta(days=7)
             last_week_end = start_of_week - datetime.timedelta(seconds=1)
             
-            # Helper for Sales Nominal (Account 41110)
+            # Helper for Sales Nominal (Account 41110 - Net Sales)
             def get_sales_nominal(start, end):
-                return db.query(func.sum(models.JurnalUmum.kredit - models.JurnalUmum.debit))\
+                sales = db.query(func.sum(models.JurnalUmum.kredit - models.JurnalUmum.debit))\
                     .filter(models.JurnalUmum.kode_akun == "41110", models.JurnalUmum.tanggal >= start, models.JurnalUmum.tanggal <= end).scalar() or 0
+                returns = db.query(func.sum(models.JurnalUmum.debit - models.JurnalUmum.kredit))\
+                    .filter(models.JurnalUmum.kode_akun == "41120", models.JurnalUmum.tanggal >= start, models.JurnalUmum.tanggal <= end).scalar() or 0
+                return sales - returns
             
             # Helper for Total Pcs (DetailPenjualan)
             def get_total_pcs(start, end):

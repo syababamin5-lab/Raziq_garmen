@@ -140,6 +140,7 @@ class DetailPenjualan(Base):
     qty_lusin = Column(Float)
     harga_per_lusin = Column(Float)
     subtotal = Column(Float)
+    qty_retur = Column(Float, default=0.0)
 
 
 # ==========================================

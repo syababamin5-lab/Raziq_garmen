@@ -150,7 +150,7 @@ def get_penjualan_history(db: Session = Depends(get_db)):
             sisa_piutang = cust.saldo_piutang if cust else 0
             
             # Jika saldo piutang sudah 0 tapi status masih Tempo, auto-koreksi ke Lunas
-            if i.status == "Tempo" and sisa_piutang <= 0:
+            if i.status == "Tempo" and sisa_piutang <= 0 and i.status != "RETUR TOTAL":
                 i.status = "Lunas"
                 db.commit()
 
@@ -178,6 +178,7 @@ def get_invoice_details(no_inv: str, db: Session = Depends(get_db)):
                 "kode_sku": d.kode_sku,
                 "nama_barang": d.nama_barang,
                 "qty": d.qty_lusin,
+                "qty_retur": d.qty_retur or 0.0,
                 "harga_per_lusin": d.harga_per_lusin,
                 "subtotal": d.subtotal
             } for d in details
@@ -195,6 +196,11 @@ def submit_retur(payload: schemas.SaleReturRequest, db: Session = Depends(get_db
         if not pilih_inv or not barang_retur:
             raise Exception("Invoice atau barang tidak ditemukan")
 
+        # Track qty_retur
+        current_retur = getattr(barang_retur, 'qty_retur', 0.0) or 0.0
+        if payload.qty_retur > (barang_retur.qty_lusin - current_retur):
+            raise Exception(f"Gagal! Jumlah retur ({payload.qty_retur}) melebihi sisa barang yang bisa diretur ({barang_retur.qty_lusin - current_retur}).")
+
         qty_retur_pcs = int(payload.qty_retur * 12)
         target_b = db.query(models.Barang).filter(models.Barang.kode_sku == payload.kode_sku).first()
         target_b.stok_saat_ini += qty_retur_pcs
@@ -202,23 +208,53 @@ def submit_retur(payload: schemas.SaleReturRequest, db: Session = Depends(get_db
         nilai_retur = payload.qty_retur * barang_retur.harga_per_lusin
         nilai_hpp_retur = float(qty_retur_pcs) * (target_b.harga_modal or 0.0)
         
+        # Jurnal Retur Penjualan (D)
         db.add(models.JurnalUmum(tanggal=waktu_retur, kode_akun="41120", nama_akun="Retur Penjualan", keterangan=f"Retur {pilih_inv.no_invoice} - {qty_retur_pcs} pcs", debit=nilai_retur, kredit=0))
         
+        # Logika Pengembalian Dana/Piutang
         if pilih_inv.metode_bayar == "Piutang (Tempo)":
-            akun_kredit = "11210"
-            nama_kredit = "Piutang Usaha"
             cust_db = db.query(models.Mitra).filter(models.Mitra.nama_mitra == pilih_inv.nama_customer).first()
-            if cust_db: cust_db.saldo_piutang -= nilai_retur
-        elif pilih_inv.metode_bayar == "Transfer":
-            akun_kredit = "11120"
-            nama_kredit = "Kas di Bank"
+            if cust_db:
+                # Sisa tagihan saat ini (sebelum retur ini)
+                # Kita asumsikan piutang customer mencakup invoice ini.
+                # Jika piutang < nilai retur, sisa refund diambil dari Bank/Kas (mengembalikan DP)
+                if cust_db.saldo_piutang >= nilai_retur:
+                    cust_db.saldo_piutang -= nilai_retur
+                    db.add(models.JurnalUmum(tanggal=waktu_retur, kode_akun="11210", nama_akun="Piutang Usaha", keterangan=f"Retur {pilih_inv.no_invoice}", debit=0, kredit=nilai_retur))
+                else:
+                    piutang_sebelum = cust_db.saldo_piutang
+                    sisa_refund = nilai_retur - piutang_sebelum
+                    
+                    cust_db.saldo_piutang = 0
+                    if piutang_sebelum > 0:
+                        db.add(models.JurnalUmum(tanggal=waktu_retur, kode_akun="11210", nama_akun="Piutang Usaha", keterangan=f"Retur {pilih_inv.no_invoice} (Piutang Lunas)", debit=0, kredit=piutang_sebelum))
+                    
+                    # Sisa refund dikreditkan ke Bank/Kas (Uang Keluar mengembalikan DP)
+                    # Jika ada data DP sumber di history, bisa lebih akurat, tapi sementara kita default ke Kas di Bank jika Tempo.
+                    db.add(models.JurnalUmum(tanggal=waktu_retur, kode_akun="11120", nama_akun="Kas di Bank", keterangan=f"Refund DP Retur {pilih_inv.no_invoice}", debit=0, kredit=sisa_refund))
         else:
-            akun_kredit = "11110"
-            nama_kredit = "Kas Tunai"
-            
-        db.add(models.JurnalUmum(tanggal=waktu_retur, kode_akun=akun_kredit, nama_akun=nama_kredit, keterangan=f"Retur {pilih_inv.no_invoice}", debit=0, kredit=nilai_retur))
+            # Tunai atau Transfer
+            akun_kredit = "11120" if pilih_inv.metode_bayar == "Transfer" else "11110"
+            nama_kredit = "Kas di Bank" if akun_kredit == "11120" else "Kas Tunai"
+            db.add(models.JurnalUmum(tanggal=waktu_retur, kode_akun=akun_kredit, nama_akun=nama_kredit, keterangan=f"Refund Retur {pilih_inv.no_invoice}", debit=0, kredit=nilai_retur))
+
+        # Jurnal HPP
         db.add(models.JurnalUmum(tanggal=waktu_retur, kode_akun="12150", nama_akun="Persediaan Barang Jadi", keterangan=f"Retur Masuk {qty_retur_pcs} pcs", debit=nilai_hpp_retur, kredit=0))
         db.add(models.JurnalUmum(tanggal=waktu_retur, kode_akun="51120", nama_akun="Harga Pokok Penjualan", keterangan=f"Batal HPP {pilih_inv.no_invoice}", debit=0, kredit=nilai_hpp_retur))
+        
+        # Update Tracking Retur di Detail
+        barang_retur.qty_retur = current_retur + payload.qty_retur
+            
+        # Update Status Invoice jika semuanya diretur
+        all_details = db.query(models.DetailPenjualan).filter(models.DetailPenjualan.no_invoice == payload.no_invoice).all()
+        is_fully_returned = True
+        for d in all_details:
+            if (d.qty_retur or 0.0) < d.qty_lusin:
+                is_fully_returned = False
+                break
+        
+        if is_fully_returned:
+            pilih_inv.status = "RETUR TOTAL"
         
         db.commit()
         return schemas.APIResponse(success=True, message="Retur berhasil dicatat", data=None)
