@@ -641,18 +641,14 @@ def audit_selisih_neraca(db: Session = Depends(get_db)):
     """Mencari transaksi mencurigakan yang menyebabkan Neraca tidak balance"""
     try:
         # 1. Cari Jurnal dengan nilai mendekati selisih (9,622,626)
-        # Atau jurnal yang berkaitan dengan INV-260501-0001
-        target_inv = "INV-260501-0001"
         jurnals = db.query(models.JurnalUmum).filter(
-            (models.JurnalUmum.keterangan.ilike(f"%{target_inv}%")) |
             (models.JurnalUmum.debit == 9622626) |
-            (models.JurnalUmum.kredit == 9622626)
-        ).all()
+            (models.JurnalUmum.kredit == 9622626) |
+            (models.JurnalUmum.tanggal >= datetime.datetime.now() - datetime.timedelta(days=1))
+        ).order_by(models.JurnalUmum.id.desc()).limit(20).all()
         
-        # 2. Cari Header Penjualan yang mungkin 'VOID' tapi jurnalnya masih ada
-        invoices = db.query(models.HeaderPenjualan).filter(
-            models.HeaderPenjualan.no_invoice == target_inv
-        ).all()
+        # 2. Cari Header Penjualan terbaru
+        invoices = db.query(models.HeaderPenjualan).order_by(models.HeaderPenjualan.id.desc()).limit(5).all()
         
         return {
             "status": "success",
