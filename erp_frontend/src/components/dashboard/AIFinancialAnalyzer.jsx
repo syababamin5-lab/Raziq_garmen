@@ -23,7 +23,8 @@ const AIFinancialAnalyzer = ({ userRole }) => {
                 setAnalysis(res.data.analysis);
             } else if (res.data.status === 'warning') {
                 setError(res.data.message);
-                console.log("Snapshot Data:", res.data.raw_data);
+            } else if (res.data.status === 'error') {
+                setError(res.data.message);
             } else {
                 setError("Gagal mendapatkan analisis AI.");
             }
