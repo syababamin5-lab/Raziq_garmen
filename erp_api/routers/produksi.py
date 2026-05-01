@@ -3,6 +3,7 @@ import re
 from fastapi import APIRouter, Depends, HTTPException
 from sqlalchemy.orm import Session
 from models import get_db
+from utils import merge_date_time
 import models
 from schemas import (
     APIResponse, ProduksiOptionsResponse, SelectOption, 
@@ -41,6 +42,7 @@ def get_produksi_options(db: Session = Depends(get_db)):
 @router.post("/cutting", response_model=APIResponse)
 def submit_cutting(payload: CuttingRequest, db: Session = Depends(get_db)):
     try:
+        waktu_transaksi = merge_date_time(payload.tgl_cutting)
         kain = db.query(models.Barang).filter(models.Barang.id == payload.kain_id).first()
         produk = db.query(models.Barang).filter(models.Barang.id == payload.produk_id).first()
         karyawan = db.query(models.Karyawan).filter(models.Karyawan.id == payload.tukang_potong_id).first()
@@ -60,12 +62,12 @@ def submit_cutting(payload: CuttingRequest, db: Session = Depends(get_db)):
 
         # Jurnal Pemakaian Bahan Baku
         db.add(models.JurnalUmum(
-            tanggal=datetime.datetime.now(), 
+            tanggal=waktu_transaksi, 
             kode_akun="51110", nama_akun="Pemakaian Bahan Baku", 
             keterangan=ket_jurnal, debit=nilai_kain_terpakai, kredit=0
         ))
         db.add(models.JurnalUmum(
-            tanggal=datetime.datetime.now(), 
+            tanggal=waktu_transaksi, 
             kode_akun="12110", nama_akun="Persediaan Bahan Baku (Kain)", 
             keterangan=f"Pemakaian Kain {kain.nama_barang}", debit=0, kredit=nilai_kain_terpakai
         ))
@@ -73,13 +75,13 @@ def submit_cutting(payload: CuttingRequest, db: Session = Depends(get_db)):
         # Jurnal Pengakuan Utang Upah (BTKL) - IFRS Compliance
         if total_upah > 0:
             db.add(models.JurnalUmum(
-                tanggal=datetime.datetime.now(),
+                tanggal=waktu_transaksi,
                 kode_akun="51210", nama_akun="BTKL - Upah Cutting",
                 keterangan=f"Upah Potong {payload.hasil_pcs} pcs - {karyawan.nama_karyawan}",
                 debit=total_upah, kredit=0
             ))
             db.add(models.JurnalUmum(
-                tanggal=datetime.datetime.now(),
+                tanggal=waktu_transaksi,
                 kode_akun="21210", nama_akun="Utang Gaji & Upah",
                 keterangan=f"Hutang Upah Potong - {karyawan.nama_karyawan}",
                 debit=0, kredit=total_upah
@@ -87,7 +89,7 @@ def submit_cutting(payload: CuttingRequest, db: Session = Depends(get_db)):
 
         # Log Produksi untuk Dashboard (Cutting)
         db.add(models.ProductionLog(
-            tanggal=datetime.datetime.now(),
+            tanggal=waktu_transaksi,
             divisi="Cutting",
             kode_sku=produk.kode_sku,
             nama_barang=produk.nama_barang,
@@ -104,6 +106,7 @@ def submit_cutting(payload: CuttingRequest, db: Session = Depends(get_db)):
 @router.post("/jahit", response_model=APIResponse)
 def submit_jahit(payload: JahitRequest, db: Session = Depends(get_db)):
     try:
+        waktu_transaksi = merge_date_time(payload.tgl_jahit)
         produk = db.query(models.Barang).filter(models.Barang.id == payload.produk_id).first()
         if not produk: return APIResponse(success=False, message="Produk tidak ditemukan")
 
@@ -141,12 +144,12 @@ def submit_jahit(payload: JahitRequest, db: Session = Depends(get_db)):
 
         nilai_masuk = total_pcs * hpp_per_pcs
 
-        db.add(models.JurnalUmum(tanggal=datetime.datetime.now(), kode_akun="12150", nama_akun="Persediaan Barang Jadi", keterangan=f"Masuk {total_pcs} pcs {produk.kode_sku} (Jahit)", debit=nilai_masuk, kredit=0))
-        db.add(models.JurnalUmum(tanggal=datetime.datetime.now(), kode_akun="51199", nama_akun="Ikhtisar Produksi", keterangan=f"Masuk Gudang {produk.kode_sku}", debit=0, kredit=nilai_masuk))
+        db.add(models.JurnalUmum(tanggal=waktu_transaksi, kode_akun="12150", nama_akun="Persediaan Barang Jadi", keterangan=f"Masuk {total_pcs} pcs {produk.kode_sku} (Jahit)", debit=nilai_masuk, kredit=0))
+        db.add(models.JurnalUmum(tanggal=waktu_transaksi, kode_akun="51199", nama_akun="Ikhtisar Produksi", keterangan=f"Masuk Gudang {produk.kode_sku}", debit=0, kredit=nilai_masuk))
 
         # Log Produksi untuk Dashboard (Jahit)
         db.add(models.ProductionLog(
-            tanggal=datetime.datetime.now(),
+            tanggal=waktu_transaksi,
             divisi="Jahit",
             kode_sku=produk.kode_sku,
             nama_barang=produk.nama_barang,

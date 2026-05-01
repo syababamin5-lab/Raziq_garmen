@@ -373,5 +373,268 @@ def export_laporan_pdf(tipe: str, bulan: int, tahun: int, db: Session = Depends(
         print(traceback.format_exc())
         return {"status": "error", "message": str(e)}
 
+@router.get("/export-pdf-penjualan-rekap")
+def export_penjualan_rekap_pdf_endpoint(bulan: int, tahun: int, db: Session = Depends(get_db)):
+    try:
+        from pdf_generator import export_rekap_penjualan_bulanan_pdf
+        from fastapi.responses import Response
+        
+        start_date = datetime.datetime(tahun, bulan, 1)
+        if bulan == 12: end_date = datetime.datetime(tahun+1, 1, 1)
+        else: end_date = datetime.datetime(tahun, bulan+1, 1)
+        
+        # 1. Ambil Semua Header Penjualan Periode Ini
+        sales = db.query(models.HeaderPenjualan).filter(
+            models.HeaderPenjualan.tanggal >= start_date,
+            models.HeaderPenjualan.tanggal < end_date
+        ).all()
+        
+        # 2. Ambil Semua Detail Penjualan (untuk hitung retur)
+        invoices_nos = [s.no_invoice for s in sales]
+        details = db.query(models.DetailPenjualan).filter(models.DetailPenjualan.no_invoice.in_(invoices_nos)).all() if invoices_nos else []
+        
+        # Mapping retur per invoice
+        retur_map = {}
+        for d in details:
+            if d.qty_retur and d.qty_retur > 0:
+                val_retur = d.qty_retur * d.harga_per_lusin
+                retur_map[d.no_invoice] = retur_map.get(d.no_invoice, 0) + val_retur
+
+        # 3. Proses Data Harian
+        daily_data = {} 
+        for s in sales:
+            tgl_str = s.tanggal.strftime("%d/%m/%Y")
+            if tgl_str not in daily_data:
+                daily_data[tgl_str] = {"count": 0, "bruto": 0, "diskon": 0}
+            
+            daily_data[tgl_str]["count"] += 1
+            daily_data[tgl_str]["bruto"] += (s.total_tagihan + (s.diskon or 0))
+            daily_data[tgl_str]["diskon"] += (s.diskon or 0)
+            
+        daily_rows = []
+        for tgl in sorted(daily_data.keys()):
+            d = daily_data[tgl]
+            daily_rows.append([tgl, d["count"], d["bruto"], d["diskon"], d["bruto"] - d["diskon"]])
+
+        # 4. Proses Data Per Client
+        client_data = {} 
+        for s in sales:
+            name = s.nama_customer or "Umum"
+            if name not in client_data:
+                client_data[name] = {"bruto": 0, "diskon": 0, "retur": 0, "piutang": 0}
+            
+            bruto = s.total_tagihan + (s.diskon or 0)
+            client_data[name]["bruto"] += bruto
+            client_data[name]["diskon"] += (s.diskon or 0)
+            client_data[name]["retur"] += retur_map.get(s.no_invoice, 0)
+            
+            if s.status == "Tempo":
+                client_data[name]["piutang"] += (s.total_tagihan - (s.uang_muka or 0))
+
+        client_rows = []
+        g_totals = {"bruto": 0, "diskon": 0, "retur": 0, "netto": 0, "piutang": 0}
+        
+        for name in sorted(client_data.keys()):
+            c = client_data[name]
+            netto = c["bruto"] - c["diskon"] - c["retur"]
+            client_rows.append([name, c["bruto"], c["diskon"], c["retur"], netto, c["piutang"]])
+            
+            g_totals["bruto"] += c["bruto"]
+            g_totals["diskon"] += c["diskon"]
+            g_totals["retur"] += c["retur"]
+            g_totals["netto"] += netto
+            g_totals["piutang"] += c["piutang"]
+
+        # 5. Generate PDF
+        config = db.query(models.CompanyConfig).first()
+        periode_str = f"{new_date(2000, bulan, 1).strftime('%B')} {tahun}"
+        
+        n_ttd = config.ttd_laporan_nama if (config and config.ttd_laporan_nama) else (config.nama_pemilik if config else "Yana Taryana")
+        j_ttd = config.ttd_laporan_jabatan if (config and config.ttd_laporan_jabatan) else (config.jabatan_pemilik if config else "Direktur Operasional")
+        n_admin = config.ttd_admin_nama if (config and config.ttd_admin_nama) else "Admin Keuangan"
+        j_admin = config.ttd_admin_jabatan if (config and config.ttd_admin_jabatan) else "Administrasi"
+
+        pdf_bytes = export_rekap_penjualan_bulanan_pdf(
+            "REKAPITULASI PENJUALAN BULANAN", periode_str, 
+            daily_rows, client_rows, g_totals, 
+            config, n_ttd, j_ttd, n_admin, j_admin
+        )
+        
+        return Response(
+            content=pdf_bytes, 
+            media_type="application/pdf", 
+            headers={"Content-Disposition": f"inline; filename=Rekap_Penjualan_{bulan}_{tahun}.pdf"}
+        )
+
+    except Exception as e:
+        import traceback
+        print(traceback.format_exc())
+        return {"status": "error", "message": str(e)}
+
+@router.get("/export-pdf-pembelian-rekap")
+def export_pembelian_rekap_pdf_endpoint(bulan: int, tahun: int, db: Session = Depends(get_db)):
+    try:
+        from pdf_generator import export_rekap_pembelian_bulanan_pdf
+        from fastapi.responses import Response
+        
+        start_date = datetime.datetime(tahun, bulan, 1)
+        if bulan == 12: end_date = datetime.datetime(tahun+1, 1, 1)
+        else: end_date = datetime.datetime(tahun, bulan+1, 1)
+        
+        # 1. Ambil Semua Header Pembelian Periode Ini
+        purchases = db.query(models.HeaderPembelian).filter(
+            models.HeaderPembelian.tanggal >= start_date,
+            models.HeaderPembelian.tanggal < end_date
+        ).all()
+        
+        # 2. Proses Data Harian
+        daily_data = {} 
+        for p in purchases:
+            tgl_str = p.tanggal.strftime("%d/%m/%Y")
+            if tgl_str not in daily_data:
+                daily_data[tgl_str] = {"count": 0, "bruto": 0, "diskon": 0}
+            
+            daily_data[tgl_str]["count"] += 1
+            daily_data[tgl_str]["bruto"] += (p.total_tagihan + (p.diskon or 0))
+            daily_data[tgl_str]["diskon"] += (p.diskon or 0)
+            
+        daily_rows = []
+        for tgl in sorted(daily_data.keys()):
+            d = daily_data[tgl]
+            daily_rows.append([tgl, d["count"], d["bruto"], d["diskon"], d["bruto"] - d["diskon"]])
+
+        # 3. Proses Data Per Supplier
+        supplier_data = {} 
+        for p in purchases:
+            name = p.nama_supplier or "Umum"
+            if name not in supplier_data:
+                supplier_data[name] = {"bruto": 0, "diskon": 0, "hutang": 0}
+            
+            bruto = p.total_tagihan + (p.diskon or 0)
+            supplier_data[name]["bruto"] += bruto
+            supplier_data[name]["diskon"] += (p.diskon or 0)
+            
+            if p.status == "Tempo":
+                supplier_data[name]["hutang"] += (p.total_tagihan - (p.uang_muka or 0))
+
+        supplier_rows = []
+        g_totals = {"bruto": 0, "diskon": 0, "netto": 0, "hutang": 0}
+        
+        for name in sorted(supplier_data.keys()):
+            s = supplier_data[name]
+            netto = s["bruto"] - s["diskon"]
+            supplier_rows.append([name, s["bruto"], s["diskon"], netto, s["hutang"]])
+            
+            g_totals["bruto"] += s["bruto"]
+            g_totals["diskon"] += s["diskon"]
+            g_totals["netto"] += netto
+            g_totals["hutang"] += s["hutang"]
+
+        # 4. Generate PDF
+        config = db.query(models.CompanyConfig).first()
+        periode_str = f"{new_date(2000, bulan, 1).strftime('%B')} {tahun}"
+        
+        n_ttd = config.ttd_laporan_nama if (config and config.ttd_laporan_nama) else (config.nama_pemilik if config else "Yana Taryana")
+        j_ttd = config.ttd_laporan_jabatan if (config and config.ttd_laporan_jabatan) else (config.jabatan_pemilik if config else "Direktur Operasional")
+        n_admin = config.ttd_admin_nama if (config and config.ttd_admin_nama) else "Admin Keuangan"
+        j_admin = config.ttd_admin_jabatan if (config and config.ttd_admin_jabatan) else "Administrasi"
+
+        pdf_bytes = export_rekap_pembelian_bulanan_pdf(
+            "REKAPITULASI PEMBELIAN BULANAN", periode_str, 
+            daily_rows, supplier_rows, g_totals, 
+            config, n_ttd, j_ttd, n_admin, j_admin
+        )
+        
+        return Response(
+            content=pdf_bytes, 
+            media_type="application/pdf", 
+            headers={"Content-Disposition": f"inline; filename=Rekap_Pembelian_{bulan}_{tahun}.pdf"}
+        )
+
+    except Exception as e:
+        import traceback
+        print(traceback.format_exc())
+        return {"status": "error", "message": str(e)}
+
+@router.get("/export-pdf-produksi-rekap")
+def export_produksi_rekap_pdf_endpoint(bulan: int, tahun: int, db: Session = Depends(get_db)):
+    try:
+        from pdf_generator import export_rekap_produksi_bulanan_pdf
+        from fastapi.responses import Response
+        
+        start_date = datetime.datetime(tahun, bulan, 1)
+        if bulan == 12: end_date = datetime.datetime(tahun+1, 1, 1)
+        else: end_date = datetime.datetime(tahun, bulan+1, 1)
+        
+        # 1. Ambil Semua Log Produksi Periode Ini
+        logs = db.query(models.ProductionLog).filter(
+            models.ProductionLog.tanggal >= start_date,
+            models.ProductionLog.tanggal < end_date
+        ).all()
+        
+        # 2. Proses Data Harian
+        daily_data = {} 
+        for l in logs:
+            tgl_str = l.tanggal.strftime("%d/%m/%Y")
+            if tgl_str not in daily_data:
+                daily_data[tgl_str] = {"cutting": 0, "jahit": 0}
+            
+            if l.divisi == "Cutting":
+                daily_data[tgl_str]["cutting"] += (l.qty_hasil or 0)
+            elif l.divisi == "Jahit":
+                daily_data[tgl_str]["jahit"] += (l.qty_hasil or 0)
+            
+        daily_rows = []
+        for tgl in sorted(daily_data.keys()):
+            d = daily_data[tgl]
+            daily_rows.append([tgl, d["cutting"], d["jahit"]])
+
+        # 3. Proses Data Per SKU
+        sku_data = {} 
+        for l in logs:
+            sku = l.kode_sku or "UNKNOWN"
+            if sku not in sku_data:
+                sku_data[sku] = {"nama": l.nama_barang, "cutting": 0, "jahit": 0}
+            
+            if l.divisi == "Cutting":
+                sku_data[sku]["cutting"] += (l.qty_hasil or 0)
+            elif l.divisi == "Jahit":
+                sku_data[sku]["jahit"] += (l.qty_hasil or 0)
+
+        sku_rows = []
+        g_totals = {"cutting": 0, "jahit": 0}
+        
+        for sku in sorted(sku_data.keys()):
+            s = sku_data[sku]
+            sku_rows.append([sku, s["nama"], s["cutting"], s["jahit"]])
+            g_totals["cutting"] += s["cutting"]
+            g_totals["jahit"] += s["jahit"]
+
+        # 4. Generate PDF
+        config = db.query(models.CompanyConfig).first()
+        periode_str = f"{new_date(2000, bulan, 1).strftime('%B')} {tahun}"
+        
+        n_ttd = config.ttd_laporan_nama if (config and config.ttd_laporan_nama) else (config.nama_pemilik if config else "Yana Taryana")
+        j_ttd = config.ttd_laporan_jabatan if (config and config.ttd_laporan_jabatan) else (config.jabatan_pemilik if config else "Direktur Operasional")
+        n_admin = config.ttd_admin_nama if (config and config.ttd_admin_nama) else "Admin Keuangan"
+        j_admin = config.ttd_admin_jabatan if (config and config.ttd_admin_jabatan) else "Administrasi"
+
+        pdf_bytes = export_rekap_produksi_bulanan_pdf(
+            "REKAPITULASI OUTPUT PRODUKSI", periode_str, 
+            daily_rows, sku_rows, g_totals, 
+            config, n_ttd, j_ttd, n_admin, j_admin
+        )
+        
+        return Response(
+            content=pdf_bytes, 
+            media_type="application/pdf", 
+            headers={"Content-Disposition": f"inline; filename=Rekap_Produksi_{bulan}_{tahun}.pdf"}
+        )
+
+    except Exception as e:
+        import traceback
+        print(traceback.format_exc())
+        return {"status": "error", "message": str(e)}
+
 def new_date(y, m, d):
     return datetime.datetime(y, m, d)

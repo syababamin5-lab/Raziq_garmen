@@ -1,9 +1,31 @@
+import datetime
+from models import AkunBukuBesar
+
+def merge_date_time(date_str):
+    """
+    Mengambil string tanggal (ISO atau YYYY-MM-DD) dan menggabungkannya 
+    dengan jam komputer saat ini agar pencatatan waktu transaksi akurat.
+    """
+    now = datetime.datetime.now()
+    if not date_str:
+        return now
+    
+    try:
+        # Jika input hanya tanggal (YYYY-MM-DD)
+        if len(date_str.split('T')[0]) == len(date_str) and len(date_str) <= 10:
+            input_date = datetime.date.fromisoformat(date_str)
+            return datetime.datetime.combine(input_date, now.time())
+        else:
+            # Jika sudah ada jam (ISO format)
+            return datetime.datetime.fromisoformat(date_str.replace('Z', '+00:00'))
+    except:
+        return now
+
 def format_rp(angka):
     if angka is None:
         angka = 0
     # Mengubah angka menjadi format Rp. 270.000,-
     return f"Rp. {int(angka):,},-".replace(',', '.')
-from models import AkunBukuBesar
 
 def get_opsi_akun(db, kategori_filter):
     """Mengambil akun dari database dan mengubahnya jadi format dictionary untuk dropdown UI"""

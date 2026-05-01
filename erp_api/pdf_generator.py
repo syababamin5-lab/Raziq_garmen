@@ -653,3 +653,277 @@ def export_buku_besar_massal_pdf(data_per_akun, periode, config=None, nama_ttd=N
     pdf.set_text_color(0, 0, 0)
     pdf.add_ttd(config, nama=nama_ttd, jabatan=jabatan_ttd, nama_admin=nama_admin, jabatan_admin=jabatan_admin)
     return pdf.output(dest='S').encode('latin-1')
+
+def export_rekap_penjualan_bulanan_pdf(judul, periode, daily_rows, client_rows, grand_totals, config=None, nama_ttd=None, jabatan_ttd=None, nama_admin=None, jabatan_admin=None):
+    """
+    daily_rows: List of [Tgl, Jml Inv, Bruto, Diskon, Netto]
+    client_rows: List of [Nama Client, Bruto, Diskon, Retur, Netto, Sisa Piutang]
+    grand_totals: Dict { "bruto": 0, "diskon": 0, "retur": 0, "netto": 0, "piutang": 0 }
+    """
+    pdf = PDF(judul, periode, orientation='L', config=config)
+    
+    # ─── TABEL 1: RINGKASAN HARIAN ────────────────────────────────
+    pdf.add_page()
+    pdf.set_font('Arial', 'B', 12)
+    pdf.set_text_color(6, 78, 59)
+    pdf.cell(0, 10, "1. RINGKASAN PENJUALAN HARIAN", 0, 1, 'L')
+    pdf.ln(2)
+    
+    h1 = ["TANGGAL", "JML INV", "PENJUALAN BRUTO", "POTONGAN/DISKON", "PENJUALAN NETTO"]
+    w1 = [40, 30, 50, 50, 50]
+    
+    pdf.set_font('Arial', 'B', 9)
+    pdf.set_fill_color(6, 78, 59)
+    pdf.set_text_color(255, 255, 255)
+    for i, h in enumerate(h1):
+        pdf.cell(w1[i], 10, h, 1, 0, 'C', 1)
+    pdf.ln()
+    
+    pdf.set_font('Arial', '', 9)
+    pdf.set_text_color(0, 0, 0)
+    
+    # Init Totals for Table 1
+    t1_inv = 0
+    t1_bruto = 0
+    t1_diskon = 0
+    t1_netto = 0
+    
+    for r in daily_rows:
+        pdf.check_page_break(8)
+        pdf.cell(w1[0], 8, str(r[0]), 1, 0, 'C')
+        pdf.cell(w1[1], 8, str(r[1]), 1, 0, 'C')
+        pdf.cell(w1[2], 8, format_rp_pdf(r[2]), 1, 0, 'R')
+        pdf.cell(w1[3], 8, format_rp_pdf(r[3]), 1, 0, 'R')
+        pdf.set_font('Arial', 'B', 9)
+        pdf.cell(w1[4], 8, format_rp_pdf(r[4]), 1, 1, 'R')
+        pdf.set_font('Arial', '', 9)
+        
+        t1_inv += r[1]
+        t1_bruto += r[2]
+        t1_diskon += r[3]
+        t1_netto += r[4]
+
+    # Baris TOTAL Tabel 1
+    pdf.set_fill_color(240, 250, 245)
+    pdf.set_font('Arial', 'B', 9)
+    pdf.cell(w1[0], 10, " TOTAL BULAN INI", 1, 0, 'L', 1)
+    pdf.cell(w1[1], 10, str(t1_inv), 1, 0, 'C', 1)
+    pdf.cell(w1[2], 10, format_rp_pdf(t1_bruto), 1, 0, 'R', 1)
+    pdf.cell(w1[3], 10, format_rp_pdf(t1_diskon), 1, 0, 'R', 1)
+    pdf.cell(w1[4], 10, format_rp_pdf(t1_netto), 1, 1, 'R', 1)
+    pdf.set_text_color(0, 0, 0)
+
+    # ─── TABEL 2: REKAPITULASI PER CLIENT ──────────────────────────
+    pdf.add_page()
+    pdf.set_font('Arial', 'B', 12)
+    pdf.set_text_color(6, 78, 59)
+    pdf.cell(0, 10, "2. REKAPITULASI PENJUALAN PER CLIENT", 0, 1, 'L')
+    pdf.ln(2)
+    
+    h2 = ["NAMA CLIENT", "BRUTO", "DISKON", "RETUR", "NETTO", "SISA PIUTANG"]
+    w2 = [80, 40, 35, 35, 40, 40]
+    
+    pdf.set_font('Arial', 'B', 9)
+    pdf.set_fill_color(6, 78, 59)
+    pdf.set_text_color(255, 255, 255)
+    for i, h in enumerate(h2):
+        pdf.cell(w2[i], 10, h, 1, 0, 'C', 1)
+    pdf.ln()
+    
+    pdf.set_font('Arial', '', 9)
+    pdf.set_text_color(0, 0, 0)
+    for r in client_rows:
+        pdf.check_page_break(8)
+        # Handle long names
+        name = str(r[0])
+        if len(name) > 35: name = name[:32] + "..."
+        
+        pdf.cell(w2[0], 8, f" {name}", 1, 0, 'L')
+        pdf.cell(w2[1], 8, format_rp_pdf(r[1]), 1, 0, 'R')
+        pdf.cell(w2[2], 8, format_rp_pdf(r[2]), 1, 0, 'R')
+        pdf.cell(w2[3], 8, format_rp_pdf(r[3]), 1, 0, 'R')
+        pdf.set_font('Arial', 'B', 9)
+        pdf.cell(w2[4], 8, format_rp_pdf(r[4]), 1, 0, 'R')
+        pdf.set_text_color(180, 0, 0) if r[5] > 0 else pdf.set_text_color(0, 0, 0)
+        pdf.cell(w2[5], 8, format_rp_pdf(r[5]), 1, 1, 'R')
+        pdf.set_text_color(0, 0, 0)
+        pdf.set_font('Arial', '', 9)
+
+    # ─── GRAND TOTAL SECTION ─────────────────────────────────────
+    pdf.ln(5)
+    pdf.set_fill_color(240, 250, 245)
+    pdf.set_font('Arial', 'B', 10)
+    pdf.cell(w2[0], 12, " GRAND TOTAL KESELURUHAN", 1, 0, 'L', 1)
+    pdf.cell(w2[1], 12, format_rp_pdf(grand_totals['bruto']), 1, 0, 'R', 1)
+    pdf.cell(w2[2], 12, format_rp_pdf(grand_totals['diskon']), 1, 0, 'R', 1)
+    pdf.cell(w2[3], 12, format_rp_pdf(grand_totals['retur']), 1, 0, 'R', 1)
+    pdf.set_text_color(6, 78, 59)
+    pdf.cell(w2[4], 12, format_rp_pdf(grand_totals['netto']), 1, 0, 'R', 1)
+    pdf.set_text_color(180, 0, 0)
+    pdf.cell(w2[5], 12, format_rp_pdf(grand_totals['piutang']), 1, 1, 'R', 1)
+    
+    pdf.set_text_color(0, 0, 0)
+    pdf.add_ttd(config, nama=nama_ttd, jabatan=jabatan_ttd, nama_admin=nama_admin, jabatan_admin=jabatan_admin)
+    return pdf.output(dest='S').encode('latin-1')
+
+def export_rekap_pembelian_bulanan_pdf(judul, periode, daily_rows, supplier_rows, grand_totals, config=None, nama_ttd=None, jabatan_ttd=None, nama_admin=None, jabatan_admin=None):
+    """
+    daily_rows: List of [Tgl, Jml PO, Bruto, Diskon, Netto]
+    supplier_rows: List of [Nama Supplier, Bruto, Diskon, Netto, Sisa Hutang]
+    grand_totals: Dict { "bruto": 0, "diskon": 0, "netto": 0, "hutang": 0 }
+    """
+    pdf = PDF(judul, periode, orientation='L', config=config)
+    
+    # ─── TABEL 1: RINGKASAN PEMBELIAN HARIAN ──────────────────────
+    pdf.add_page()
+    pdf.set_font('Arial', 'B', 12)
+    pdf.set_text_color(6, 78, 59)
+    pdf.cell(0, 10, "1. RINGKASAN PEMBELIAN HARIAN", 0, 1, 'L')
+    pdf.ln(2)
+    
+    h1 = ["TANGGAL", "JML PO", "PEMBELIAN BRUTO", "POTONGAN/DISKON", "PEMBELIAN NETTO"]
+    w1 = [40, 30, 50, 50, 50]
+    
+    pdf.set_font('Arial', 'B', 9)
+    pdf.set_fill_color(6, 78, 59)
+    pdf.set_text_color(255, 255, 255)
+    for i, h in enumerate(h1):
+        pdf.cell(w1[i], 10, h, 1, 0, 'C', 1)
+    pdf.ln()
+    
+    pdf.set_font('Arial', '', 9)
+    pdf.set_text_color(0, 0, 0)
+    t1_po = 0; t1_bruto = 0; t1_diskon = 0; t1_netto = 0
+    
+    for r in daily_rows:
+        pdf.check_page_break(8)
+        pdf.cell(w1[0], 8, str(r[0]), 1, 0, 'C')
+        pdf.cell(w1[1], 8, str(r[1]), 1, 0, 'C')
+        pdf.cell(w1[2], 8, format_rp_pdf(r[2]), 1, 0, 'R')
+        pdf.cell(w1[3], 8, format_rp_pdf(r[3]), 1, 0, 'R')
+        pdf.set_font('Arial', 'B', 9)
+        pdf.cell(w1[4], 8, format_rp_pdf(r[4]), 1, 1, 'R')
+        pdf.set_font('Arial', '', 9)
+        t1_po += r[1]; t1_bruto += r[2]; t1_diskon += r[3]; t1_netto += r[4]
+
+    # Total Row Table 1
+    pdf.set_fill_color(240, 250, 245); pdf.set_font('Arial', 'B', 9)
+    pdf.cell(w1[0], 10, " TOTAL PEMBELIAN", 1, 0, 'L', 1)
+    pdf.cell(w1[1], 10, str(t1_po), 1, 0, 'C', 1)
+    pdf.cell(w1[2], 10, format_rp_pdf(t1_bruto), 1, 0, 'R', 1)
+    pdf.cell(w1[3], 10, format_rp_pdf(t1_diskon), 1, 0, 'R', 1)
+    pdf.cell(w1[4], 10, format_rp_pdf(t1_netto), 1, 1, 'R', 1)
+
+    # ─── TABEL 2: REKAPITULASI PER SUPPLIER ───────────────────────
+    pdf.add_page()
+    pdf.set_font('Arial', 'B', 12)
+    pdf.set_text_color(6, 78, 59)
+    pdf.cell(0, 10, "2. REKAPITULASI PEMBELIAN PER SUPPLIER", 0, 1, 'L')
+    pdf.ln(2)
+    
+    h2 = ["NAMA SUPPLIER", "BRUTO", "DISKON", "NETTO", "SISA HUTANG"]
+    w2 = [90, 45, 45, 45, 45]
+    
+    pdf.set_font('Arial', 'B', 9)
+    pdf.set_fill_color(6, 78, 59)
+    pdf.set_text_color(255, 255, 255)
+    for i, h in enumerate(h2):
+        pdf.cell(w2[i], 10, h, 1, 0, 'C', 1)
+    pdf.ln()
+    
+    pdf.set_font('Arial', '', 9)
+    pdf.set_text_color(0, 0, 0)
+    for r in supplier_rows:
+        pdf.check_page_break(8)
+        name = str(r[0]); name = (name[:35] + "...") if len(name) > 35 else name
+        pdf.cell(w2[0], 8, f" {name}", 1, 0, 'L')
+        pdf.cell(w2[1], 8, format_rp_pdf(r[1]), 1, 0, 'R')
+        pdf.cell(w2[2], 8, format_rp_pdf(r[2]), 1, 0, 'R')
+        pdf.set_font('Arial', 'B', 9)
+        pdf.cell(w2[3], 8, format_rp_pdf(r[3]), 1, 0, 'R')
+        pdf.set_text_color(180, 0, 0) if r[4] > 0 else pdf.set_text_color(0, 0, 0)
+        pdf.cell(w2[4], 8, format_rp_pdf(r[4]), 1, 1, 'R')
+        pdf.set_text_color(0, 0, 0); pdf.set_font('Arial', '', 9)
+
+    # GRAND TOTAL
+    pdf.ln(5); pdf.set_fill_color(240, 250, 245); pdf.set_font('Arial', 'B', 10)
+    pdf.cell(w2[0], 12, " GRAND TOTAL PEMBELIAN", 1, 0, 'L', 1)
+    pdf.cell(w2[1], 12, format_rp_pdf(grand_totals['bruto']), 1, 0, 'R', 1)
+    pdf.cell(w2[2], 12, format_rp_pdf(grand_totals['diskon']), 1, 0, 'R', 1)
+    pdf.set_text_color(6, 78, 59)
+    pdf.cell(w2[3], 12, format_rp_pdf(grand_totals['netto']), 1, 0, 'R', 1)
+    pdf.set_text_color(180, 0, 0)
+    pdf.cell(w2[4], 12, format_rp_pdf(grand_totals['hutang']), 1, 1, 'R', 1)
+    
+    pdf.set_text_color(0, 0, 0)
+    pdf.add_ttd(config, nama=nama_ttd, jabatan=jabatan_ttd, nama_admin=nama_admin, jabatan_admin=jabatan_admin)
+    return pdf.output(dest='S').encode('latin-1')
+
+def export_rekap_produksi_bulanan_pdf(judul, periode, daily_rows, sku_rows, grand_totals, config=None, nama_ttd=None, jabatan_ttd=None, nama_admin=None, jabatan_admin=None):
+    """
+    daily_rows: List of [Tgl, Total Cutting (pcs), Total Jahit (lsn)]
+    sku_rows: List of [SKU, Nama Barang, Total Cutting, Total Jahit]
+    grand_totals: Dict { "cutting": 0, "jahit": 0 }
+    """
+    pdf = PDF(judul, periode, orientation='P', config=config)
+    
+    # ─── TABEL 1: RINGKASAN PRODUKSI HARIAN ───────────────────────
+    pdf.add_page()
+    pdf.set_font('Arial', 'B', 12)
+    pdf.set_text_color(6, 78, 59)
+    pdf.cell(0, 10, "1. RINGKASAN OUTPUT PRODUKSI HARIAN", 0, 1, 'L')
+    pdf.ln(2)
+    
+    h1 = ["TANGGAL", "OUTPUT CUTTING (PCS)", "OUTPUT JAHIT (LSN)"]
+    w1 = [60, 65, 65]
+    
+    pdf.set_font('Arial', 'B', 10)
+    pdf.set_fill_color(6, 78, 59)
+    pdf.set_text_color(255, 255, 255)
+    for i, h in enumerate(h1):
+        pdf.cell(w1[i], 10, h, 1, 0, 'C', 1)
+    pdf.ln()
+    
+    pdf.set_font('Arial', '', 10)
+    pdf.set_text_color(0, 0, 0)
+    for r in daily_rows:
+        pdf.check_page_break(8)
+        pdf.cell(w1[0], 8, str(r[0]), 1, 0, 'C')
+        pdf.cell(w1[1], 8, f"{int(r[1]):,} Pcs".replace(',', '.'), 1, 0, 'C')
+        pdf.cell(w1[2], 8, f"{r[2]:g} Lsn", 1, 1, 'C')
+
+    # Total Row Table 1
+    pdf.set_fill_color(240, 250, 245); pdf.set_font('Arial', 'B', 10)
+    pdf.cell(w1[0], 10, " TOTAL PRODUKSI", 1, 0, 'L', 1)
+    pdf.cell(w1[1], 10, f"{int(grand_totals['cutting']):,} Pcs".replace(',', '.'), 1, 0, 'C', 1)
+    pdf.cell(w1[2], 10, f"{grand_totals['jahit']:g} Lsn", 1, 1, 'C', 1)
+
+    # ─── TABEL 2: REKAPITULASI PER MODEL / SKU ────────────────────
+    pdf.add_page()
+    pdf.set_font('Arial', 'B', 12)
+    pdf.set_text_color(6, 78, 59)
+    pdf.cell(0, 10, "2. REKAPITULASI PRODUKSI PER MODEL (SKU)", 0, 1, 'L')
+    pdf.ln(2)
+    
+    h2 = ["KODE SKU", "NAMA BARANG", "CUTTING", "JAHIT"]
+    w2 = [40, 90, 30, 30]
+    
+    pdf.set_font('Arial', 'B', 9)
+    pdf.set_fill_color(6, 78, 59)
+    pdf.set_text_color(255, 255, 255)
+    for i, h in enumerate(h2):
+        pdf.cell(w2[i], 10, h, 1, 0, 'C', 1)
+    pdf.ln()
+    
+    pdf.set_font('Arial', '', 9)
+    pdf.set_text_color(0, 0, 0)
+    for r in sku_rows:
+        pdf.check_page_break(8)
+        pdf.cell(w2[0], 8, f" {r[0]}", 1, 0, 'L')
+        name = str(r[1]); name = (name[:38] + "...") if len(name) > 38 else name
+        pdf.cell(w2[1], 8, f" {name}", 1, 0, 'L')
+        pdf.cell(w2[2], 8, f"{int(r[2]):,}".replace(',', '.'), 1, 0, 'C')
+        pdf.cell(w2[3], 8, f"{r[3]:g} Lsn", 1, 1, 'C')
+
+    pdf.add_ttd(config, nama=nama_ttd, jabatan=jabatan_ttd, nama_admin=nama_admin, jabatan_admin=jabatan_admin)
+    return pdf.output(dest='S').encode('latin-1')

@@ -81,8 +81,13 @@ export default function Produksi() {
       if(!cuttingForm.kain_id || !cuttingForm.produk_id || !cuttingForm.tukang_potong_id) {
           throw new Error("Pilih semua field yang wajib!");
       }
+      const selectedDate = new Date(cuttingForm.tgl_cutting);
+      const now = new Date();
+      selectedDate.setHours(now.getHours(), now.getMinutes(), now.getSeconds());
+
       const res = await submitCutting({
-        tgl_cutting: cuttingForm.tgl_cutting + "T00:00:00.000Z",
+        ...cuttingForm,
+        tgl_cutting: selectedDate.toISOString(),
         kain_id: Number(cuttingForm.kain_id),
         produk_id: Number(cuttingForm.produk_id),
         kg_pakai: Number(cuttingForm.kg_pakai),
@@ -110,8 +115,13 @@ export default function Produksi() {
     setLoading(true); setMsg({text:'', type:''});
     try {
       if(!jahitForm.produk_id) throw new Error("Pilih produk!");
+      const selectedDate = new Date(jahitForm.tgl_jahit);
+      const now = new Date();
+      selectedDate.setHours(now.getHours(), now.getMinutes(), now.getSeconds());
+
       const res = await submitJahit({
-        tgl_jahit: jahitForm.tgl_jahit + "T00:00:00.000Z",
+        ...jahitForm,
+        tgl_jahit: selectedDate.toISOString(),
         produk_id: Number(jahitForm.produk_id),
         qty_lusin: Number(jahitForm.qty_lusin)
       });

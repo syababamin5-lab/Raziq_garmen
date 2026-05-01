@@ -2,6 +2,7 @@ from fastapi import APIRouter, Depends
 from sqlalchemy.orm import Session
 from sqlalchemy import func
 from models import get_db
+from utils import merge_date_time
 import models
 import schemas
 import datetime
@@ -19,11 +20,7 @@ async def submit_pembelian_bahan(payload: schemas.PembelianBahanRequest, db: Ses
         no_po = f"PO-{datetime.datetime.now().strftime('%y%m%d%H%M')}"
         
         # Parse Tanggal
-        tgl_transaksi = datetime.datetime.now()
-        try:
-            tgl_transaksi = datetime.datetime.strptime(payload.tgl_po, '%Y-%m-%d')
-            tgl_transaksi = datetime.datetime.combine(tgl_transaksi.date(), datetime.datetime.now().time())
-        except: pass
+        tgl_transaksi = merge_date_time(payload.tgl_po)
 
         total_bruto = sum(i.qty * i.harga for i in payload.items)
         total_netto = total_bruto - (payload.diskon or 0)
@@ -163,11 +160,7 @@ def get_pembelian_details(no_po: str, db: Session = Depends(get_db)):
 @router.post("/opex", response_model=schemas.APIResponse)
 def submit_opex(payload: schemas.OpexRequest, db: Session = Depends(get_db)):
     try:
-        waktu_opex = datetime.datetime.now() # Using current time instead of tgl_opex for exact timestamp
-        try:
-            waktu_opex = datetime.datetime.strptime(payload.tgl_opex, '%Y-%m-%d')
-            waktu_opex = datetime.datetime.combine(waktu_opex.date(), datetime.datetime.now().time())
-        except: pass
+        waktu_opex = merge_date_time(payload.tgl_opex)
         
         kode_akun_debit = payload.kode_akun_opex
         nama_akun_debit = payload.nama_akun_opex
@@ -187,11 +180,7 @@ def submit_opex(payload: schemas.OpexRequest, db: Session = Depends(get_db)):
 @router.post("/aset", response_model=schemas.APIResponse)
 def submit_aset(payload: schemas.AsetRequest, db: Session = Depends(get_db)):
     try:
-        waktu_aset = datetime.datetime.now()
-        try:
-            waktu_aset = datetime.datetime.strptime(payload.tgl_aset, '%Y-%m-%d')
-            waktu_aset = datetime.datetime.combine(waktu_aset.date(), datetime.datetime.now().time())
-        except: pass
+        waktu_aset = merge_date_time(payload.tgl_aset)
         
         if payload.sumber_dana == "Modal Awal (Khusus Aset Lama)":
             kode_kredit, nama_kredit = "31110", "Modal Disetor"
@@ -384,7 +373,7 @@ def bayar_po_cepat(payload: schemas.BayarPOCepatRequest, db: Session = Depends(g
         supp = db.query(models.Mitra).filter(models.Mitra.nama_mitra == po.nama_supplier).first()
         if not supp: raise Exception("Data supplier tidak ditemukan")
 
-        waktu_bayar = datetime.datetime.now()
+        waktu_bayar = datetime.datetime.now() # Cepat biasanya sekarang
         po.status = "Lunas"
         
         # Kurangi saldo utang ke supplier
@@ -407,7 +396,7 @@ def bayar_po_cepat(payload: schemas.BayarPOCepatRequest, db: Session = Depends(g
 @router.post("/retur", response_model=schemas.APIResponse)
 def submit_retur_pembelian(payload: schemas.ReturPembelianRequest, db: Session = Depends(get_db)):
     try:
-        waktu_retur = datetime.datetime.now()
+        waktu_retur = datetime.datetime.now() # Retur biasanya sekarang
         po = db.query(models.HeaderPembelian).filter(models.HeaderPembelian.no_po == payload.no_po).first()
         detail = db.query(models.DetailPembelian).filter(models.DetailPembelian.no_po == payload.no_po, models.DetailPembelian.kode_sku == payload.kode_sku).first()
         

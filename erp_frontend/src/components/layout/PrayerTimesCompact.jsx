@@ -9,6 +9,7 @@ const PrayerTimesCompact = () => {
   const [isWarning, setIsWarning] = useState(false);
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [lastNotified, setLastNotified] = useState("");
+  const [activePrayerName, setActivePrayerName] = useState("");
 
   useEffect(() => {
     const fetchPrayerTimes = async (lat, lon) => {
@@ -58,6 +59,7 @@ const PrayerTimesCompact = () => {
           // Trigger Pop-up: Jika waktu shalat tiba (toleransi 1 menit agar tidak terlewat)
           const diffToPrayer = prayerTime - now;
           if (diffToPrayer <= 500 && diffToPrayer > -60000 && lastNotified !== p.label) {
+            setActivePrayerName(p.label);
             setIsModalOpen(true);
             setLastNotified(p.label);
           }
@@ -67,6 +69,7 @@ const PrayerTimesCompact = () => {
             const warningTime = new Date(prayerTime.getTime() - 15 * 60000);
             const diffToWarning = warningTime - now;
             if (diffToWarning <= 500 && diffToWarning > -60000 && lastNotified !== 'Persiapan Jum\'at') {
+              setActivePrayerName('Persiapan Jum\'at');
               setIsModalOpen(true);
               setLastNotified('Persiapan Jum\'at');
             }
@@ -121,7 +124,10 @@ const PrayerTimesCompact = () => {
     <>
       <div className="flex items-center gap-2">
         <div 
-          onClick={() => setIsModalOpen(true)}
+          onClick={() => {
+            setActivePrayerName(nextPrayer.name);
+            setIsModalOpen(true);
+          }}
           className={`
             flex items-center gap-3 px-4 py-1.5 rounded-full border transition-all duration-500 cursor-pointer group
             ${isWarning 
@@ -157,7 +163,7 @@ const PrayerTimesCompact = () => {
       <PrayerModal 
         isOpen={isModalOpen} 
         onClose={() => setIsModalOpen(false)} 
-        prayerName={nextPrayer.name} 
+        prayerName={activePrayerName} 
       />
     </>
   );

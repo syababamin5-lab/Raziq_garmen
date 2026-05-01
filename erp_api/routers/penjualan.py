@@ -6,6 +6,7 @@ from fastapi import APIRouter, Depends, HTTPException
 from fastapi.responses import StreamingResponse
 from sqlalchemy.orm import Session
 from models import get_db
+from utils import merge_date_time
 import models
 import schemas
 from utils import format_rp, terbilang
@@ -16,7 +17,7 @@ router = APIRouter(prefix="/api/penjualan", tags=["Penjualan & Retur"])
 @router.post("/invoice", response_model=schemas.APIResponse)
 def submit_invoice(payload: schemas.SaleRequest, db: Session = Depends(get_db)):
     try:
-        waktu_jual = datetime.datetime.fromisoformat(payload.tgl_jual.replace('Z', '+00:00')) if payload.tgl_jual else datetime.datetime.now()
+        waktu_jual = merge_date_time(payload.tgl_jual)
         
         # Generate nomor invoice yang SELALU UNIK: INV-YYMMDD-XXXX (XXXX = nomor urut hari ini)
         prefix_hari_ini = f"INV-{waktu_jual.strftime('%y%m%d')}"
@@ -189,7 +190,7 @@ def get_invoice_details(no_inv: str, db: Session = Depends(get_db)):
 @router.post("/retur", response_model=schemas.APIResponse)
 def submit_retur(payload: schemas.SaleReturRequest, db: Session = Depends(get_db)):
     try:
-        waktu_retur = datetime.datetime.fromisoformat(payload.tgl_retur.replace('Z', '+00:00')) if payload.tgl_retur else datetime.datetime.now()
+        waktu_retur = merge_date_time(payload.tgl_retur)
         pilih_inv = db.query(models.HeaderPenjualan).filter(models.HeaderPenjualan.no_invoice == payload.no_invoice).first()
         barang_retur = db.query(models.DetailPenjualan).filter(models.DetailPenjualan.no_invoice == payload.no_invoice, models.DetailPenjualan.kode_sku == payload.kode_sku).first()
         
