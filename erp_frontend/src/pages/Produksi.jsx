@@ -244,6 +244,11 @@ export default function Produksi() {
               <div className="w-full md:w-1/4">
                 <label className="block text-xs font-bold text-slate-600 mb-1.5 uppercase tracking-wide">Jumlah (LUSIN)</label>
                 <input type="number" step="0.1" min="0.1" value={jahitForm.qty_lusin} onChange={e => setJahitForm({...jahitForm, qty_lusin: e.target.value})} className="w-full bg-white border border-slate-200 text-slate-800 text-sm rounded-lg p-2.5 outline-none focus:border-emerald-500 font-black"/>
+                {jahitForm.qty_lusin > 0 && (
+                  <p className="mt-1.5 px-1 text-[10px] font-black text-emerald-600 uppercase tracking-widest animate-in fade-in slide-in-from-top-1 duration-300">
+                    = {(jahitForm.qty_lusin * 12).toLocaleString('id-ID')} PCS
+                  </p>
+                )}
               </div>
             </div>
 
