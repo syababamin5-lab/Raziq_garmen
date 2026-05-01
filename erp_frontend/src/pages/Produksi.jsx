@@ -195,6 +195,11 @@ export default function Produksi() {
                 <div>
                   <label className="block text-xs font-bold text-slate-500 mb-1 uppercase tracking-wide">Hasil (Pcs)</label>
                   <input type="number" min="1" value={cuttingForm.hasil_pcs} onChange={e => setCuttingForm({...cuttingForm, hasil_pcs: e.target.value})} className="w-full bg-white border border-slate-200 rounded-lg p-2 font-bold text-slate-700 outline-none focus:border-emerald-500"/>
+                  {cuttingForm.hasil_pcs > 0 && (
+                    <p className="mt-1 text-[9px] font-black text-emerald-600 uppercase tracking-widest animate-in fade-in slide-in-from-top-1">
+                      = {(cuttingForm.hasil_pcs / 12).toFixed(2)} LUSIN
+                    </p>
+                  )}
                 </div>
                 <div>
                   <label className="block text-xs font-bold text-slate-500 mb-1 uppercase tracking-wide">Tukang Potong</label>
