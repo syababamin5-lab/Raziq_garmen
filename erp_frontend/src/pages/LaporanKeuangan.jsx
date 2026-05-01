@@ -139,34 +139,33 @@ export default function LaporanKeuangan() {
                 <button onClick={fetchReports} className="bg-emerald-600 text-white p-2.5 rounded-xl hover:bg-black transition-all">
                     <span className="material-symbols-rounded">sync</span>
                 </button>
-                {activeTab !== 'wip' && (
-                    <div className="flex items-center gap-2">
+                    <div className="flex items-center gap-2 flex-wrap justify-end">
                         <a 
+                            id="btn-rekap-penjualan"
                             href={`${import.meta.env.VITE_API_BASE_URL || ''}/api/laporan/export-pdf-penjualan-rekap?bulan=${bulan}&tahun=${tahun}`}
                             target="_blank"
                             rel="noreferrer"
                             className="bg-emerald-100 text-emerald-800 px-4 py-2.5 rounded-xl text-xs font-black flex items-center gap-2 hover:bg-emerald-600 hover:text-white transition-all border border-emerald-200"
-                            title="Cetak Rekap Penjualan Harian & Per Client"
                         >
                             <span className="material-symbols-rounded text-sm">summarize</span>
-                            REKAP PENJUALAN
+                            REKAP JUAL
                         </a>
                         <a 
+                            id="btn-rekap-pembelian"
                             href={`${import.meta.env.VITE_API_BASE_URL || ''}/api/laporan/export-pdf-pembelian-rekap?bulan=${bulan}&tahun=${tahun}`}
                             target="_blank"
                             rel="noreferrer"
                             className="bg-orange-100 text-orange-800 px-4 py-2.5 rounded-xl text-xs font-black flex items-center gap-2 hover:bg-orange-600 hover:text-white transition-all border border-orange-200"
-                            title="Cetak Rekap Pembelian Harian & Per Supplier"
                         >
                             <span className="material-symbols-rounded text-sm">inventory_2</span>
-                            REKAP PEMBELIAN
+                            REKAP BELI
                         </a>
                         <a 
+                            id="btn-rekap-produksi"
                             href={`${import.meta.env.VITE_API_BASE_URL || ''}/api/laporan/export-pdf-produksi-rekap?bulan=${bulan}&tahun=${tahun}`}
                             target="_blank"
                             rel="noreferrer"
                             className="bg-blue-100 text-blue-800 px-4 py-2.5 rounded-xl text-xs font-black flex items-center gap-2 hover:bg-blue-600 hover:text-white transition-all border border-blue-200"
-                            title="Cetak Rekap Output Produksi Harian & Per Model"
                         >
                             <span className="material-symbols-rounded text-sm">precision_manufacturing</span>
                             REKAP PRODUKSI
@@ -182,10 +181,9 @@ export default function LaporanKeuangan() {
                             className="bg-slate-800 text-white px-4 py-2.5 rounded-xl text-xs font-black flex items-center gap-2 hover:bg-emerald-600 transition-all shadow-lg shadow-slate-200"
                         >
                             <span className="material-symbols-rounded text-sm">print</span>
-                            {activeTab === 'ledger' && !selectedAkun ? 'CETAK SEMUA BUKU BESAR' : 'CETAK PDF'}
+                            {activeTab === 'ledger' && !selectedAkun ? 'CETAK SEMUA' : 'CETAK PDF'}
                         </a>
                     </div>
-                )}
             </div>
         </div>
 
