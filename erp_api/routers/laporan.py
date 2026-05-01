@@ -636,55 +636,5 @@ def export_produksi_rekap_pdf_endpoint(bulan: int, tahun: int, db: Session = Dep
         print(traceback.format_exc())
         return {"status": "error", "message": str(e)}
 
-@router.get("/audit-selisih")
-def audit_selisih_neraca(db: Session = Depends(get_db)):
-    """Mencari transaksi mencurigakan yang menyebabkan Neraca tidak balance"""
-    try:
-        # 1. Cari Jurnal dengan nilai mendekati selisih (9,622,626)
-        jurnals = db.query(models.JurnalUmum).filter(
-            (models.JurnalUmum.debit == 9622626) |
-            (models.JurnalUmum.kredit == 9622626) |
-            (models.JurnalUmum.tanggal >= datetime.datetime.now() - datetime.timedelta(days=1))
-        ).order_by(models.JurnalUmum.id.desc()).limit(20).all()
-        
-        # 2. Cari Header Penjualan terbaru
-        invoices = db.query(models.HeaderPenjualan).order_by(models.HeaderPenjualan.id.desc()).limit(5).all()
-        
-        return {
-            "status": "success",
-            "audit_results": {
-                "jurnal_terkait": [
-                    {
-                        "id": j.id, 
-                        "tgl": j.tanggal.isoformat(), 
-                        "akun": f"{j.kode_akun} - {j.nama_akun}",
-                        "ket": j.keterangan,
-                        "debit": j.debit,
-                        "kredit": j.kredit
-                    } for j in jurnals
-                ],
-                "invoice_header": [
-                    {
-                        "no": i.no_invoice,
-                        "status": i.status,
-                        "total": i.total_tagihan
-                    } for i in invoices
-                ]
-            }
-        }
-    except Exception as e:
-        return {"status": "error", "message": str(e)}
-
-@router.post("/fix-specific-jurnals")
-def fix_specific_jurnals(ids: list[int], db: Session = Depends(get_db)):
-    """Hapus jurnal berdasarkan ID spesifik (Hasil Audit)"""
-    try:
-        deleted = db.query(models.JurnalUmum).filter(models.JurnalUmum.id.in_(ids)).delete(synchronize_session=False)
-        db.commit()
-        return {"status": "success", "message": f"{deleted} jurnal berhasil dibersihkan."}
-    except Exception as e:
-        db.rollback()
-        return {"status": "error", "message": str(e)}
-
 def new_date(y, m, d):
     return datetime.datetime(y, m, d)
