@@ -230,8 +230,10 @@ def submit_retur(payload: schemas.SaleReturRequest, db: Session = Depends(get_db
                         db.add(models.JurnalUmum(tanggal=waktu_retur, kode_akun="11210", nama_akun="Piutang Usaha", keterangan=f"Retur {pilih_inv.no_invoice} (Piutang Lunas)", debit=0, kredit=piutang_sebelum))
                     
                     # Sisa refund dikreditkan ke Bank/Kas (Uang Keluar mengembalikan DP)
-                    # Jika ada data DP sumber di history, bisa lebih akurat, tapi sementara kita default ke Kas di Bank jika Tempo.
-                    db.add(models.JurnalUmum(tanggal=waktu_retur, kode_akun="11120", nama_akun="Kas di Bank", keterangan=f"Refund DP Retur {pilih_inv.no_invoice}", debit=0, kredit=sisa_refund))
+                    akun_refund = "11120" if "Bank" in (payload.sumber_refund or "") else "11110"
+                    nama_refund = "Kas di Bank" if akun_refund == "11120" else "Kas Tunai"
+                    
+                    db.add(models.JurnalUmum(tanggal=waktu_retur, kode_akun=akun_refund, nama_akun=nama_refund, keterangan=f"Refund DP Retur {pilih_inv.no_invoice}", debit=0, kredit=sisa_refund))
         else:
             # Tunai atau Transfer
             akun_kredit = "11120" if pilih_inv.metode_bayar == "Transfer" else "11110"

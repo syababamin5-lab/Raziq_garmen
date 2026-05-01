@@ -279,6 +279,7 @@ class SaleReturRequest(BaseModel):
     qty_retur: float
     tgl_retur: str
     alasan: str
+    sumber_refund: Optional[str] = "Kas di Bank"
 
 class BayarInvoiceCepatRequest(BaseModel):
     no_invoice: str
