@@ -343,6 +343,9 @@ def login(request: schemas.LoginRequest, db: Session = Depends(get_db)):
     if not user or not verify_password(request.password, user.password_hash):
         return schemas.TokenResponse(access_token="", user={"error": "Username atau password salah!"})
     
+    if user.is_active == 0:
+        return schemas.TokenResponse(access_token="", user={"error": "Akun Anda telah dinonaktifkan. Silakan hubungi admin."})
+    
     access_token = create_access_token(data={"sub": user.username, "role": user.role})
     return schemas.TokenResponse(
         access_token=access_token,
@@ -495,6 +498,7 @@ def update_user(user_id: int, data: dict, db: Session = Depends(get_db)):
     if "foto_base64" in data: user.foto_base64 = data["foto_base64"]
     if "email" in data: user.email = data["email"]
     if "no_hp" in data: user.no_hp = data["no_hp"]
+    if "is_active" in data: user.is_active = 1 if data["is_active"] else 0
     if "password" in data and data["password"]:
         user.password_hash = get_password_hash(data["password"])
         

@@ -87,6 +87,15 @@ export default function SettingsUsers() {
     setShowAdd(true);
   };
 
+  const handleToggleActive = async (id, currentStatus) => {
+    try {
+      const { data } = await api.put(`/users/${id}`, { is_active: !currentStatus });
+      if (data.status === 'success') {
+        fetchUsers();
+      }
+    } catch (err) { alert('Gagal mengubah status user'); }
+  };
+
   const handleDelete = async (id) => {
     if (!window.confirm('Hapus user ini?')) return;
     try {
@@ -231,15 +240,26 @@ export default function SettingsUsers() {
                           </div>
                           <div>
                             <p className="font-black text-slate-800">{u.nama_lengkap}</p>
-                            {getRoleBadge(u.role)}
+                            <div className="flex items-center gap-2">
+                              {getRoleBadge(u.role)}
+                              <span className={`w-1.5 h-1.5 rounded-full ${u.is_active ? 'bg-emerald-500 animate-pulse shadow-[0_0_8px_rgba(16,185,129,0.5)]' : 'bg-slate-300'}`}></span>
+                            </div>
                           </div>
                         </div>
                       </td>
                       <td className="py-6 px-8 font-bold text-slate-500 italic">@{u.username}</td>
-                      <td className="py-6 px-8 text-center space-x-2">
+                      <td className="py-6 px-8 text-center space-x-2 whitespace-nowrap">
+                        <button 
+                          onClick={() => handleToggleActive(u.id, u.is_active)}
+                          disabled={u.username === 'superadmin'}
+                          className={`w-10 h-10 rounded-xl transition-all shadow-sm flex items-center justify-center ${u.is_active ? 'bg-emerald-500 text-white hover:scale-110' : 'bg-slate-100 text-slate-400 hover:bg-slate-200'}`}
+                          title={u.is_active ? 'Non-aktifkan User' : 'Aktifkan User'}
+                        >
+                          <span className="material-symbols-rounded">{u.is_active ? 'toggle_on' : 'toggle_off'}</span>
+                        </button>
                         <button 
                           onClick={() => handleEdit(u)}
-                          className="w-10 h-10 rounded-xl bg-emerald-50 text-emerald-600 hover:bg-emerald-600 hover:text-white transition-all shadow-sm"
+                          className="w-10 h-10 rounded-xl bg-blue-50 text-blue-600 hover:bg-blue-600 hover:text-white transition-all shadow-sm"
                         >
                           <span className="material-symbols-rounded">edit</span>
                         </button>
