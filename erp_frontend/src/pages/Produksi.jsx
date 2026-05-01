@@ -21,17 +21,17 @@ export default function Produksi() {
     tgl_cutting: new Date().toISOString().split('T')[0],
     kain_id: '',
     produk_id: '',
-    kg_pakai: 0.5,
-    hasil_pcs: 1,
+    kg_pakai: '',
+    hasil_pcs: '',
     tukang_potong_id: '',
-    ongkos_per_pcs: 1000,
+    ongkos_per_pcs: '',
   });
 
   // Form State Jahit
   const [jahitForm, setJahitForm] = useState({
     tgl_jahit: new Date().toISOString().split('T')[0],
     produk_id: '',
-    qty_lusin: 1,
+    qty_lusin: '',
   });
 
   const user = JSON.parse(localStorage.getItem('user') || '{}');
@@ -91,6 +91,13 @@ export default function Produksi() {
         ongkos_per_pcs: Number(cuttingForm.ongkos_per_pcs),
       });
       setMsg({ text: res.message, type: 'success' });
+      // Reset Form
+      setCuttingForm(prev => ({
+        ...prev,
+        kg_pakai: '',
+        hasil_pcs: '',
+        ongkos_per_pcs: ''
+      }));
       fetchOptions(); // Refresh stok
     } catch (err) {
       setMsg({ text: err.message, type: 'error' });
@@ -109,6 +116,11 @@ export default function Produksi() {
         qty_lusin: Number(jahitForm.qty_lusin)
       });
       setMsg({ text: res.message, type: 'success' });
+      // Reset Form
+      setJahitForm(prev => ({
+        ...prev,
+        qty_lusin: ''
+      }));
       fetchOptions();
     } catch (err) {
       setMsg({ text: err.message, type: 'error' });
@@ -191,11 +203,11 @@ export default function Produksi() {
               <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
                 <div>
                   <label className="block text-xs font-bold text-slate-500 mb-1 uppercase tracking-wide">Kain Terpakai (Kg)</label>
-                  <input type="number" step="0.1" min="0.1" value={cuttingForm.kg_pakai} onChange={e => setCuttingForm({...cuttingForm, kg_pakai: e.target.value})} className="w-full bg-white border border-slate-200 rounded-lg p-2 font-bold text-slate-700 outline-none focus:border-emerald-500"/>
+                  <input type="number" step="0.1" min="0.1" value={cuttingForm.kg_pakai} onChange={e => setCuttingForm({...cuttingForm, kg_pakai: e.target.value})} className="w-full bg-white border border-slate-200 rounded-lg p-2 font-bold text-slate-700 outline-none focus:border-emerald-500" placeholder="0.0"/>
                 </div>
                 <div>
                   <label className="block text-xs font-bold text-slate-500 mb-1 uppercase tracking-wide">Hasil (Pcs)</label>
-                  <input type="number" min="1" value={cuttingForm.hasil_pcs} onChange={e => setCuttingForm({...cuttingForm, hasil_pcs: e.target.value})} className="w-full bg-white border border-slate-200 rounded-lg p-2 font-bold text-slate-700 outline-none focus:border-emerald-500"/>
+                  <input type="number" min="1" value={cuttingForm.hasil_pcs} onChange={e => setCuttingForm({...cuttingForm, hasil_pcs: e.target.value})} className="w-full bg-white border border-slate-200 rounded-lg p-2 font-bold text-slate-700 outline-none focus:border-emerald-500" placeholder="0"/>
                   {cuttingForm.hasil_pcs > 0 && (
                     <p className="mt-1 text-[9px] font-black text-emerald-600 uppercase tracking-widest animate-in fade-in slide-in-from-top-1">
                       = {(cuttingForm.hasil_pcs / 12).toFixed(2)} LUSIN
@@ -258,7 +270,7 @@ export default function Produksi() {
               </div>
               <div className="w-full md:w-1/4">
                 <label className="block text-xs font-bold text-slate-600 mb-1.5 uppercase tracking-wide">Jumlah (LUSIN)</label>
-                <input type="number" step="0.1" min="0.1" value={jahitForm.qty_lusin} onChange={e => setJahitForm({...jahitForm, qty_lusin: e.target.value})} className="w-full bg-white border border-slate-200 text-slate-800 text-sm rounded-lg p-2.5 outline-none focus:border-emerald-500 font-black"/>
+                <input type="number" step="0.1" min="0.1" value={jahitForm.qty_lusin} onChange={e => setJahitForm({...jahitForm, qty_lusin: e.target.value})} className="w-full bg-white border border-slate-200 text-slate-800 text-sm rounded-lg p-2.5 outline-none focus:border-emerald-500 font-black" placeholder="0.0"/>
                 {jahitForm.qty_lusin > 0 && (
                   <p className="mt-1.5 px-1 text-[10px] font-black text-emerald-600 uppercase tracking-widest animate-in fade-in slide-in-from-top-1 duration-300">
                     = {(jahitForm.qty_lusin * 12).toLocaleString('id-ID')} PCS
