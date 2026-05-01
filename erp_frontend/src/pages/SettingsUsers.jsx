@@ -248,28 +248,40 @@ export default function SettingsUsers() {
                         </div>
                       </td>
                       <td className="py-6 px-8 font-bold text-slate-500 italic">@{u.username}</td>
-                      <td className="py-6 px-8 text-center space-x-2 whitespace-nowrap">
-                        <button 
-                          onClick={() => handleToggleActive(u.id, u.is_active)}
-                          disabled={u.username === 'superadmin'}
-                          className={`w-10 h-10 rounded-xl transition-all shadow-sm flex items-center justify-center ${u.is_active ? 'bg-emerald-500 text-white hover:scale-110' : 'bg-slate-100 text-slate-400 hover:bg-slate-200'}`}
-                          title={u.is_active ? 'Non-aktifkan User' : 'Aktifkan User'}
-                        >
-                          <span className="material-symbols-rounded">{u.is_active ? 'toggle_on' : 'toggle_off'}</span>
-                        </button>
-                        <button 
-                          onClick={() => handleEdit(u)}
-                          className="w-10 h-10 rounded-xl bg-blue-50 text-blue-600 hover:bg-blue-600 hover:text-white transition-all shadow-sm"
-                        >
-                          <span className="material-symbols-rounded">edit</span>
-                        </button>
-                        <button 
-                          onClick={() => handleDelete(u.id)}
-                          disabled={u.username === 'superadmin'}
-                          className="w-10 h-10 rounded-xl bg-red-50 text-red-500 hover:bg-red-500 hover:text-white transition-all disabled:opacity-30 disabled:cursor-not-allowed shadow-sm"
-                        >
-                          <span className="material-symbols-rounded">delete</span>
-                        </button>
+                      <td className="py-6 px-8">
+                        <div className="flex items-center justify-center gap-6">
+                          {/* Premium Switch Style Toggle */}
+                          <div className="flex flex-col items-center gap-1">
+                            <button 
+                              onClick={() => handleToggleActive(u.id, u.is_active)}
+                              disabled={u.username === 'superadmin'}
+                              className={`group relative w-14 h-7 rounded-full transition-all duration-300 ${u.is_active ? 'bg-emerald-500 shadow-lg shadow-emerald-500/20' : 'bg-slate-200'} ${u.username === 'superadmin' ? 'opacity-20 cursor-not-allowed' : 'cursor-pointer active:scale-90'}`}
+                            >
+                               <div className={`absolute top-1 left-1 w-5 h-5 bg-white rounded-full shadow-sm transition-all duration-300 transform ${u.is_active ? 'translate-x-7' : 'translate-x-0'}`}></div>
+                            </button>
+                            <span className={`text-[8px] font-black uppercase tracking-widest ${u.is_active ? 'text-emerald-600' : 'text-slate-400'}`}>
+                              {u.is_active ? 'Active' : 'Off'}
+                            </span>
+                          </div>
+
+                          <div className="h-8 w-px bg-slate-100"></div>
+
+                          <div className="flex items-center gap-2">
+                            <button 
+                              onClick={() => handleEdit(u)}
+                              className="w-10 h-10 rounded-xl bg-slate-50 text-slate-400 hover:bg-emerald-600 hover:text-white transition-all shadow-sm flex items-center justify-center group"
+                            >
+                              <span className="material-symbols-rounded text-[20px]">edit</span>
+                            </button>
+                            <button 
+                              onClick={() => handleDelete(u.id)}
+                              disabled={u.username === 'superadmin'}
+                              className="w-10 h-10 rounded-xl bg-slate-50 text-slate-400 hover:bg-red-500 hover:text-white transition-all disabled:opacity-10 disabled:cursor-not-allowed shadow-sm flex items-center justify-center"
+                            >
+                              <span className="material-symbols-rounded text-[20px]">delete</span>
+                            </button>
+                          </div>
+                        </div>
                       </td>
                     </tr>
                   ))}
