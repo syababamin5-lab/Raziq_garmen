@@ -90,7 +90,8 @@ export default function PenjualanRetur() {
         if (!returForm.no_invoice || !returForm.kode_sku || returForm.qty_retur <= 0) return alert("Lengkapi data retur!");
 
         const item = invDetails.find(d => d.kode_sku === returForm.kode_sku);
-        if (returForm.qty_retur > item.qty) return alert("Retur tidak boleh melebihi jumlah jual!");
+        const remaining = item.qty - (item.qty_retur || 0);
+        if (returForm.qty_retur > remaining) return alert(`Retur tidak boleh melebihi sisa barang (${remaining} LS)!`);
 
         setLoading(true);
         try {
@@ -368,7 +369,13 @@ export default function PenjualanRetur() {
                                         <label className="block text-xs font-bold text-slate-500 mb-1">PILIH MODEL BAJU YANG DIRETAK</label>
                                         <select className="w-full p-4 border rounded-xl font-medium" value={returForm.kode_sku} onChange={e => setReturForm({ ...returForm, kode_sku: e.target.value })}>
                                             <option value="">-- Pilih Barang --</option>
-                                            {invDetails.map(d => <option key={d.kode_sku} value={d.kode_sku}>{d.nama_barang} (Beli: {d.qty} LS)</option>)}
+                                            {invDetails
+                                                .filter(d => (d.qty - (d.qty_retur || 0)) > 0)
+                                                .map(d => (
+                                                <option key={d.kode_sku} value={d.kode_sku}>
+                                                    {d.nama_barang} (Beli: {d.qty} LS {d.qty_retur > 0 ? `| Sisa: ${d.qty - d.qty_retur} LS` : ''})
+                                                </option>
+                                            ))}
                                         </select>
                                     </div>
                                     <div className="col-span-1">
