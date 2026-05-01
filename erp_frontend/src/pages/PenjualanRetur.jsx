@@ -19,11 +19,9 @@ export default function PenjualanRetur() {
 
     // RETUR FORM
     const [returForm, setReturForm] = useState({
-        no_invoice: '',
-        kode_sku: '',
-        qty_retur: 0,
         tgl_retur: new Date().toISOString().split('T')[0],
-        alasan: 'Barang Cacat / Rusak'
+        alasan: 'Barang Cacat / Rusak',
+        sumber_refund: 'Kas di Bank'
     });
     const [invDetails, setInvDetails] = useState([]);
     const [payModal, setPayModal] = useState({ open: false, no_invoice: '', nama_customer: '', total_tagihan: 0, uang_muka: 0, nominal: 0, sumber_dana: 'Kas Tunai' });
@@ -98,7 +96,7 @@ export default function PenjualanRetur() {
             const res = await submitReturPenjualan(returForm);
             if (res.success) {
                 setMsg({ text: res.message, type: 'success' });
-                setReturForm({ ...returForm, no_invoice: '', kode_sku: '', qty_retur: 0 });
+                setReturForm({ ...returForm, no_invoice: '', kode_sku: '', qty_retur: 0, sumber_refund: 'Kas di Bank' });
                 setInvDetails([]);
                 fetchData();
             } else setMsg({ text: res.message, type: 'error' });
@@ -389,6 +387,17 @@ export default function PenjualanRetur() {
                                     <div className="col-span-2">
                                         <label className="block text-xs font-bold text-slate-500 mb-1">ALASAN RETUR</label>
                                         <input type="text" className="w-full p-4 border rounded-xl" value={returForm.alasan} onChange={e => setReturForm({ ...returForm, alasan: e.target.value })} />
+                                    </div>
+                                    <div className="col-span-2">
+                                        <label className="block text-xs font-bold text-slate-500 mb-1">SUMBER DANA PENGEMBALIAN (JIKA ADA REFUND DP)</label>
+                                        <div className="flex bg-slate-100 p-1 rounded-xl">
+                                            {['Kas Tunai', 'Kas di Bank'].map(s => (
+                                                <button key={s} type="button" onClick={() => setReturForm({ ...returForm, sumber_refund: s })} className={`flex-1 py-3 text-[10px] font-black rounded-lg transition-all ${returForm.sumber_refund === s ? 'bg-white shadow-sm text-amber-600' : 'text-slate-400'}`}>
+                                                    {s === 'Kas Tunai' ? '💵 KAS TUNAI' : '🏦 BANK TRANSFER'}
+                                                </button>
+                                            ))}
+                                        </div>
+                                        <p className="text-[10px] text-slate-400 mt-1 font-medium italic">*Uang akan dikeluarkan dari akun ini jika ada DP yang harus dikembalikan ke customer.</p>
                                     </div>
                                     <button type="submit" disabled={loading} className="col-span-2 bg-amber-600 text-white p-5 rounded-2xl font-black text-lg shadow-xl hover:bg-amber-700 transition-all flex items-center justify-center gap-3">
                                         <span className="material-symbols-rounded">save</span>
