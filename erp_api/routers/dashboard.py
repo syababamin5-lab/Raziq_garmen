@@ -31,12 +31,17 @@ def get_dashboard_summary(db: Session = Depends(get_db)):
                 # Ringkasan Bulan Ini
                 if j.tanggal and j.tanggal >= first_day:
                     kode_s = str(j.kode_akun)
+                    
+                    # Uang Masuk: Pendapatan (4xxx)
                     if kode_s.startswith("4"): 
-                        masuk_ini += (k - d)  # Pendapatan (Omzet)
-                    elif kode_s.startswith(("5", "6")):
-                        # Kecualikan HPP (51120) agar jualan tidak dianggap uang keluar
-                        if kode_s != "51120":
-                            keluar_ini += (d - k) # Biaya Produksi & Operasional
+                        masuk_ini += (k - d)
+                    
+                    # Uang Keluar: Pembelian Stok (12110) + Biaya Produksi (5xxx) + Beban (6xxx)
+                    # KECUALIKAN: Pemakaian Bahan (51110), HPP (51120), Ikhtisar (51199), & Penyusutan (51350, 62170)
+                    elif kode_s == "12110" or kode_s.startswith(("5", "6")):
+                        non_cash = ["51110", "51120", "51199", "51350", "62170"]
+                        if kode_s not in non_cash:
+                            keluar_ini += (d - k)
         except Exception as e:
             print(f"DEBUG Dashboard Keuangan Error: {e}")
             tunai, bank, masuk_ini, keluar_ini = 0, 0, 0, 0
