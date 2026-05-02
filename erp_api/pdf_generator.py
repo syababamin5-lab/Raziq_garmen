@@ -420,18 +420,19 @@ def export_invoice_pdf(header_inv, detail_items, terbilang_teks, config, custome
         pdf.set_x(x_start) 
         pdf.set_font('Arial', 'B', 20) 
         pdf.set_text_color(180, 0, 0)
-        pdf.cell(w_label, 12, 'SISA PIUTANG:', 0, 0, 'R')
+        pdf.cell(w_label, 12, 'SISA PIUTANG :  ', 0, 0, 'R')
         pdf.cell(w_val, 12, format_rp_pdf(header_inv.total_tagihan - uang_muka), 0, 1, 'R')
     else:
         pdf.ln(2)
         pdf.set_x(x_start)
         pdf.set_font('Arial', 'B', 20)
         pdf.set_text_color(6, 78, 59)
-        pdf.cell(w_label, 12, 'TOTAL BAYAR:', 0, 0, 'R')
+        pdf.cell(w_label, 12, 'TOTAL BAYAR :  ', 0, 0, 'R')
         pdf.cell(w_val, 12, format_rp_pdf(header_inv.total_tagihan), 0, 1, 'R')
     
-    # Tanda Tangan
-    pdf.ln(10)
+    # Tanda Tangan (Cek sisa halaman agar tidak terpotong)
+    pdf.check_page_break(50)
+    pdf.ln(5)
     y_sig = pdf.get_y()
     
     # Gunakan logic dinamis untuk nama dan jabatan
