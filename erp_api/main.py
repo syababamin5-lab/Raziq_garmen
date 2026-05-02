@@ -639,6 +639,36 @@ def add_master_barang(data: schemas.MasterBarangRequest, db: Session = Depends(g
 @app.post("/api/master/karyawan")
 def add_master_karyawan(data: schemas.MasterKaryawanRequest, db: Session = Depends(get_db)):
     try:
+        # SCENARIO C: Cek apakah ini karyawan lama yang masuk kembali
+        cek_lama = db.query(models.Karyawan).filter(
+            models.Karyawan.nama_karyawan == data.nama_karyawan,
+            models.Karyawan.is_active == 0
+        ).first()
+
+        if cek_lama:
+            cek_lama.is_active = 1
+            cek_lama.no_hp = data.no_hp
+            cek_lama.alamat = data.alamat
+            cek_lama.divisi = data.divisi
+            cek_lama.tipe_gaji = data.tipe_gaji
+            cek_lama.nominal_gaji = data.nominal_gaji
+            
+            # Jika ada saldo hutang lama, pulihkan di jurnal agar muncul lagi di Dashboard
+            if (cek_lama.saldo_kasbon or 0) > 0:
+                db.add(models.JurnalUmum(
+                    kode_akun="11220", nama_akun="Piutang Karyawan", 
+                    keterangan=f"Pemulihan Piutang (Karyawan Masuk Kembali): {cek_lama.nama_karyawan}", 
+                    debit=cek_lama.saldo_kasbon, kredit=0, tanggal=datetime.now()
+                ))
+                db.add(models.JurnalUmum(
+                    kode_akun="62190", nama_akun="Beban Lain-lain", 
+                    keterangan=f"Pemulihan Piutang (Karyawan Masuk Kembali): {cek_lama.nama_karyawan}", 
+                    debit=0, kredit=cek_lama.saldo_kasbon, tanggal=datetime.now()
+                ))
+            db.commit()
+            return {"status": "success", "message": f"Karyawan {cek_lama.nama_karyawan} diaktifkan kembali. Saldo hutang lama telah dipulihkan."}
+
+        # Jika benar-benar baru
         new_karyawan = models.Karyawan(
             nama_karyawan=data.nama_karyawan, 
             no_hp=data.no_hp, 
@@ -751,10 +781,32 @@ def delete_master_karyawan(item_id: int, db: Session = Depends(get_db)):
         if not item: return {"status": "error", "message": "Karyawan tidak ditemukan"}
         
         nama_karyawan = item.nama_karyawan
-        # Soft delete: History keuangan tetap terjaga agar pembukuan REAL
+        saldo_akhir = item.saldo_kasbon or 0
+        
+        # SCENARIO B: Jika ada hutang saat keluar, jadikan "Piutang Tak Tertagih"
+        if saldo_akhir > 0:
+            # Jurnal: Debit Beban Lain-lain (62190), Kredit Piutang Karyawan (11220)
+            db.add(models.JurnalUmum(
+                tanggal=datetime.now(),
+                kode_akun="62190", nama_akun="Beban Lain-lain",
+                keterangan=f"Penghapusan Piutang (Karyawan Keluar): {nama_karyawan}",
+                debit=saldo_akhir, kredit=0
+            ))
+            db.add(models.JurnalUmum(
+                tanggal=datetime.now(),
+                kode_akun="11220", nama_akun="Piutang Karyawan",
+                keterangan=f"Penghapusan Piutang (Karyawan Keluar): {nama_karyawan}",
+                debit=0, kredit=saldo_akhir
+            ))
+            msg = f"Karyawan {nama_karyawan} dihapus. Sisa hutang {saldo_akhir:,.0f} telah dicatat sebagai Beban Piutang Tak Tertagih."
+        else:
+            # SCENARIO A: Keluar tanpa hutang
+            msg = f"Karyawan {nama_karyawan} berhasil dihapus dari daftar."
+
+        # Soft Delete (Ubah status agar history tetap aman)
         item.is_active = 0
         db.commit()
-        return {"status": "success", "message": f"Karyawan {nama_karyawan} berhasil dihapus. Seluruh history transaksi tetap tersimpan agar pembukuan Anda akurat."}
+        return {"status": "success", "message": msg}
     except Exception as e:
         db.rollback()
         return {"status": "error", "message": str(e)}
