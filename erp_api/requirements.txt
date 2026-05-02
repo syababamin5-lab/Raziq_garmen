@@ -12,3 +12,4 @@ python-dotenv
 passlib[bcrypt]
 PyJWT
 requests
+google-generativeai

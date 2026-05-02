@@ -111,7 +111,7 @@ def get_ai_financial_analysis(db: Session = Depends(get_db)):
             }
 
         # Panggil AI (System Prompt sesuai permintaan)
-        model = genai.GenerativeModel('gemini-1.5-flash')
+        model = genai.GenerativeModel('gemini-pro')
         
         system_prompt = (
             "Kamu adalah seorang Chief Financial Officer (CFO) dan Analis Keuangan Senior di industri garmen/konveksi. "
