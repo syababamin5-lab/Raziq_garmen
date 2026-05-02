@@ -62,9 +62,9 @@ def submit_invoice(payload: schemas.SaleRequest, db: Session = Depends(get_db)):
                 
                 nilai_hpp = float(qty_pcs) * (target.harga_modal or 0.0)
                 
-                # Jurnal HPP dan Persediaan per item
-                db.add(models.JurnalUmum(tanggal=waktu_jual, kode_akun="51120", nama_akun="Harga Pokok Penjualan", keterangan=f"HPP {qty_pcs} pcs {target.kode_sku}", debit=nilai_hpp, kredit=0))
-                db.add(models.JurnalUmum(tanggal=waktu_jual, kode_akun="12150", nama_akun="Persediaan Barang Jadi", keterangan=f"Keluar {qty_pcs} pcs {target.kode_sku} (Jual)", debit=0, kredit=nilai_hpp))
+                # Jurnal HPP dan Persediaan per item (WAJIB sertakan inv_no agar bisa dibersihkan saat VOID)
+                db.add(models.JurnalUmum(tanggal=waktu_jual, kode_akun="51120", nama_akun="Harga Pokok Penjualan", keterangan=f"HPP {qty_pcs} pcs {target.kode_sku} - {inv_no}", debit=nilai_hpp, kredit=0))
+                db.add(models.JurnalUmum(tanggal=waktu_jual, kode_akun="12150", nama_akun="Persediaan Barang Jadi", keterangan=f"Keluar {qty_pcs} pcs {target.kode_sku} (Jual) - {inv_no}", debit=0, kredit=nilai_hpp))
 
         total_tagihan = total_sebelum_diskon - (payload.diskon or 0.0)
         sisa_utang = total_tagihan - (payload.dp or 0.0)
