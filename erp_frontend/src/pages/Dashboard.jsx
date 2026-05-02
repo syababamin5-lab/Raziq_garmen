@@ -84,10 +84,11 @@ export default function Dashboard() {
 
   useEffect(() => {
     api.get('/menus').then(({ data }) => {
+      const isSuper = user.role === 'super_admin';
       const settings = {
-        showKeuangan: data.find(m => m.id_menu === 'dash_keuangan') ? data.find(m => m.id_menu === 'dash_keuangan').is_active === 1 : true,
-        showPenjualan: data.find(m => m.id_menu === 'dash_penjualan') ? data.find(m => m.id_menu === 'dash_penjualan').is_active === 1 : true,
-        showProduksi: data.find(m => m.id_menu === 'dash_produksi') ? data.find(m => m.id_menu === 'dash_produksi').is_active === 1 : true
+        showKeuangan: isSuper || (data.find(m => m.id_menu === 'dash_keuangan')?.is_active === 1),
+        showPenjualan: isSuper || (data.find(m => m.id_menu === 'dash_penjualan')?.is_active === 1),
+        showProduksi: isSuper || (data.find(m => m.id_menu === 'dash_produksi')?.is_active === 1)
       };
       setDashSettings(settings);
     }).catch(err => console.error("Gagal memuat setting dashboard:", err));

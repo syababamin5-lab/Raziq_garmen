@@ -17,6 +17,11 @@ export default function Sidebar({ isOpen }) {
           const isRoleMatch = m.roles.split(',').includes(user?.role);
           const isNotPanel = m.path !== 'DASHBOARD_PANEL';
           
+          // HAK ISTIMEWA SUPER ADMIN: Abaikan status is_active (Selalu tampil)
+          if (user?.role === 'super_admin') {
+            return isRoleMatch && isNotPanel;
+          }
+
           // Filter khusus Owner & GM (Hanya Dashboard, Laporan, Riwayat, Profile)
           if (user?.role === 'owner' || user?.role === 'gm') {
              const allowed = ['dashboard', 'laporan', 'riwayat', 'profile'];
