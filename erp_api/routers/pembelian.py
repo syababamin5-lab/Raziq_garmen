@@ -81,7 +81,7 @@ async def submit_pembelian_bahan(payload: schemas.PembelianBahanRequest, db: Ses
         # 4. Jurnal Accounting
         # Debit: Persediaan (Nilai Bruto)
         if total_baku > 0:
-            db.add(models.JurnalUmum(tanggal=tgl_transaksi, kode_akun="12110", nama_akun="Persediaan Kain", keterangan=f"Beli {no_po}", debit=total_baku, kredit=0))
+            db.add(models.JurnalUmum(tanggal=tgl_transaksi, kode_akun="12110", nama_akun="Persediaan Bahan Baku (Kain)", keterangan=f"Beli {no_po}", debit=total_baku, kredit=0))
         if total_penolong > 0:
             db.add(models.JurnalUmum(tanggal=tgl_transaksi, kode_akun="51320", nama_akun="BOP - Pemakaian Bahan Penolong & Packing", keterangan=f"Beli Penolong {no_po}", debit=total_penolong, kredit=0))
 
@@ -420,8 +420,8 @@ def submit_retur_pembelian(payload: schemas.ReturPembelianRequest, db: Session =
             db.add(models.JurnalUmum(tanggal=waktu_retur, kode_akun=akun_debit, nama_akun=nama_debit, keterangan=f"Retur Beli {po.no_po} (Refund)", debit=nilai_retur, kredit=0))
 
         # Persediaan / Beban Keluar
-        akun_persediaan = "12110" if "Kain" in detail.nama_barang or "Baku" in detail.nama_barang else "51320"
-        nama_persediaan = "Persediaan Kain" if akun_persediaan == "12110" else "BOP - Pemakaian Bahan Penolong"
+        akun_persediaan = "12110" if "Kain" in detail.nama_barang or "Baku" in detail.nama_barang else "12120"
+        nama_persediaan = "Persediaan Bahan Baku (Kain)" if akun_persediaan == "12110" else "Persediaan Bahan Penolong"
         db.add(models.JurnalUmum(tanggal=waktu_retur, kode_akun=akun_persediaan, nama_akun=nama_persediaan, keterangan=f"Retur Beli {po.no_po}", debit=0, kredit=nilai_retur))
 
         db.commit()
