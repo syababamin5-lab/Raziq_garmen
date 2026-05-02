@@ -1,5 +1,6 @@
 /**
  * KeuanganCard.jsx — Satu kartu di seksi "Posisi Keuangan (Real-Time)"
+ * Updated at: 2026-05-02 11:25
  * Props:
  *   label    (string)  — "Sisa Saldo Tunai"
  *   value    (string)  — "Rp 45.230.000"
