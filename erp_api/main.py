@@ -162,9 +162,15 @@ async def startup_event():
             try:
                 db.execute(text(f"ALTER TABLE company_config ADD COLUMN {col_name} {col_type}"))
                 db.commit()
-                print(f"Migration: Added {col_name}")
             except:
                 db.rollback()
+        
+        # Migrasi Karyawan (is_active)
+        try:
+            db.execute(text("ALTER TABLE karyawan ADD COLUMN is_active INTEGER DEFAULT 1"))
+            db.commit()
+        except:
+            db.rollback()
         
         # 1. AUTO-SEED USERS (HANYA UNTUK LOCALHOST / SQLITE)
         # JANGAN PERNAH JALANKAN DI PRODUCTION (WEB/POSTGRES)
