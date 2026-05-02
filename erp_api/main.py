@@ -743,8 +743,47 @@ def update_master_mitra(item_id: int, data: dict, db: Session = Depends(get_db))
     db.commit()
     return {"status": "success", "message": "Mitra diperbarui"}
 
-# EDIT & DELETE Firestore...
-# (Akan diimplementasikan bertahap jika diperlukan, sementara fokus pada operasional utama)
+# EDIT & DELETE Master Data
+@app.delete("/api/master/karyawan/{item_id}")
+def delete_master_karyawan(item_id: int, db: Session = Depends(get_db)):
+    try:
+        item = db.query(models.Karyawan).filter(models.Karyawan.id == item_id).first()
+        if not item: return {"status": "error", "message": "Karyawan tidak ditemukan"}
+        
+        nama_karyawan = item.nama_lengkap
+        # Hapus jurnal kasbon/piutang yang terkait nama karyawan ini
+        db.query(models.JurnalUmum).filter(models.JurnalUmum.keterangan.ilike(f"%{nama_karyawan}%")).delete(synchronize_session=False)
+        
+        db.delete(item)
+        db.commit()
+        return {"status": "success", "message": f"Karyawan {nama_karyawan} dan seluruh saldo terkait berhasil dihapus"}
+    except Exception as e:
+        db.rollback()
+        return {"status": "error", "message": str(e)}
+
+@app.delete("/api/master/barang/{item_id}")
+def delete_master_barang(item_id: int, db: Session = Depends(get_db)):
+    try:
+        item = db.query(models.Barang).filter(models.Barang.id == item_id).first()
+        if not item: return {"status": "error", "message": "Barang tidak ditemukan"}
+        db.delete(item)
+        db.commit()
+        return {"status": "success", "message": "Barang berhasil dihapus"}
+    except Exception as e:
+        db.rollback()
+        return {"status": "error", "message": str(e)}
+
+@app.delete("/api/master/mitra/{item_id}")
+def delete_master_mitra(item_id: int, db: Session = Depends(get_db)):
+    try:
+        item = db.query(models.Mitra).filter(models.Mitra.id == item_id).first()
+        if not item: return {"status": "error", "message": "Mitra tidak ditemukan"}
+        db.delete(item)
+        db.commit()
+        return {"status": "success", "message": "Mitra berhasil dihapus"}
+    except Exception as e:
+        db.rollback()
+        return {"status": "error", "message": str(e)}
 
 @app.post("/api/master/import-excel")
 async def import_excel(tipe: str, overwrite: bool = False, file: UploadFile = File(...), db: Session = Depends(get_db)):
