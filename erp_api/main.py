@@ -222,6 +222,7 @@ async def startup_event():
                 {"kode_akun": "31110", "nama_akun": "Modal Disetor", "kategori": "Ekuitas"},
                 {"kode_akun": "41110", "nama_akun": "Pendapatan Penjualan", "kategori": "Pendapatan"},
                 {"kode_akun": "41120", "nama_akun": "Retur Penjualan", "kategori": "Pendapatan"},
+                {"kode_akun": "41130", "nama_akun": "Potongan Penjualan (Diskon)", "kategori": "Pendapatan"},
                 {"kode_akun": "51110", "nama_akun": "Pemakaian Bahan Baku", "kategori": "Beban"},
                 {"kode_akun": "51120", "nama_akun": "Harga Pokok Penjualan (HPP)", "kategori": "Beban"},
                 {"kode_akun": "51199", "nama_akun": "Ikhtisar Produksi", "kategori": "Beban"},
@@ -273,8 +274,6 @@ async def startup_event():
             {"id_menu": "super_admin", "nama_menu": "Database & Admin", "path": "/super-admin", "icon": "database", "roles": "super_admin", "order_priority": 14},
             {"id_menu": "div_profile", "nama_menu": "", "path": "", "icon": "", "roles": "super_admin,owner,gm,admin,staff", "order_priority": 15, "is_divider": 1},
             {"id_menu": "profile", "nama_menu": "Profil Saya", "path": "/profile", "icon": "account_circle", "roles": "super_admin,owner,gm,admin,staff", "order_priority": 16},
-            
-            # Dashboard Panels (Non-Sidebar)
             {"id_menu": "dash_keuangan", "nama_menu": "Panel Keuangan (Dashboard)", "path": "DASHBOARD_PANEL", "icon": "account_balance", "roles": "super_admin,owner,gm,admin", "order_priority": 100},
             {"id_menu": "dash_penjualan", "nama_menu": "Panel Penjualan (Dashboard)", "path": "DASHBOARD_PANEL", "icon": "shopping_cart", "roles": "super_admin,owner,gm,admin", "order_priority": 101},
             {"id_menu": "dash_produksi", "nama_menu": "Panel Produksi (Dashboard)", "path": "DASHBOARD_PANEL", "icon": "factory", "roles": "super_admin,owner,gm,admin", "order_priority": 102},

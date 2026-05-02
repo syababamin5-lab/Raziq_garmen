@@ -88,8 +88,12 @@ def submit_invoice(payload: schemas.SaleRequest, db: Session = Depends(get_db)):
             status=status_invoice
         ))
 
-        # Jurnal Pendapatan Penjualan
-        db.add(models.JurnalUmum(tanggal=waktu_jual, kode_akun="41110", nama_akun="Pendapatan Penjualan", keterangan=f"Penjualan {inv_no} ({total_pcs_invoice} pcs)", debit=0, kredit=total_tagihan))
+        # Jurnal Pendapatan Penjualan (Mencatat Nilai BRUTO agar laporan akurat)
+        db.add(models.JurnalUmum(tanggal=waktu_jual, kode_akun="41110", nama_akun="Pendapatan Penjualan", keterangan=f"Penjualan {inv_no} ({total_pcs_invoice} pcs) - Bruto", debit=0, kredit=total_sebelum_diskon))
+        
+        # Jurnal Potongan Penjualan / Diskon (Mencatat kerugian dari diskon)
+        if (payload.diskon or 0.0) > 0:
+            db.add(models.JurnalUmum(tanggal=waktu_jual, kode_akun="41130", nama_akun="Potongan Penjualan (Diskon)", keterangan=f"Diskon Nota {inv_no}", debit=payload.diskon, kredit=0))
         
         if payload.metode in ["Tunai", "Transfer"]:
             akun_debit = "11110" if payload.metode == "Tunai" else "11120"
@@ -146,23 +150,20 @@ def get_penjualan_history(db: Session = Depends(get_db)):
         invoices = db.query(models.HeaderPenjualan).order_by(models.HeaderPenjualan.id.desc()).limit(50).all()
         result = []
         for i in invoices:
-            # Cari saldo piutang customer saat ini
+            # Dapatkan saldo piutang global customer (untuk informasi saja, tidak untuk merubah status invoice)
             cust = db.query(models.Mitra).filter(models.Mitra.nama_mitra == i.nama_customer).first()
-            sisa_piutang = cust.saldo_piutang if cust else 0
+            sisa_piutang_global = cust.saldo_piutang if cust else 0
             
-            # Jika saldo piutang sudah 0 tapi status masih Tempo, auto-koreksi ke Lunas
-            if i.status == "Tempo" and sisa_piutang <= 0 and i.status != "RETUR TOTAL":
-                i.status = "Lunas"
-                db.commit()
-
             result.append({
                 "no_invoice": i.no_invoice,
                 "nama_customer": i.nama_customer,
-                "total_tagihan": i.total_tagihan,
+                "total_bruto": i.total_tagihan + (i.diskon or 0.0), # Hitung Bruto untuk UI
+                "total_tagihan": i.total_tagihan, # Ini adalah Netto
+                "diskon": i.diskon or 0.0,
                 "metode_bayar": i.metode_bayar,
-                "uang_muka": getattr(i, 'uang_muka', 0.0) or 0.0,
+                "uang_muka": i.uang_muka or 0.0,
                 "status": i.status,
-                "sisa_piutang_customer": sisa_piutang,
+                "sisa_piutang_customer": sisa_piutang_global,
                 "tanggal": i.tanggal.isoformat() if hasattr(i.tanggal, 'isoformat') else str(i.tanggal)
             })
             
