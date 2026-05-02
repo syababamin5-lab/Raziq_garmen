@@ -10,7 +10,7 @@ import google.generativeai as genai
 router = APIRouter(prefix="/api/ai", tags=["AI Analyzer"])
 
 # Konfigurasi AI (Pastikan API Key ada di environment)
-GEMINI_API_KEY = os.environ.get("GOOGLE_API_KEY", "")
+GEMINI_API_KEY = os.environ.get("GOOGLE_API_KEY", "").strip()
 if GEMINI_API_KEY:
     genai.configure(api_key=GEMINI_API_KEY)
 
@@ -111,7 +111,7 @@ def get_ai_financial_analysis(db: Session = Depends(get_db)):
             }
 
         # Panggil AI (System Prompt sesuai permintaan)
-        model = genai.GenerativeModel('gemini-pro')
+        model = genai.GenerativeModel('gemini-1.5-flash')
         
         system_prompt = (
             "Kamu adalah seorang Chief Financial Officer (CFO) dan Analis Keuangan Senior di industri garmen/konveksi. "
