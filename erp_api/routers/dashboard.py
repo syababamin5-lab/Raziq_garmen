@@ -24,11 +24,15 @@ def get_dashboard_summary(db: Session = Depends(get_db)):
             tunai, bank, masuk_ini, keluar_ini = 0, 0, 0, 0
             for j in jurnals:
                 d, k = j.debit or 0, j.kredit or 0
+                # Saldo berjalan Kas & Bank
                 if j.kode_akun == "11110": tunai += (d - k)
                 elif j.kode_akun == "11120": bank += (d - k)
+                
+                # Ringkasan Masuk/Keluar Bulan Ini (Cash Flow Real)
                 if j.tanggal and j.tanggal >= first_day:
-                    if str(j.kode_akun).startswith("4"): masuk_ini += (k - d)
-                    elif str(j.kode_akun).startswith(("5", "6")): keluar_ini += (d - k)
+                    if j.kode_akun in ["11110", "11120"]:
+                        if d > 0: masuk_ini += d
+                        if k > 0: keluar_ini += k
         except Exception as e:
             print(f"DEBUG Dashboard Keuangan Error: {e}")
             tunai, bank, masuk_ini, keluar_ini = 0, 0, 0, 0
