@@ -111,7 +111,16 @@ def get_ai_financial_analysis(db: Session = Depends(get_db)):
             }
 
         # Panggil AI (System Prompt sesuai permintaan)
-        model = genai.GenerativeModel('gemini-1.5-flash')
+        # Mencari model yang tersedia secara dinamis agar tidak 404
+        try:
+            available_models = [m.name for m in genai.list_models() if 'generateContent' in m.supported_generation_methods]
+            # Prioritaskan flash terbaru agar cepat dan hemat
+            target_model = next((m for m in available_models if 'flash' in m), 
+                               available_models[0] if available_models else 'models/gemini-1.5-flash')
+            model = genai.GenerativeModel(target_model)
+        except Exception as e:
+            # Fallback jika list_models gagal (beberapa environment membatasi ini)
+            model = genai.GenerativeModel('gemini-1.5-flash')
         
         system_prompt = (
             "Kamu adalah seorang Chief Financial Officer (CFO) dan Analis Keuangan Senior di industri garmen/konveksi. "
