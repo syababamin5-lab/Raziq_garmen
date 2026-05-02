@@ -607,7 +607,7 @@ def print_master_barang(tipe: str = "all", db: Session = Depends(get_db)):
 
 @app.get("/api/master/karyawan")
 def get_master_karyawan(db: Session = Depends(get_db)):
-    return db.query(models.Karyawan).all()
+    return db.query(models.Karyawan).filter(models.Karyawan.is_active == 1).all()
 
 @app.get("/api/master/mitra")
 def get_master_mitra(db: Session = Depends(get_db)):
@@ -750,13 +750,11 @@ def delete_master_karyawan(item_id: int, db: Session = Depends(get_db)):
         item = db.query(models.Karyawan).filter(models.Karyawan.id == item_id).first()
         if not item: return {"status": "error", "message": "Karyawan tidak ditemukan"}
         
-        nama_karyawan = item.nama_lengkap
-        # Hapus jurnal kasbon/piutang yang terkait nama karyawan ini
-        db.query(models.JurnalUmum).filter(models.JurnalUmum.keterangan.ilike(f"%{nama_karyawan}%")).delete(synchronize_session=False)
-        
-        db.delete(item)
+        nama_karyawan = item.nama_karyawan
+        # Soft delete: History keuangan tetap terjaga agar pembukuan REAL
+        item.is_active = 0
         db.commit()
-        return {"status": "success", "message": f"Karyawan {nama_karyawan} dan seluruh saldo terkait berhasil dihapus"}
+        return {"status": "success", "message": f"Karyawan {nama_karyawan} berhasil dihapus. Seluruh history transaksi tetap tersimpan agar pembukuan Anda akurat."}
     except Exception as e:
         db.rollback()
         return {"status": "error", "message": str(e)}

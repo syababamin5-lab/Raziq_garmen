@@ -111,6 +111,7 @@ class Karyawan(Base):
     nominal_gaji = Column(Float, default=0.0)
     target_produksi_mingguan = Column(Integer, default=0)
     saldo_kasbon = Column(Float, default=0.0)
+    is_active = Column(Integer, default=1) # 1=Aktif, 0=Dihapus/Keluar
 
 
 # ==========================================
