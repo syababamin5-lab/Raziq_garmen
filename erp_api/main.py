@@ -1020,6 +1020,34 @@ def prune_database(start_date: str, end_date: str, db: Session = Depends(get_db)
         db.rollback()
         return {"status": "error", "message": str(e)}
 
+@app.delete("/api/admin/database/reset-master")
+def reset_master_data(target: str, db: Session = Depends(get_db)):
+    """Reset data master & transaksi terkait untuk persiapan Go-Live."""
+    try:
+        if target == "barang" or target == "all":
+            db.query(models.ProductionLog).delete()
+            db.query(models.DetailPenjualan).delete()
+            db.query(models.DetailPembelian).delete()
+            db.query(models.Barang).delete()
+            
+        if target == "karyawan" or target == "all":
+            db.query(models.Karyawan).delete()
+            
+        if target == "mitra" or target == "all":
+            db.query(models.HeaderPenjualan).delete()
+            db.query(models.HeaderPembelian).delete()
+            db.query(models.Mitra).delete()
+            
+        if target == "all":
+            db.query(models.JurnalUmum).delete()
+            # Reset saldo-saldo di mitra & barang sudah tercover karena row-nya dihapus
+            
+        db.commit()
+        return {"status": "success", "message": f"Data {target.upper()} berhasil direset total!"}
+    except Exception as e:
+        db.rollback()
+        return {"status": "error", "message": str(e)}
+
 @app.get("/api/admin/database/export-all")
 def export_full_database(db: Session = Depends(get_db)):
     """Ekspor SELURUH database ke Excel Multi-Sheet."""

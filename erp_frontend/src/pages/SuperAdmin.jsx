@@ -132,6 +132,27 @@ export default function SuperAdmin() {
     setLoading(false);
   };
 
+  const handleResetMaster = async (target, label) => {
+    const pass = window.prompt(`Ketik "RESET ${label.toUpperCase()}" untuk mengkonfirmasi penghapusan seluruh data ${label}:`);
+    if (pass !== `RESET ${label.toUpperCase()}`) {
+      alert("Konfirmasi gagal. Data tidak dihapus.");
+      return;
+    }
+
+    setLoading(true);
+    try {
+      const res = await api.delete(`/admin/database/reset-master?target=${target}`);
+      if (res.data.status === 'success') {
+        alert("✅ " + res.data.message);
+      } else {
+        alert("❌ Gagal: " + res.data.message);
+      }
+    } catch (err) {
+      alert("Error: " + err.message);
+    }
+    setLoading(false);
+  };
+
   const downloadFile = (endpoint, filename) => {
     const url = `${api.defaults.baseURL}${endpoint}`;
     window.open(url, '_blank');
@@ -173,7 +194,7 @@ export default function SuperAdmin() {
           <h2 className="text-2xl font-black text-slate-900 mb-3 tracking-tight">Database Pruning</h2>
           <p className="text-sm text-slate-500 leading-relaxed mb-8 flex-1">
             Fitur pembersihan data. Seluruh transaksi (Invoice, PO, Jurnal, Kasbon) akan dihapus secara permanen. 
-            <span className="font-bold text-red-600"> Data Master akan tetap aman.</span>
+            <span className="font-bold text-red-600"> Data Master tetap aman.</span>
           </p>
           <button 
             onClick={() => setShowPruneModal(true)}
@@ -182,6 +203,52 @@ export default function SuperAdmin() {
             <span className="material-symbols-rounded">delete_sweep</span>
             Mulai Pruning
           </button>
+        </div>
+
+        {/* Master Data Reset Card (NEW) */}
+        <div className="lg:col-span-1 bg-white p-8 rounded-[2rem] shadow-sm border border-slate-100 flex flex-col group hover:shadow-xl hover:shadow-amber-500/5 transition-all duration-300">
+          <div className="mb-6 p-4 bg-amber-50 rounded-2xl w-fit">
+            <span className="material-symbols-rounded text-amber-600 text-3xl">restart_alt</span>
+          </div>
+          <h2 className="text-2xl font-black text-slate-900 mb-3 tracking-tight">Initialization Reset</h2>
+          <p className="text-sm text-slate-500 leading-relaxed mb-6">
+            Hapus data master untuk memulai perusahaan baru. <span className="text-amber-600 font-bold">Gunakan dengan sangat hati-hati!</span>
+          </p>
+          
+          <div className="grid grid-cols-2 gap-3 mb-6">
+            <button 
+              onClick={() => handleResetMaster('barang', 'Barang')}
+              className="p-3 bg-slate-50 hover:bg-amber-100 text-slate-600 hover:text-amber-700 rounded-2xl border border-slate-100 transition-all flex flex-col items-center gap-1"
+            >
+              <span className="material-symbols-rounded text-xl">inventory_2</span>
+              <span className="text-[10px] font-black uppercase">Barang</span>
+            </button>
+            <button 
+              onClick={() => handleResetMaster('karyawan', 'Karyawan')}
+              className="p-3 bg-slate-50 hover:bg-amber-100 text-slate-600 hover:text-amber-700 rounded-2xl border border-slate-100 transition-all flex flex-col items-center gap-1"
+            >
+              <span className="material-symbols-rounded text-xl">badge</span>
+              <span className="text-[10px] font-black uppercase">Karyawan</span>
+            </button>
+            <button 
+              onClick={() => handleResetMaster('mitra', 'Mitra')}
+              className="p-3 bg-slate-50 hover:bg-amber-100 text-slate-600 hover:text-amber-700 rounded-2xl border border-slate-100 transition-all flex flex-col items-center gap-1"
+            >
+              <span className="material-symbols-rounded text-xl">handshake</span>
+              <span className="text-[10px] font-black uppercase">Mitra</span>
+            </button>
+            <button 
+              onClick={() => handleResetMaster('all', 'Semuanya')}
+              className="p-3 bg-red-600 hover:bg-red-700 text-white rounded-2xl shadow-lg shadow-red-100 transition-all flex flex-col items-center gap-1"
+            >
+              <span className="material-symbols-rounded text-xl">factory</span>
+              <span className="text-[10px] font-black uppercase">Reset Total</span>
+            </button>
+          </div>
+
+          <p className="text-[9px] text-slate-400 italic leading-tight text-center">
+            * Reset Total akan menghapus Seluruh Master & Seluruh Transaksi Jurnal.
+          </p>
         </div>
 
         {/* Dashboard Control Card */}
