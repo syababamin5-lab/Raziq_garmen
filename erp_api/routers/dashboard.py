@@ -33,8 +33,10 @@ def get_dashboard_summary(db: Session = Depends(get_db)):
                     kode_s = str(j.kode_akun)
                     if kode_s.startswith("4"): 
                         masuk_ini += (k - d)  # Pendapatan (Omzet)
-                    elif kode_s.startswith("6"): 
-                        keluar_ini += (d - k) # Beban Operasional (Saja)
+                    elif kode_s.startswith(("5", "6")):
+                        # Kecualikan HPP (51120) agar jualan tidak dianggap uang keluar
+                        if kode_s != "51120":
+                            keluar_ini += (d - k) # Biaya Produksi & Operasional
         except Exception as e:
             print(f"DEBUG Dashboard Keuangan Error: {e}")
             tunai, bank, masuk_ini, keluar_ini = 0, 0, 0, 0
