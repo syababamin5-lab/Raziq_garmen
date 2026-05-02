@@ -2,7 +2,7 @@ import datetime
 import os
 from fastapi import APIRouter, Depends, HTTPException
 from sqlalchemy.orm import Session
-from sqlalchemy import func
+from sqlalchemy import func, or_
 from models import get_db
 import models
 import google.generativeai as genai
@@ -34,11 +34,16 @@ def get_ai_financial_analysis(db: Session = Depends(get_db)):
 
         # 2. Data Neraca (Aktiva vs Pasiva)
         total_aktiva = db.query(func.sum(models.JurnalUmum.debit - models.JurnalUmum.kredit)).filter(
-            models.JurnalUmum.kode_akun.startswith(('1'))
+            or_(
+                models.JurnalUmum.kode_akun.startswith('1')
+            )
         ).scalar() or 0
         
         total_pasiva = db.query(func.sum(models.JurnalUmum.kredit - models.JurnalUmum.debit)).filter(
-            models.JurnalUmum.kode_akun.startswith(('2', '3'))
+            or_(
+                models.JurnalUmum.kode_akun.startswith('2'),
+                models.JurnalUmum.kode_akun.startswith('3')
+            )
         ).scalar() or 0
         
         selisih_neraca = abs(total_aktiva - total_pasiva)
@@ -67,7 +72,7 @@ def get_ai_financial_analysis(db: Session = Depends(get_db)):
         ).scalar() or 0
         
         # WIP (Estimasi dari log produksi yang belum selesai/terkirim)
-        total_wip_cutting = db.query(func.sum(models.ProductionLog.qty)).filter(
+        total_wip_cutting = db.query(func.sum(models.ProductionLog.qty_hasil)).filter(
             models.ProductionLog.divisi == 'CUTTING'
         ).scalar() or 0
 

@@ -24,9 +24,8 @@ export default function KeuanganCard({
     down: 'bg-red-100 text-red-600',
   }
 
-  const valueColor = badgeType === 'down'
-    ? 'text-red-600'
-    : 'text-slate-800'
+  const iconColor = badgeType === 'down' ? 'text-red-500' : 'text-emerald-500'
+  const valueColor = badgeType === 'down' ? 'text-red-600' : 'text-slate-800'
 
   if (loading) {
     return (
@@ -40,18 +39,18 @@ export default function KeuanganCard({
 
   return (
     <div className="card animate-fade-in-up">
-      {/* ── Badge pojok kanan atas ─────────────────────── */}
-      {badge && (
-        <div className="flex justify-between items-start mb-3">
-          <span className="material-symbols-rounded text-[28px] text-emerald-600">{icon}</span>
+      {/* ── Icon & Badge ─────────────────────── */}
+      <div className="flex justify-between items-start mb-3">
+        <span className={`material-symbols-rounded text-[28px] ${iconColor}`}>{icon}</span>
+        {badge && (
           <span className={`badge text-[10px] font-bold px-2 py-0.5 rounded-full ${badgeStyles[badgeType]}`}>
             {badgeType === 'live' && (
               <span className="inline-block w-1.5 h-1.5 bg-emerald-500 rounded-full mr-1 live-dot" />
             )}
             {badge}
           </span>
-        </div>
-      )}
+        )}
+      </div>
 
       {/* ── Label ────────────────────────────────────────── */}
       <p className="fin-label mb-1">{label}</p>

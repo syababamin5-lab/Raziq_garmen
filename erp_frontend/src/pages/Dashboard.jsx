@@ -202,6 +202,7 @@ export default function Dashboard() {
             label="Total Uang Keluar"
             value={formatRp(data?.keuangan?.total_uang_keluar_bulan_ini)}
             icon="trending_down"
+            badge="-Keluar"
             badgeType="down"
             sub="Bulan Ini"
             loading={loading}
