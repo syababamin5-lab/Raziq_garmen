@@ -24,24 +24,18 @@ def get_dashboard_summary(db: Session = Depends(get_db)):
             tunai, bank, masuk_ini, keluar_ini = 0, 0, 0, 0
             for j in jurnals:
                 d, k = j.debit or 0, j.kredit or 0
-                # Saldo Kas & Bank (Tetap dari akun 111x)
+                # 1a. Saldo Kas & Bank (Posisi Sekarang)
                 if j.kode_akun == "11110": tunai += (d - k)
                 elif j.kode_akun == "11120": bank += (d - k)
                 
-                # Ringkasan Bulan Ini
+                # 1b. Ringkasan Arus Kas Bulan Ini (Cash-Flow Based)
                 if j.tanggal and j.tanggal >= first_day:
                     kode_s = str(j.kode_akun)
                     
-                    # Uang Masuk: Pendapatan (4xxx)
-                    if kode_s.startswith("4"): 
-                        masuk_ini += (k - d)
-                    
-                    # Uang Keluar: Pembelian Stok (12110) + Biaya Produksi (5xxx) + Beban (6xxx)
-                    # KECUALIKAN: Pemakaian Bahan (51110), HPP (51120), Ikhtisar (51199), & Penyusutan (51350, 62170)
-                    elif kode_s == "12110" or kode_s.startswith(("5", "6")):
-                        non_cash = ["51110", "51120", "51199", "51350", "62170"]
-                        if kode_s not in non_cash:
-                            keluar_ini += (d - k)
+                    # Jika mutasi terjadi di akun Kas atau Bank (111xx)
+                    if kode_s.startswith("111"):
+                        masuk_ini += d  # Uang masuk ke kas/bank
+                        keluar_ini += k # Uang keluar dari kas/bank
         except Exception as e:
             print(f"DEBUG Dashboard Keuangan Error: {e}")
             tunai, bank, masuk_ini, keluar_ini = 0, 0, 0, 0
