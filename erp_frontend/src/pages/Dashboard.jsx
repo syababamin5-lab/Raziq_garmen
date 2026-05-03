@@ -10,8 +10,7 @@ import TotalProduksiPanel from '../components/dashboard/TotalProduksiPanel'
 import InvoiceDetailModal from '../components/dashboard/InvoiceDetailModal'
 import PrayerTimes from '../components/dashboard/PrayerTimes'
 import IslamicCalendarCard from '../components/dashboard/IslamicCalendarCard'
-import AIFinancialAnalyzer from '../components/dashboard/AIFinancialAnalyzer'
-import AIExecutiveAssistant from '../components/dashboard/AIExecutiveAssistant'
+import AIAssistantHub from '../components/dashboard/AIAssistantHub'
 
 export default function Dashboard() {
   const [data, setData] = useState(null)
@@ -336,8 +335,7 @@ export default function Dashboard() {
         </div>
       </div>
 
-      <AIFinancialAnalyzer userRole={user.role} />
-      <AIExecutiveAssistant userRole={user.role} />
+      <AIAssistantHub userRole={user.role} />
 
       <InvoiceDetailModal
         isOpen={isModalOpen}
