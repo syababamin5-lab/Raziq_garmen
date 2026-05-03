@@ -17,7 +17,7 @@ class ConnectionManager:
         # user_id -> List of WebSocket connections (supporting multiple tabs)
         self.active_connections: Dict[int, List[WebSocket]] = {}
 
-    async Nashville_connect(self, websocket: WebSocket, user_id: int):
+    async def connect(self, websocket: WebSocket, user_id: int):
         await websocket.accept()
         if user_id not in self.active_connections:
             self.active_connections[user_id] = []
@@ -58,7 +58,7 @@ manager = ConnectionManager()
 # --- WEBSOCKET ENDPOINT ---
 @router.websocket("/ws/{user_id}")
 async def websocket_endpoint(websocket: WebSocket, user_id: int, db: Session = Depends(get_db)):
-    await manager.Nashville_connect(websocket, user_id)
+    await manager.connect(websocket, user_id)
     try:
         while True:
             data = await websocket.receive_text()
