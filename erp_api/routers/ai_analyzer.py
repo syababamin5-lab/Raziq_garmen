@@ -151,93 +151,117 @@ def get_ai_financial_analysis(db: Session = Depends(get_db)):
     except Exception as e:
         return {"status": "error", "message": str(e)}
 
+# ==========================================================
+# AI EXECUTIVE ASSISTANT (CHAT/SEARCH) - TEXT-TO-SQL AGENT
+# ==========================================================
 
-# ==========================================================
-# AI EXECUTIVE ASSISTANT (CHAT/SEARCH)
-# ==========================================================
+SCHEMA_CONTEXT = """
+Database ini adalah sistem ERP Garmen. Gunakan SQLite syntax. 
+Berikut adalah tabel-tabel utama:
+
+1. barang (Master Barang/Stok):
+   - id, model_code, nama_barang, kode_sku, kategori, satuan, stok_saat_ini, harga_jual, harga_modal
+2. mitra (Customer/Supplier):
+   - id, nama_mitra, kategori, no_hp, email, alamat, saldo_piutang, saldo_utang
+3. karyawan (SDM):
+   - id, nama_karyawan, no_hp, alamat, divisi, tipe_gaji, nominal_gaji, target_produksi_mingguan, saldo_kasbon, is_active
+4. header_penjualan (Invoice Penjualan):
+   - id, no_invoice, tanggal, nama_customer, metode_bayar, total_tagihan, status (Lunas/Tempo)
+5. detail_penjualan (Item yang dijual):
+   - id, no_invoice, kode_sku, nama_barang, qty_lusin, harga_per_lusin, subtotal
+6. header_pembelian (PO Pembelian ke Supplier):
+   - id, no_po, tanggal, nama_supplier, metode_bayar, total_tagihan, status
+7. detail_pembelian (Item yang dibeli):
+   - id, no_po, kode_sku, nama_barang, qty_kg, harga_per_kg, subtotal
+8. production_logs (Catatan Produksi Harian):
+   - id, tanggal, divisi (Cutting/Jahit/Finishing), kode_sku, nama_barang, qty_hasil, karyawan_id
+9. jurnal_umum (Akuntansi Dasar):
+   - id, tanggal, kode_akun, nama_akun, keterangan, debit, kredit
+   - Akun 4xxxx: Pendapatan, Akun 5xxxx: HPP, Akun 6xxxx: Beban Operasional, Akun 111xx: Kas/Bank
+
+INSTRUKSI: 
+- Hasilkan HANYA query SQL SELECT yang valid untuk SQLite.
+- Jangan berikan penjelasan atau markdown block, hanya teks SQL saja.
+- Gunakan 'datetime()' atau 'strftime()' untuk manipulasi tanggal. 'bulan ini' berarti antara awal bulan saat ini sampai hari ini.
+- Pastikan query aman (read-only).
+"""
 
 @router.post("/tanya")
 def ai_executive_assistant(req: AskRequest, db: Session = Depends(get_db)):
-    """Smart Query Engine untuk menjawab pertanyaan Bos/Owner secara langsung"""
-    prompt = req.prompt.lower()
-    
-    # 1. TIMEFRAME DETECTION (WIB Context)
-    from datetime import timezone, timedelta
-    WIB = timezone(timedelta(hours=7))
-    now = datetime.datetime.now(WIB).replace(tzinfo=None)
-    
-    if "hari ini" in prompt:
-        start_date = now.replace(hour=0, minute=0, second=0, microsecond=0)
-        time_label = "hari ini"
-    elif "minggu ini" in prompt:
-        start_date = now - datetime.timedelta(days=now.weekday())
-        start_date = start_date.replace(hour=0, minute=0, second=0, microsecond=0)
-        time_label = "minggu ini"
-    else:
-        start_date = now.replace(day=1, hour=0, minute=0, second=0, microsecond=0)
-        time_label = "bulan ini"
-
-    # 2. INTENT MATCHING & QUERY EXECUTION
-    jawaban_teks = "Maaf Bos, saya belum mengerti pertanyaan itu. Coba tanya tentang Omset, Penjualan, Stok, Hutang, atau Piutang."
-    data_tabel = []
+    """Agent Text-to-SQL: Menerjemahkan bahasa natural ke Query Database secara dinamis"""
+    if not GEMINI_API_KEY:
+        return {"status": "error", "message": "API Key Gemini belum di-set!"}
 
     try:
-        # A. OMSET / PENDAPATAN
-        if any(k in prompt for k in ["omset", "pendapatan", "revenue"]):
-            total = db.query(func.sum(models.JurnalUmum.kredit - models.JurnalUmum.debit)).filter(
-                models.JurnalUmum.kode_akun.startswith('4'),
-                models.JurnalUmum.tanggal >= start_date
-            ).scalar() or 0
-            
-            jawaban_teks = f"Total Omset/Pendapatan Anda {time_label} adalah **Rp {total:,.0f}**. Ini dihitung dari seluruh akun pendapatan penjualan.".replace(',', '.')
-            
-            # Tambah rincian per kategori akun jika perlu
-            rincian = db.query(models.JurnalUmum.nama_akun, func.sum(models.JurnalUmum.kredit - models.JurnalUmum.debit)).filter(
-                models.JurnalUmum.kode_akun.startswith('4'),
-                models.JurnalUmum.tanggal >= start_date
-            ).group_by(models.JurnalUmum.nama_akun).all()
-            data_tabel = [{"Kategori": r[0], "Nominal": f"Rp {r[1]:,.0f}".replace(',', '.')} for r in rincian]
+        from sqlalchemy import text
+        import json
+        
+        # 1. INITIALIZE GEMINI
+        model = genai.GenerativeModel('gemini-1.5-flash')
+        now = datetime.datetime.now()
+        
+        # 2. GENERATE SQL QUERY
+        sql_prompt = (
+            f"{SCHEMA_CONTEXT}\n\n"
+            f"Waktu Sekarang: {now.strftime('%Y-%m-%d %H:%M:%S')}\n"
+            f"Pertanyaan Bos: {req.prompt}\n\n"
+            "Query SQL (SELECT ONLY):"
+        )
+        
+        sql_response = model.generate_content(sql_prompt).text.strip()
+        # Clean up potential markdown formatting
+        sql_query = sql_response.replace('```sql', '').replace('```', '').strip()
+        
+        # SAFETY CHECK: Only allow SELECT
+        forbidden = ["DROP", "DELETE", "UPDATE", "INSERT", "ALTER", "TRUNCATE", "CREATE"]
+        if any(f in sql_query.upper() for f in forbidden):
+            return {"status": "error", "message": "Permintaan ditolak demi keamanan (Query mengandung perintah manipulatif)."}
 
-        # B. PENJUALAN / INVOICE
-        elif any(k in prompt for k in ["penjualan", "invoice", "nota"]):
-            sales = db.query(models.HeaderPenjualan).filter(models.HeaderPenjualan.tanggal >= start_date).all()
-            total_nom = sum(s.total_tagihan for s in sales)
-            count = len(sales)
-            
-            jawaban_teks = f"Ada **{count} Invoice** yang diterbitkan {time_label} dengan total nilai transaksi **Rp {total_nom:,.0f}**.".replace(',', '.')
-            data_tabel = [{"No. Invoice": s.no_invoice, "Customer": s.nama_customer, "Total": f"Rp {s.total_tagihan:,.0f}".replace(',', '.'), "Status": s.status} for s in sales]
+        # 3. EXECUTE SQL (READ-ONLY)
+        result_proxy = db.execute(text(sql_query))
+        rows = result_proxy.fetchall()
+        columns = result_proxy.keys()
+        
+        # Convert result to list of dicts for processing
+        data_raw = []
+        for row in rows:
+            data_raw.append(dict(zip(columns, row)))
+        
+        # 4. SUMMARIZE RESULTS (NATURAL LANGUAGE)
+        summary_prompt = (
+            "Kamu adalah Asisten Eksekutif Pabrik Garmen yang cerdas. "
+            "Bos bertanya: '" + req.prompt + "'\n"
+            "Hasil data dari database (SQL Result):\n" + json.dumps(data_raw[:20], default=str) + "\n\n"
+            "Tugasmu:\n"
+            "1. Berikan jawaban rangkuman yang ramah dan eksekutif (max 3-4 kalimat).\n"
+            "2. Gunakan angka Rp atau Qty sesuai data.\n"
+            "3. Jika data kosong, katakan dengan sopan bahwa data tidak ditemukan."
+        )
+        
+        summary_response = model.generate_content(summary_prompt).text.strip()
 
-        # C. STOK / PERSEDIAAN
-        elif any(k in prompt for k in ["stok", "persediaan", "barang"]):
-            top_items = db.query(models.Barang).order_by(models.Barang.stok_saat_ini.desc()).limit(10).all()
-            jawaban_teks = "Berikut adalah 10 produk dengan stok fisik terbanyak di gudang saat ini. Pastikan perputaran barang tetap terjaga."
-            data_tabel = [{"Produk": b.nama_barang, "SKU": b.kode_sku, "Stok": f"{b.stok_saat_ini:g} {b.satuan}", "Kategori": b.kategori} for b in top_items]
-
-        # D. HUTANG (PAYABLES)
-        elif any(k in prompt for k in ["hutang", "utang"]):
-            total_utang = db.query(func.sum(models.Mitra.saldo_utang)).scalar() or 0
-            suppliers = db.query(models.Mitra).filter(models.Mitra.saldo_utang > 0).order_by(models.Mitra.saldo_utang.desc()).all()
-            
-            jawaban_teks = f"Total hutang perusahaan saat ini adalah **Rp {total_utang:,.0f}**. Berikut rincian supplier yang harus segera dibayar.".replace(',', '.')
-            data_tabel = [{"Supplier": m.nama_mitra, "Sisa Hutang": f"Rp {m.saldo_utang:,.0f}".replace(',', '.')} for m in suppliers]
-
-        # E. PIUTANG (RECEIVABLES)
-        elif any(k in prompt for k in ["piutang"]):
-            total_piutang = db.query(func.sum(models.Mitra.saldo_piutang)).scalar() or 0
-            customers = db.query(models.Mitra).filter(models.Mitra.saldo_piutang > 0).order_by(models.Mitra.saldo_piutang.desc()).all()
-            
-            jawaban_teks = f"Total piutang yang belum tertagih adalah **Rp {total_piutang:,.0f}**. Ini adalah uang perusahaan yang masih ada di tangan pelanggan.".replace(',', '.')
-            data_tabel = [{"Customer": m.nama_mitra, "Belum Bayar": f"Rp {m.saldo_piutang:,.0f}".replace(',', '.')} for m in customers]
+        # 5. FORMAT DATA TABLE FOR UI
+        # Kita ambil maksimal 10-15 baris agar tidak kepenuhan di UI
+        data_tabel = []
+        for row in data_raw[:15]:
+            formatted_row = {}
+            for k, v in row.items():
+                # Formatting sederhana untuk nominal uang
+                if isinstance(v, (int, float)) and any(x in k.lower() for x in ['total', 'nominal', 'saldo', 'harga', 'tagihan', 'debit', 'kredit']):
+                    formatted_row[k.replace('_', ' ').title()] = f"Rp {v:,.0f}".replace(',', '.')
+                else:
+                    formatted_row[k.replace('_', ' ').title()] = str(v)
+            data_tabel.append(formatted_row)
 
         return {
             "status": "success",
-            "jawaban_teks": jawaban_teks,
+            "jawaban_teks": summary_response,
             "data_tabel": data_tabel,
             "metadata": {
-                "timeframe": time_label,
+                "query_generated": sql_query,
                 "timestamp": now.isoformat()
             }
         }
 
     except Exception as e:
-        return {"status": "error", "message": f"Gagal memproses data: {str(e)}"}
+        return {"status": "error", "message": f"AI Assistant Error: {str(e)}"}
