@@ -178,6 +178,7 @@ Berikut adalah tabel-tabel utama:
 9. jurnal_umum (Akuntansi Dasar):
    - id, tanggal, kode_akun, nama_akun, keterangan, debit, kredit
    - Akun 4xxxx: Pendapatan, Akun 5xxxx: HPP, Akun 6xxxx: Beban Operasional, Akun 111xx: Kas/Bank
+   - Kategori Barang: 'Bahan Baku (Kain)', 'Barang Jadi (Baju)', 'Bahan Pembantu', 'Bahan Penolong'
 
 INSTRUKSI: 
 - Hasilkan HANYA query SQL SELECT yang valid untuk SQLite/PostgreSQL.
@@ -283,4 +284,11 @@ def ai_executive_assistant(req: AskRequest, db: Session = Depends(get_db)):
         }
 
     except Exception as e:
-        return {"status": "error", "message": f"AI Assistant Error: {str(e)}"}
+        err_msg = str(e)
+        if "429" in err_msg:
+            return {
+                "status": "success", 
+                "jawaban_teks": "Mohon maaf Bos, kuota harian/menit AI (Gemini Free Tier) sedang penuh. Silakan tunggu sekitar 10-20 detik dan coba lagi. 🙏",
+                "data_tabel": []
+            }
+        return {"status": "error", "message": f"AI Assistant Error: {err_msg}"}
