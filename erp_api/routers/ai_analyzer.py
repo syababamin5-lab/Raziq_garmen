@@ -196,8 +196,14 @@ def ai_executive_assistant(req: AskRequest, db: Session = Depends(get_db)):
         from sqlalchemy import text
         import json
         
-        # 1. INITIALIZE GEMINI
-        model = genai.GenerativeModel('gemini-1.5-flash')
+        # 1. INITIALIZE GEMINI DYNAMICALLY
+        try:
+            available_models = [m.name for m in genai.list_models() if 'generateContent' in m.supported_generation_methods]
+            target_model = next((m for m in available_models if 'flash' in m), 
+                               available_models[0] if available_models else 'models/gemini-1.5-flash')
+            model = genai.GenerativeModel(target_model)
+        except Exception:
+            model = genai.GenerativeModel('gemini-1.5-flash')
         now = datetime.datetime.now()
         
         # 2. GENERATE SQL QUERY
