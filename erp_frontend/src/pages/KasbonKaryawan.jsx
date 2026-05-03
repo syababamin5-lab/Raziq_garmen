@@ -99,9 +99,9 @@ export default function KasbonKaryawan() {
               <div className="space-y-2">
                 <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest pl-2">Sumber Dana</label>
                 <div className="flex gap-4 p-1 bg-white rounded-2xl w-fit shadow-sm">
-                  {['Kas Tunai', 'Bank'].map(s => (
+                  {['Kas Tunai', 'Bank BCA'].map(s => (
                     <button key={s} onClick={() => setKasbonForm({...kasbonForm, sumber: s})} className={`px-6 py-2 rounded-xl text-[10px] font-black transition-all ${kasbonForm.sumber === s ? 'bg-emerald-600 text-white shadow-md' : 'text-slate-400'}`}>
-                      {s.toUpperCase()}
+                      {s === 'Bank BCA' ? 'BANK BCA' : s.toUpperCase()}
                     </button>
                   ))}
                 </div>

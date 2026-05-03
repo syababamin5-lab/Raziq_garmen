@@ -20,7 +20,7 @@ export default function PembelianBiaya() {
   const [activeTab, setActiveTab] = useState('bahan');
   const [loading, setLoading] = useState(false);
   const [msg, setMsg] = useState({ text: '', type: '' });
-  const [balance, setBalance] = useState({ tunai: 0, bank: 0 });
+  const [balance, setBalance] = useState({ tunai: 0, bca: 0 });
 
   // Data for Selects
   const [suppliers, setSuppliers] = useState([]);
@@ -80,7 +80,7 @@ export default function PembelianBiaya() {
       const dash = await getDashboardSummary();
       setBalance({
         tunai: dash?.keuangan?.sisa_saldo_tunai || 0,
-        bank: dash?.keuangan?.sisa_saldo_bank || 0
+        bca: dash?.keuangan?.sisa_saldo_bank || 0
       });
     } catch (err) { console.error(err); }
   };
@@ -289,8 +289,8 @@ export default function PembelianBiaya() {
                 <p className="text-xl font-black text-emerald-900 leading-none">{formatRp(balance.tunai)}</p>
             </div>
             <div className="bg-blue-50 border border-blue-100 px-5 py-3 rounded-2xl">
-                <p className="text-[10px] font-black text-blue-700 uppercase tracking-widest mb-1">Saldo Bank</p>
-                <p className="text-xl font-black text-blue-900 leading-none">{formatRp(balance.bank)}</p>
+                <p className="text-[10px] font-black text-blue-700 uppercase tracking-widest mb-1">Saldo Bank BCA</p>
+                <p className="text-xl font-black text-blue-900 leading-none">{formatRp(balance.bca)}</p>
             </div>
         </div>
       </div>
@@ -497,7 +497,7 @@ export default function PembelianBiaya() {
                          <label className="block text-xs font-bold text-slate-500 mb-1">SUMBER DANA</label>
                          <select className="w-full p-3 border border-slate-200 rounded-xl font-bold text-emerald-700" value={opexForm.sumber} onChange={e => setOpexForm({...opexForm, sumber: e.target.value})}>
                             <option value="Kas Tunai">Kas Tunai</option>
-                            <option value="Bank">Bank</option>
+                            <option value="Bank BCA">Bank BCA</option>
                          </select>
                     </div>
                     <div className="col-span-2">

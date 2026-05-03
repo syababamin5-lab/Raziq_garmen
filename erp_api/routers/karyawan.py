@@ -18,7 +18,7 @@ def tambah_kasbon(payload: schemas.KasbonLoanRequest, db: Session = Depends(get_
 
         # 2. Jurnal Umum
         kode_kredit = "11110" if payload.sumber == "Kas Tunai" else "11120"
-        nama_kredit = "Kas Tunai" if payload.sumber == "Kas Tunai" else "Kas di Bank"
+        nama_kredit = "Kas Tunai" if payload.sumber == "Kas Tunai" else "Bank BCA"
         
         db.add(models.JurnalUmum(
             tanggal=datetime.datetime.now(), 

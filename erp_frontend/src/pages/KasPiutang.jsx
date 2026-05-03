@@ -14,7 +14,7 @@ export default function KasPiutang() {
 
   // FORMS
   const [piutangForm, setPiutangForm] = useState({ customer_id: '', nominal: '', sumber: 'Kas Tunai', tgl: new Date().toISOString().split('T')[0], keterangan: 'Pelunasan Piutang' });
-  const [utangForm, setUtangForm] = useState({ supplier_id: '', nominal: '', sumber: 'Bank', tgl: new Date().toISOString().split('T')[0], keterangan: 'Pelunasan Utang Material' });
+  const [utangForm, setUtangForm] = useState({ supplier_id: '', nominal: '', sumber: 'Bank BCA', tgl: new Date().toISOString().split('T')[0], keterangan: 'Pelunasan Utang Material' });
   const [mutasiForm, setMutasiForm] = useState({ jenis: 'Setor Tunai', nominal: '', tgl: new Date().toISOString().split('T')[0] });
   const [kasbonForm, setKasbonForm] = useState({ karyawan_id: '', nominal: '', sumber: 'Kas Tunai', tgl: new Date().toISOString().split('T')[0] });
 
@@ -62,9 +62,9 @@ export default function KasPiutang() {
 
   const renderSourceRadio = (val, setVal) => (
     <div className="flex gap-4 p-1 bg-slate-100 rounded-xl w-fit">
-        {['Kas Tunai', 'Bank'].map(s => (
+        {['Kas Tunai', 'Bank BCA'].map(s => (
             <button key={s} onClick={() => setVal(s)} className={`px-6 py-2 rounded-lg text-xs font-black transition-all ${val === s ? 'bg-white text-emerald-600 shadow-sm' : 'text-slate-400'}`}>
-                {s.toUpperCase()}
+                {s === 'Bank BCA' ? 'BANK BCA' : s.toUpperCase()}
             </button>
         ))}
     </div>
@@ -89,7 +89,7 @@ export default function KasPiutang() {
                     <p className="text-lg font-black text-emerald-800">{formatRp(saldo.kas)}</p>
                 </div>
                 <div className="bg-blue-50 px-5 py-3 rounded-2xl border border-blue-100">
-                    <p className="text-[9px] font-black text-blue-600 uppercase tracking-widest">Saldo Bank</p>
+                    <p className="text-[9px] font-black text-blue-600 uppercase tracking-widest">Saldo Bank BCA</p>
                     <p className="text-lg font-black text-blue-800">{formatRp(saldo.bank)}</p>
                 </div>
             </div>
@@ -245,7 +245,7 @@ export default function KasPiutang() {
                                 <div className={`w-16 h-16 rounded-full flex items-center justify-center mb-2 transition-all ${mutasiForm.jenis === 'Tarik Tunai' ? 'bg-blue-100 text-blue-600 scale-110' : 'bg-slate-100 text-slate-400'}`}>
                                     <span className="material-symbols-rounded">account_balance</span>
                                 </div>
-                                <span className="text-[10px] font-bold">REKENING BANK</span>
+                                <span className="text-[10px] font-bold uppercase">Bank BCA</span>
                             </div>
                         </div>
                         <div className="grid grid-cols-2 gap-4">

@@ -19,7 +19,7 @@ def terima_piutang(payload: schemas.CollectionRequest, db: Session = Depends(get
 
         # Jurnal Umum
         kode_debit = "11110" if payload.sumber == "Kas Tunai" else "11120"
-        nama_debit = "Kas Tunai" if payload.sumber == "Kas Tunai" else "Kas di Bank"
+        nama_debit = "Kas Tunai" if payload.sumber == "Kas Tunai" else "Bank BCA"
         
         db.add(models.JurnalUmum(
             tanggal=datetime.datetime.now(), 
@@ -63,7 +63,7 @@ def bayar_utang(payload: schemas.PaymentRequest, db: Session = Depends(get_db)):
 
         # Jurnal
         kode_kredit = "11110" if payload.sumber == "Kas Tunai" else "11120"
-        nama_kredit = "Kas Tunai" if payload.sumber == "Kas Tunai" else "Kas di Bank"
+        nama_kredit = "Kas Tunai" if payload.sumber == "Kas Tunai" else "Bank BCA"
         
         db.add(models.JurnalUmum(tanggal=datetime.datetime.now(), kode_akun="21110", nama_akun="Utang Usaha", keterangan=f"Bayar Utang: {supp.nama_mitra}", debit=payload.nominal, kredit=0))
         db.add(models.JurnalUmum(tanggal=datetime.datetime.now(), kode_akun=kode_kredit, nama_akun=nama_kredit, keterangan=f"Pelunasan ke {supp.nama_mitra} - {payload.keterangan}", debit=0, kredit=payload.nominal))
@@ -78,11 +78,11 @@ def bayar_utang(payload: schemas.PaymentRequest, db: Session = Depends(get_db)):
 def mutasi_kas(payload: schemas.MutationRequest, db: Session = Depends(get_db)):
     try:
         if payload.jenis == "Setor Tunai":
-            db.add(models.JurnalUmum(tanggal=datetime.datetime.now(), kode_akun="11120", nama_akun="Kas di Bank", keterangan="Setoran Kas ke Bank", debit=payload.nominal, kredit=0))
+            db.add(models.JurnalUmum(tanggal=datetime.datetime.now(), kode_akun="11120", nama_akun="Bank BCA", keterangan="Setoran Kas ke Bank", debit=payload.nominal, kredit=0))
             db.add(models.JurnalUmum(tanggal=datetime.datetime.now(), kode_akun="11110", nama_akun="Kas Tunai", keterangan="Setoran Kas ke Bank", debit=0, kredit=payload.nominal))
         else:
             db.add(models.JurnalUmum(tanggal=datetime.datetime.now(), kode_akun="11110", nama_akun="Kas Tunai", keterangan="Penarikan Bank ke Kas", debit=payload.nominal, kredit=0))
-            db.add(models.JurnalUmum(tanggal=datetime.datetime.now(), kode_akun="11120", nama_akun="Kas di Bank", keterangan="Penarikan Bank ke Kas", debit=0, kredit=payload.nominal))
+            db.add(models.JurnalUmum(tanggal=datetime.datetime.now(), kode_akun="11120", nama_akun="Bank BCA", keterangan="Penarikan Bank ke Kas", debit=0, kredit=payload.nominal))
 
         db.commit()
         return schemas.APIResponse(success=True, message=f"Mutasi {payload.jenis} berhasil dicatat.")
@@ -99,7 +99,7 @@ def bayar_kasbon(payload: schemas.KasbonPaymentRequest, db: Session = Depends(ge
         kary.saldo_kasbon = (kary.saldo_kasbon or 0) - payload.nominal
 
         kode_debit = "11110" if payload.sumber == "Kas Tunai" else "11120"
-        nama_debit = "Kas Tunai" if payload.sumber == "Kas Tunai" else "Kas di Bank"
+        nama_debit = "Kas Tunai" if payload.sumber == "Kas Tunai" else "Bank BCA"
         
         db.add(models.JurnalUmum(tanggal=datetime.datetime.now(), kode_akun=kode_debit, nama_akun=nama_debit, keterangan=f"Cicilan Kasbon: {kary.nama_karyawan}", debit=payload.nominal, kredit=0))
         db.add(models.JurnalUmum(tanggal=datetime.datetime.now(), kode_akun="11220", nama_akun="Piutang Karyawan", keterangan=f"Cicilan Kasbon: {kary.nama_karyawan}", debit=0, kredit=payload.nominal))

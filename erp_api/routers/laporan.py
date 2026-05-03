@@ -84,14 +84,13 @@ def get_laporan_keuangan(bulan: int, tahun: int, db: Session = Depends(get_db)):
         modal_disetor, d_md = get_saldo_sqlite(db, "311", None, end_date)
         prive_val, d_prive = get_saldo_sqlite(db, "312", None, end_date)
         
-        # Ekuitas = Laba Kumulatif
-        laba_kumulatif, _ = get_saldo_sqlite(db, "41", None, end_date)
-        hpp_kumulatif, _ = get_saldo_sqlite(db, "51", None, end_date)
-        beban_kumulatif, _ = get_saldo_sqlite(db, "6", None, end_date) # Semua kepala 6
-        beban_kumulatif -= hpp_kumulatif # hpp_kumulatif sudah dihitung dari 51
-        # Wait, get_saldo_sqlite handles the sign based on first digit.
-        # Let's just calculate manually for clarity
-        total_laba_akum = laba_kumulatif - hpp_kumulatif - (beban_kumulatif if beban_kumulatif > 0 else 0)
+        # Ekuitas = Laba Kumulatif (Pendapatan - HPP - Beban)
+        laba_kumulatif, _ = get_saldo_sqlite(db, "41", None, end_date) # 41: Pendapatan
+        hpp_kumulatif, _ = get_saldo_sqlite(db, "51", None, end_date)  # 51: HPP
+        beban_kumulatif, _ = get_saldo_sqlite(db, "6", None, end_date)   # 6: Beban Operasional
+        
+        # total_laba_akum adalah Pendapatan - (HPP + Beban)
+        total_laba_akum = laba_kumulatif - hpp_kumulatif - beban_kumulatif
 
         return {
             "success": True,

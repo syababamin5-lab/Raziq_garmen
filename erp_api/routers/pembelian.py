@@ -166,7 +166,7 @@ def submit_opex(payload: schemas.OpexRequest, db: Session = Depends(get_db)):
         nama_akun_debit = payload.nama_akun_opex
         
         kode_akun_kredit = "11110" if payload.sumber_dana == "Kas Tunai" else "11120"
-        nama_akun_kredit = "Kas Tunai" if payload.sumber_dana == "Kas Tunai" else "Kas di Bank"
+        nama_akun_kredit = "Kas Tunai" if payload.sumber_dana == "Kas Tunai" else "Bank BCA"
         
         db.add(models.JurnalUmum(tanggal=waktu_opex, kode_akun=kode_akun_debit, nama_akun=nama_akun_debit, keterangan=payload.keterangan, debit=payload.nominal, kredit=0))
         db.add(models.JurnalUmum(tanggal=waktu_opex, kode_akun=kode_akun_kredit, nama_akun=nama_akun_kredit, keterangan=payload.keterangan, debit=0, kredit=payload.nominal))
@@ -186,7 +186,7 @@ def submit_aset(payload: schemas.AsetRequest, db: Session = Depends(get_db)):
             kode_kredit, nama_kredit = "31110", "Modal Disetor"
         else:
             kode_kredit = "11110" if payload.sumber_dana == "Kas Tunai" else "11120"
-            nama_kredit = "Kas Tunai" if payload.sumber_dana == "Kas Tunai" else "Kas di Bank"
+            nama_kredit = "Kas Tunai" if payload.sumber_dana == "Kas Tunai" else "Bank BCA"
             
         db.add(models.JurnalUmum(
             tanggal=waktu_aset, 
@@ -382,7 +382,7 @@ def bayar_po_cepat(payload: schemas.BayarPOCepatRequest, db: Session = Depends(g
 
         # Jurnal: Utang Usaha (D) vs Kas/Bank (K)
         akun_kredit = "11110" if "Tunai" in payload.sumber_dana else "11120"
-        nama_kredit = "Kas Tunai" if akun_kredit == "11110" else "Kas di Bank"
+        nama_kredit = "Kas Tunai" if akun_kredit == "11110" else "Bank BCA"
 
         db.add(models.JurnalUmum(tanggal=waktu_bayar, kode_akun="21110", nama_akun="Utang Usaha", keterangan=f"Pelunasan PO {po.no_po} - {supp.nama_mitra}", debit=nominal_aktual, kredit=0))
         db.add(models.JurnalUmum(tanggal=waktu_bayar, kode_akun=akun_kredit, nama_akun=nama_kredit, keterangan=f"Pelunasan PO {po.no_po} - {supp.nama_mitra}", debit=0, kredit=nominal_aktual))
@@ -416,7 +416,7 @@ def submit_retur_pembelian(payload: schemas.ReturPembelianRequest, db: Session =
             db.add(models.JurnalUmum(tanggal=waktu_retur, kode_akun="21110", nama_akun="Utang Usaha", keterangan=f"Retur Beli {po.no_po}", debit=nilai_retur, kredit=0))
         else:
             akun_debit = "11110" if po.metode_bayar == "Kas Tunai" else "11120"
-            nama_debit = "Kas Tunai" if akun_debit == "11110" else "Kas di Bank"
+            nama_debit = "Kas Tunai" if akun_debit == "11110" else "Bank BCA"
             db.add(models.JurnalUmum(tanggal=waktu_retur, kode_akun=akun_debit, nama_akun=nama_debit, keterangan=f"Retur Beli {po.no_po} (Refund)", debit=nilai_retur, kredit=0))
 
         # Persediaan / Beban Keluar

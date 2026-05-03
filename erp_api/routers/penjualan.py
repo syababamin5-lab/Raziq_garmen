@@ -97,7 +97,7 @@ def submit_invoice(payload: schemas.SaleRequest, db: Session = Depends(get_db)):
         
         if payload.metode in ["Tunai", "Transfer"]:
             akun_debit = "11110" if payload.metode == "Tunai" else "11120"
-            nama_debit = "Kas Tunai" if payload.metode == "Tunai" else "Kas di Bank"
+            nama_debit = "Kas Tunai" if payload.metode == "Tunai" else "Bank BCA"
             db.add(models.JurnalUmum(tanggal=waktu_jual, kode_akun=akun_debit, nama_akun=nama_debit, keterangan=f"Pelunasan {inv_no}", debit=total_tagihan, kredit=0))
         
         elif payload.metode == "Piutang (Tempo)":
@@ -105,7 +105,7 @@ def submit_invoice(payload: schemas.SaleRequest, db: Session = Depends(get_db)):
             db.add(models.JurnalUmum(tanggal=waktu_jual, kode_akun="11210", nama_akun="Piutang Usaha", keterangan=f"Tagihan {inv_no} - {cust.nama_mitra}", debit=sisa_utang, kredit=0))
             if (payload.dp or 0.0) > 0:
                 akun_dp = "11110" if payload.dp_sumber == "Kas Tunai" else "11120"
-                nama_dp = "Kas Tunai" if payload.dp_sumber == "Kas Tunai" else "Kas di Bank"
+                nama_dp = "Kas Tunai" if payload.dp_sumber == "Kas Tunai" else "Bank BCA"
                 db.add(models.JurnalUmum(tanggal=waktu_jual, kode_akun=akun_dp, nama_akun=nama_dp, keterangan=f"DP Invoice {inv_no} - {cust.nama_mitra}", debit=payload.dp, kredit=0))
 
         db.commit()
@@ -233,13 +233,13 @@ def submit_retur(payload: schemas.SaleReturRequest, db: Session = Depends(get_db
                     
                     # Sisa refund dikreditkan ke Bank/Kas (Uang Keluar mengembalikan DP)
                     akun_refund = "11120" if "Bank" in (payload.sumber_refund or "") else "11110"
-                    nama_refund = "Kas di Bank" if akun_refund == "11120" else "Kas Tunai"
+                    nama_refund = "Bank BCA" if akun_refund == "11120" else "Kas Tunai"
                     
                     db.add(models.JurnalUmum(tanggal=waktu_retur, kode_akun=akun_refund, nama_akun=nama_refund, keterangan=f"Refund DP Retur {pilih_inv.no_invoice}", debit=0, kredit=sisa_refund))
         else:
             # Tunai atau Transfer
             akun_kredit = "11120" if pilih_inv.metode_bayar == "Transfer" else "11110"
-            nama_kredit = "Kas di Bank" if akun_kredit == "11120" else "Kas Tunai"
+            nama_kredit = "Bank BCA" if akun_kredit == "11120" else "Kas Tunai"
             db.add(models.JurnalUmum(tanggal=waktu_retur, kode_akun=akun_kredit, nama_akun=nama_kredit, keterangan=f"Refund Retur {pilih_inv.no_invoice}", debit=0, kredit=nilai_retur))
 
         # Jurnal HPP
@@ -350,7 +350,7 @@ def bayar_invoice_cepat(payload: schemas.BayarInvoiceCepatRequest, db: Session =
 
         # 3. Jurnal Keuangan: Kas/Bank (D) vs Piutang Usaha (K)
         akun_debit = "11110" if "Tunai" in payload.sumber_dana else "11120"
-        nama_debit = "Kas Tunai" if akun_debit == "11110" else "Kas di Bank"
+        nama_debit = "Kas Tunai" if akun_debit == "11110" else "Bank BCA"
 
         db.add(models.JurnalUmum(
             tanggal=waktu_bayar,
