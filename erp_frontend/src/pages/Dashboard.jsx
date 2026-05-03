@@ -11,6 +11,7 @@ import InvoiceDetailModal from '../components/dashboard/InvoiceDetailModal'
 import PrayerTimes from '../components/dashboard/PrayerTimes'
 import IslamicCalendarCard from '../components/dashboard/IslamicCalendarCard'
 import AIFinancialAnalyzer from '../components/dashboard/AIFinancialAnalyzer'
+import AIExecutiveAssistant from '../components/dashboard/AIExecutiveAssistant'
 
 export default function Dashboard() {
   const [data, setData] = useState(null)
@@ -169,8 +170,6 @@ export default function Dashboard() {
         </div>
       )}
 
-      {/* AI FINANCIAL HEALTH ANALYZER MODUL */}
-      <AIFinancialAnalyzer userRole={user.role} />
 
       {dashSettings.showKeuangan && (
         <div className="grid grid-cols-4 gap-4">
@@ -336,6 +335,9 @@ export default function Dashboard() {
           </div>
         </div>
       </div>
+
+      <AIFinancialAnalyzer userRole={user.role} />
+      <AIExecutiveAssistant userRole={user.role} />
 
       <InvoiceDetailModal
         isOpen={isModalOpen}

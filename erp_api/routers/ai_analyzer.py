@@ -7,7 +7,12 @@ from models import get_db
 import models
 import google.generativeai as genai
 
-router = APIRouter(prefix="/api/ai", tags=["AI Analyzer"])
+from pydantic import BaseModel
+
+router = APIRouter(prefix="/api/ai", tags=["AI Assistant"])
+
+class AskRequest(BaseModel):
+    prompt: str
 
 # Konfigurasi AI (Pastikan API Key ada di environment)
 GEMINI_API_KEY = os.environ.get("GOOGLE_API_KEY", "").strip()
@@ -144,5 +149,93 @@ def get_ai_financial_analysis(db: Session = Depends(get_db)):
             "data_snapshot": financial_data
         }
 
+
+# ==========================================================
+# AI EXECUTIVE ASSISTANT (CHAT/SEARCH)
+# ==========================================================
+
+@router.post("/tanya")
+def ai_executive_assistant(req: AskRequest, db: Session = Depends(get_db)):
+    """Smart Query Engine untuk menjawab pertanyaan Bos/Owner secara langsung"""
+    prompt = req.prompt.lower()
+    
+    # 1. TIMEFRAME DETECTION (WIB Context)
+    from datetime import timezone, timedelta
+    WIB = timezone(timedelta(hours=7))
+    now = datetime.datetime.now(WIB).replace(tzinfo=None)
+    
+    if "hari ini" in prompt:
+        start_date = now.replace(hour=0, minute=0, second=0, microsecond=0)
+        time_label = "hari ini"
+    elif "minggu ini" in prompt:
+        start_date = now - datetime.timedelta(days=now.weekday())
+        start_date = start_date.replace(hour=0, minute=0, second=0, microsecond=0)
+        time_label = "minggu ini"
+    else:
+        start_date = now.replace(day=1, hour=0, minute=0, second=0, microsecond=0)
+        time_label = "bulan ini"
+
+    # 2. INTENT MATCHING & QUERY EXECUTION
+    jawaban_teks = "Maaf Bos, saya belum mengerti pertanyaan itu. Coba tanya tentang Omset, Penjualan, Stok, Hutang, atau Piutang."
+    data_tabel = []
+
+    try:
+        # A. OMSET / PENDAPATAN
+        if any(k in prompt for k in ["omset", "pendapatan", "revenue"]):
+            total = db.query(func.sum(models.JurnalUmum.kredit - models.JurnalUmum.debit)).filter(
+                models.JurnalUmum.kode_akun.startswith('4'),
+                models.JurnalUmum.tanggal >= start_date
+            ).scalar() or 0
+            
+            jawaban_teks = f"Total Omset/Pendapatan Anda {time_label} adalah **Rp {total:,.0f}**. Ini dihitung dari seluruh akun pendapatan penjualan.".replace(',', '.')
+            
+            # Tambah rincian per kategori akun jika perlu
+            rincian = db.query(models.JurnalUmum.nama_akun, func.sum(models.JurnalUmum.kredit - models.JurnalUmum.debit)).filter(
+                models.JurnalUmum.kode_akun.startswith('4'),
+                models.JurnalUmum.tanggal >= start_date
+            ).group_by(models.JurnalUmum.nama_akun).all()
+            data_tabel = [{"Kategori": r[0], "Nominal": f"Rp {r[1]:,.0f}".replace(',', '.')} for r in rincian]
+
+        # B. PENJUALAN / INVOICE
+        elif any(k in prompt for k in ["penjualan", "invoice", "nota"]):
+            sales = db.query(models.HeaderPenjualan).filter(models.HeaderPenjualan.tanggal >= start_date).all()
+            total_nom = sum(s.total_tagihan for s in sales)
+            count = len(sales)
+            
+            jawaban_teks = f"Ada **{count} Invoice** yang diterbitkan {time_label} dengan total nilai transaksi **Rp {total_nom:,.0f}**.".replace(',', '.')
+            data_tabel = [{"No. Invoice": s.no_invoice, "Customer": s.nama_customer, "Total": f"Rp {s.total_tagihan:,.0f}".replace(',', '.'), "Status": s.status} for s in sales]
+
+        # C. STOK / PERSEDIAAN
+        elif any(k in prompt for k in ["stok", "persediaan", "barang"]):
+            top_items = db.query(models.Barang).order_by(models.Barang.stok_saat_ini.desc()).limit(10).all()
+            jawaban_teks = "Berikut adalah 10 produk dengan stok fisik terbanyak di gudang saat ini. Pastikan perputaran barang tetap terjaga."
+            data_tabel = [{"Produk": b.nama_barang, "SKU": b.kode_sku, "Stok": f"{b.stok_saat_ini:g} {b.satuan}", "Kategori": b.kategori} for b in top_items]
+
+        # D. HUTANG (PAYABLES)
+        elif any(k in prompt for k in ["hutang", "utang"]):
+            total_utang = db.query(func.sum(models.Mitra.saldo_utang)).scalar() or 0
+            suppliers = db.query(models.Mitra).filter(models.Mitra.saldo_utang > 0).order_by(models.Mitra.saldo_utang.desc()).all()
+            
+            jawaban_teks = f"Total hutang perusahaan saat ini adalah **Rp {total_utang:,.0f}**. Berikut rincian supplier yang harus segera dibayar.".replace(',', '.')
+            data_tabel = [{"Supplier": m.nama_mitra, "Sisa Hutang": f"Rp {m.saldo_utang:,.0f}".replace(',', '.')} for m in suppliers]
+
+        # E. PIUTANG (RECEIVABLES)
+        elif any(k in prompt for k in ["piutang"]):
+            total_piutang = db.query(func.sum(models.Mitra.saldo_piutang)).scalar() or 0
+            customers = db.query(models.Mitra).filter(models.Mitra.saldo_piutang > 0).order_by(models.Mitra.saldo_piutang.desc()).all()
+            
+            jawaban_teks = f"Total piutang yang belum tertagih adalah **Rp {total_piutang:,.0f}**. Ini adalah uang perusahaan yang masih ada di tangan pelanggan.".replace(',', '.')
+            data_tabel = [{"Customer": m.nama_mitra, "Belum Bayar": f"Rp {m.saldo_piutang:,.0f}".replace(',', '.')} for m in customers]
+
+        return {
+            "status": "success",
+            "jawaban_teks": jawaban_teks,
+            "data_tabel": data_tabel,
+            "metadata": {
+                "timeframe": time_label,
+                "timestamp": now.isoformat()
+            }
+        }
+
     except Exception as e:
-        return {"status": "error", "message": str(e)}
+        return {"status": "error", "message": f"Gagal memproses data: {str(e)}"}
