@@ -148,6 +148,8 @@ def get_ai_financial_analysis(db: Session = Depends(get_db)):
             "analysis": response.text,
             "data_snapshot": financial_data
         }
+    except Exception as e:
+        return {"status": "error", "message": str(e)}
 
 
 # ==========================================================
