@@ -764,7 +764,7 @@ export default function MasterData() {
                     }} className="w-full p-2 border border-slate-200 rounded-lg text-sm" required>
                       <option value="">-- Pilih --</option>
                       <option value="11110">11110 - Kas Tunai</option>
-                      <option value="11120">11120 - Bank BCA</option>
+                      <option value="11120">11120 - BCA</option>
                     </select>
                   </div>
                   <div>

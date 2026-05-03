@@ -446,7 +446,7 @@ export default function PembelianBiaya() {
                                 <div className="space-y-1">
                                     <label className="text-[10px] font-bold text-amber-600 px-1 uppercase tracking-widest">DP Dibayar Via</label>
                                     <div className="flex bg-amber-50 border border-amber-200 p-1 rounded-xl">
-                                        {['Kas Tunai', 'Transfer Bank'].map(s => (
+                                        {['Kas Tunai', 'BCA'].map(s => (
                                             <button key={s} type="button" onClick={() => setBahanMeta({...bahanMeta, dp_sumber: s})} className={`flex-1 py-2 text-[10px] font-black rounded-lg transition-all ${bahanMeta.dp_sumber === s ? 'bg-amber-500 text-white shadow-sm' : 'text-amber-600'}`}>
                                                 {s.toUpperCase()}
                                             </button>
@@ -464,7 +464,7 @@ export default function PembelianBiaya() {
                         <button 
                           onClick={handleBahanSubmit} 
                           disabled={loading || isBos} 
-                          className={`w-full p-4 rounded-2xl font-black text-lg shadow-xl transition-all flex items-center justify-center gap-3 ${isBos ? 'bg-slate-200 text-slate-400 cursor-not-allowed' : 'bg-blue-600 hover:bg-blue-700 text-white shadow-blue-100'}`}
+                          className={`w-full p-4 rounded-2xl font-black text-lg shadow-xl transition-all ${isBos ? 'bg-slate-200 text-slate-400 cursor-not-allowed' : 'bg-blue-600 hover:bg-blue-700 text-white shadow-blue-100'}`}
                         >
                             <span className="material-symbols-rounded">save</span>
                             {isBos ? 'VIEW ONLY (BOS)' : loading ? 'MEMPROSES...' : 'TERBITKAN NOTA PEMBELIAN'}
@@ -497,7 +497,7 @@ export default function PembelianBiaya() {
                          <label className="block text-xs font-bold text-slate-500 mb-1">SUMBER DANA</label>
                          <select className="w-full p-3 border border-slate-200 rounded-xl font-bold text-emerald-700" value={opexForm.sumber} onChange={e => setOpexForm({...opexForm, sumber: e.target.value})}>
                             <option value="Kas Tunai">Kas Tunai</option>
-                            <option value="Bank BCA">Bank BCA</option>
+                            <option value="BCA">BCA</option>
                          </select>
                     </div>
                     <div className="col-span-2">
@@ -606,7 +606,7 @@ export default function PembelianBiaya() {
                             <button 
                               type="submit" 
                               disabled={loading || isBos} 
-                              className={`w-full p-4 rounded-2xl font-bold shadow-xl transition-all flex items-center justify-center gap-3 ${isBos ? 'bg-slate-200 text-slate-400 cursor-not-allowed' : 'bg-amber-600 hover:bg-amber-700 text-white'}`}
+                              className={`w-full p-4 rounded-2xl font-bold shadow-xl transition-all ${isBos ? 'bg-slate-200 text-slate-400 cursor-not-allowed' : 'bg-amber-600 hover:bg-amber-700 text-white'}`}
                             >
                                 <span className="material-symbols-rounded">assignment_return</span>
                                 {isBos ? 'VIEW ONLY (BOS)' : loading ? 'MEMPROSES RETUR...' : 'KONFIRMASI RETUR PEMBELIAN'}
@@ -775,7 +775,7 @@ export default function PembelianBiaya() {
                             <label className="block text-xs font-bold text-slate-500 mb-1">SUMBER DANA</label>
                             <select className="w-full p-2.5 border rounded-lg" value={asetForm.sumber} onChange={e => setAsetForm({...asetForm, sumber: e.target.value})}>
                                 <option value="Kas Tunai">Kas Tunai</option>
-                                <option value="Bank">Bank</option>
+                                <option value="BCA">BCA</option>
                                 <option value="Modal Awal (Khusus Aset Lama)">Modal Awal (Aset Lama)</option>
                             </select>
                         </div>
@@ -911,7 +911,7 @@ export default function PembelianBiaya() {
                     onChange={(e) => setPayModal({...payModal, sumber_dana: e.target.value})}
                   >
                     <option value="Kas Tunai">Kas Tunai (11110)</option>
-                    <option value="Kas di Bank">Kas di Bank (11120)</option>
+                    <option value="BCA">BCA (11120)</option>
                   </select>
                 </div>
               </div>

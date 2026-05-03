@@ -21,7 +21,7 @@ export default function PenjualanRetur() {
     const [returForm, setReturForm] = useState({
         tgl_retur: new Date().toISOString().split('T')[0],
         alasan: 'Barang Cacat / Rusak',
-        sumber_refund: 'Bank BCA'
+        sumber_refund: 'BCA'
     });
     const [invDetails, setInvDetails] = useState([]);
     const [payModal, setPayModal] = useState({ open: false, no_invoice: '', nama_customer: '', total_tagihan: 0, uang_muka: 0, nominal: 0, sumber_dana: 'Kas Tunai' });
@@ -104,7 +104,7 @@ export default function PenjualanRetur() {
             const res = await submitReturPenjualan({ ...returForm, tgl_retur: selectedDate.toISOString() });
             if (res.success) {
                 setMsg({ text: res.message, type: 'success' });
-                setReturForm({ ...returForm, no_invoice: '', kode_sku: '', qty_retur: 0, sumber_refund: 'Bank BCA' });
+                setReturForm({ ...returForm, no_invoice: '', kode_sku: '', qty_retur: 0, sumber_refund: 'BCA' });
                 setInvDetails([]);
                 fetchData();
             } else setMsg({ text: res.message, type: 'error' });
@@ -256,9 +256,9 @@ export default function PenjualanRetur() {
                                             <div className="space-y-1">
                                                 <label className="text-[10px] font-bold text-amber-600 px-1">DP MASUK KE</label>
                                                 <div className="flex bg-amber-50 border border-amber-200 p-1 rounded-xl">
-                                                    {['Kas Tunai', 'Bank BCA'].map(s => (
+                                                    {['Kas Tunai', 'BCA'].map(s => (
                                                         <button key={s} type="button" onClick={() => setMeta({ ...meta, dp_sumber: s })} className={`flex-1 py-2 text-[10px] font-black rounded-lg transition-all ${meta.dp_sumber === s ? 'bg-amber-500 text-white shadow-sm' : 'text-amber-600'}`}>
-                                                            {s === 'Kas Tunai' ? '💵 KAS TUNAI' : '🏦 BANK BCA'}
+                                                            {s === 'Kas Tunai' ? '💵 KAS TUNAI' : '🏦 BCA'}
                                                         </button>
                                                     ))}
                                                 </div>
@@ -399,9 +399,9 @@ export default function PenjualanRetur() {
                                     <div className="col-span-2">
                                         <label className="block text-xs font-bold text-slate-500 mb-1">SUMBER DANA PENGEMBALIAN (JIKA ADA REFUND DP)</label>
                                         <div className="flex bg-slate-100 p-1 rounded-xl">
-                                            {['Kas Tunai', 'Bank BCA'].map(s => (
+                                            {['Kas Tunai', 'BCA'].map(s => (
                                                 <button key={s} type="button" onClick={() => setReturForm({ ...returForm, sumber_refund: s })} className={`flex-1 py-3 text-[10px] font-black rounded-lg transition-all ${returForm.sumber_refund === s ? 'bg-white shadow-sm text-amber-600' : 'text-slate-400'}`}>
-                                                    {s === 'Kas Tunai' ? '💵 KAS TUNAI' : '🏦 BANK BCA'}
+                                                    {s === 'Kas Tunai' ? '💵 KAS TUNAI' : '🏦 BCA'}
                                                 </button>
                                             ))}
                                         </div>
@@ -559,7 +559,7 @@ export default function PenjualanRetur() {
                                         onChange={(e) => setPayModal({ ...payModal, sumber_dana: e.target.value })}
                                     >
                                         <option value="Kas Tunai">Kas Tunai (11110)</option>
-                                        <option value="Bank BCA">Bank BCA (11120)</option>
+                                        <option value="BCA">BCA (11120)</option>
                                     </select>
                                 </div>
                             </div>

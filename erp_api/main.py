@@ -205,7 +205,7 @@ async def startup_event():
         # 2. AUTO-SEED CHART OF ACCOUNTS (COA) - PERMANENSI MASTER DATA
             coa_data = [
                 {"kode_akun": "11110", "nama_akun": "Kas Tunai", "kategori": "Aset"},
-                {"kode_akun": "11120", "nama_akun": "Bank BCA", "kategori": "Aset"},
+                {"kode_akun": "11120", "nama_akun": "BCA", "kategori": "Aset"},
                 {"kode_akun": "11210", "nama_akun": "Piutang Usaha", "kategori": "Aset"},
                 {"kode_akun": "11220", "nama_akun": "Piutang Karyawan", "kategori": "Aset"},
                 {"kode_akun": "12110", "nama_akun": "Persediaan Bahan Baku (Kain)", "kategori": "Aset"},

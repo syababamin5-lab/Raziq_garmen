@@ -186,7 +186,7 @@ def submit_aset(payload: schemas.AsetRequest, db: Session = Depends(get_db)):
             kode_kredit, nama_kredit = "31110", "Modal Disetor"
         else:
             kode_kredit = "11110" if payload.sumber_dana == "Kas Tunai" else "11120"
-            nama_kredit = "Kas Tunai" if payload.sumber_dana == "Kas Tunai" else "Bank BCA"
+            nama_kredit = "Kas Tunai" if payload.sumber_dana == "Kas Tunai" else "BCA"
             
         db.add(models.JurnalUmum(
             tanggal=waktu_aset, 

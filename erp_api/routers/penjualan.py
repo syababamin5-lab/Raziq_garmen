@@ -233,13 +233,13 @@ def submit_retur(payload: schemas.SaleReturRequest, db: Session = Depends(get_db
                     
                     # Sisa refund dikreditkan ke Bank/Kas (Uang Keluar mengembalikan DP)
                     akun_refund = "11120" if "Bank" in (payload.sumber_refund or "") else "11110"
-                    nama_refund = "Bank BCA" if akun_refund == "11120" else "Kas Tunai"
+                    nama_refund = "BCA" if akun_refund == "11120" else "Kas Tunai"
                     
                     db.add(models.JurnalUmum(tanggal=waktu_retur, kode_akun=akun_refund, nama_akun=nama_refund, keterangan=f"Refund DP Retur {pilih_inv.no_invoice}", debit=0, kredit=sisa_refund))
         else:
             # Tunai atau Transfer
             akun_kredit = "11120" if pilih_inv.metode_bayar == "Transfer" else "11110"
-            nama_kredit = "Bank BCA" if akun_kredit == "11120" else "Kas Tunai"
+            nama_kredit = "BCA" if akun_kredit == "11120" else "Kas Tunai"
             db.add(models.JurnalUmum(tanggal=waktu_retur, kode_akun=akun_kredit, nama_akun=nama_kredit, keterangan=f"Refund Retur {pilih_inv.no_invoice}", debit=0, kredit=nilai_retur))
 
         # Jurnal HPP
