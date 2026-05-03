@@ -180,9 +180,9 @@ Berikut adalah tabel-tabel utama:
    - Akun 4xxxx: Pendapatan, Akun 5xxxx: HPP, Akun 6xxxx: Beban Operasional, Akun 111xx: Kas/Bank
 
 INSTRUKSI: 
-- Gunakan standar SQL yang kompatibel dengan database target.
-- Jika menggunakan PostgreSQL, gunakan 'TO_CHAR()', 'DATE_TRUNC()', atau 'EXTRACT()' untuk tanggal.
-- Jika menggunakan SQLite, gunakan 'strftime()'.
+- Hasilkan HANYA query SQL SELECT yang valid untuk SQLite/PostgreSQL.
+- Jika pertanyaan terlalu ambigu, tidak jelas, atau tidak bisa diterjemahkan ke SQL, kembalikan HANYA kata: CLARIFY
+- Jangan berikan penjelasan, ramalan, atau chat santai di tahap perancangan SQL ini.
 - Pastikan query aman (read-only).
 """
 
@@ -223,12 +223,20 @@ def ai_executive_assistant(req: AskRequest, db: Session = Depends(get_db)):
         # Clean up potential markdown formatting
         sql_query = sql_response.replace('```sql', '').replace('```', '').strip()
         
+        # 4. HANDLE CLARIFICATION OR INVALID SQL
+        if "CLARIFY" in sql_query.upper() or len(sql_query.split()) < 3:
+            return {
+                "status": "success",
+                "jawaban_teks": "Pertanyaan Anda kurang spesifik nih, Bos. Bisa diperjelas ingin cek apa di Soundtrax? (Contoh: 'Cek omset dari Soundtrax' atau 'Cek hutang ke Soundtrax')",
+                "data_tabel": []
+            }
+
         # SAFETY CHECK: Only allow SELECT
         forbidden = ["DROP", "DELETE", "UPDATE", "INSERT", "ALTER", "TRUNCATE", "CREATE"]
         if any(f in sql_query.upper() for f in forbidden):
-            return {"status": "error", "message": "Permintaan ditolak demi keamanan (Query mengandung perintah manipulatif)."}
+            return {"status": "error", "message": "Permintaan ditolak demi keamanan."}
 
-        # 3. EXECUTE SQL (READ-ONLY)
+        # 5. EXECUTE SQL (READ-ONLY)
         result_proxy = db.execute(text(sql_query))
         rows = result_proxy.fetchall()
         columns = result_proxy.keys()
