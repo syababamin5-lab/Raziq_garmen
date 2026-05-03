@@ -180,9 +180,9 @@ Berikut adalah tabel-tabel utama:
    - Akun 4xxxx: Pendapatan, Akun 5xxxx: HPP, Akun 6xxxx: Beban Operasional, Akun 111xx: Kas/Bank
 
 INSTRUKSI: 
-- Hasilkan HANYA query SQL SELECT yang valid untuk SQLite.
-- Jangan berikan penjelasan atau markdown block, hanya teks SQL saja.
-- Gunakan 'datetime()' atau 'strftime()' untuk manipulasi tanggal. 'bulan ini' berarti antara awal bulan saat ini sampai hari ini.
+- Gunakan standar SQL yang kompatibel dengan database target.
+- Jika menggunakan PostgreSQL, gunakan 'TO_CHAR()', 'DATE_TRUNC()', atau 'EXTRACT()' untuk tanggal.
+- Jika menggunakan SQLite, gunakan 'strftime()'.
 - Pastikan query aman (read-only).
 """
 
@@ -206,12 +206,17 @@ def ai_executive_assistant(req: AskRequest, db: Session = Depends(get_db)):
             model = genai.GenerativeModel('gemini-1.5-flash')
         now = datetime.datetime.now()
         
-        # 2. GENERATE SQL QUERY
+        # 2. DETECT DATABASE TYPE
+        from models import SQLALCHEMY_DATABASE_URL
+        db_type = "PostgreSQL" if SQLALCHEMY_DATABASE_URL.startswith("postgresql") else "SQLite"
+        
+        # 3. GENERATE SQL QUERY
         sql_prompt = (
             f"{SCHEMA_CONTEXT}\n\n"
+            f"DIALECT: {db_type}\n"
             f"Waktu Sekarang: {now.strftime('%Y-%m-%d %H:%M:%S')}\n"
             f"Pertanyaan Bos: {req.prompt}\n\n"
-            "Query SQL (SELECT ONLY):"
+            f"Query SQL {db_type} (SELECT ONLY):"
         )
         
         sql_response = model.generate_content(sql_prompt).text.strip()
