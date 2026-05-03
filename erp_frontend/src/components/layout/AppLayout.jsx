@@ -3,8 +3,11 @@ import { Outlet } from 'react-router-dom'
 import Sidebar from './Sidebar'
 import Topbar from './Topbar'
 import ChatSystem from '../chat/ChatSystem'
+import AIAssistantHub from '../dashboard/AIAssistantHub'
+import { getCurrentUser } from '../../api/authApi'
 
 export default function AppLayout() {
+  const user = getCurrentUser();
   const [isSidebarOpen, setSidebarOpen] = useState(true);
   const [isChatOpen, setChatOpen] = useState(false);
   const [unreadCount, setUnreadCount] = useState(0);
@@ -29,6 +32,8 @@ export default function AppLayout() {
             onClose={() => setChatOpen(false)} 
             onUnreadUpdate={setUnreadCount}
         />
+
+        {!isChatOpen && <AIAssistantHub userRole={user?.role} />}
         
         <main className="flex-1 mt-14 p-10 bg-slate-50 overflow-auto">
           <Outlet />

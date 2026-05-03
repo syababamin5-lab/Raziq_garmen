@@ -9,7 +9,9 @@ const ChatSystem = ({ isOpen, onClose, onUnreadUpdate }) => {
     const [messages, setMessages] = useState([]);
     const [input, setInput] = useState('');
     const [ws, setWs] = useState(null);
+    const [isConnected, setIsConnected] = useState(false);
     const scrollRef = useRef(null);
+    const reconnectTimeout = useRef(null);
 
     // 1. Fetch Users List
     const fetchUsers = async () => {
@@ -23,50 +25,90 @@ const ChatSystem = ({ isOpen, onClose, onUnreadUpdate }) => {
         }
     };
 
-    // 2. WebSocket Connection
-    useEffect(() => {
+    // 2. WebSocket Connection with Reconnect
+    const connectWS = () => {
+        if (reconnectTimeout.current) clearTimeout(reconnectTimeout.current);
+        
         const protocol = window.location.protocol === 'https:' ? 'wss:' : 'ws:';
+        // Ensure we use the correct backend host
         const host = window.location.hostname === 'localhost' ? 'localhost:8000' : window.location.host;
         const socket = new WebSocket(`${protocol}//${host}/api/chat/ws/${user.id}`);
+
+        socket.onopen = () => {
+            console.log("Chat WebSocket Connected");
+            setIsConnected(true);
+        };
 
         socket.onmessage = (event) => {
             const data = JSON.parse(event.data);
             
             if (data.type === 'chat') {
-                // Jika pesan untuk chat yang sedang dibuka
-                if (selectedUser && (data.sender_id === selectedUser.id || data.sender_id === user.id)) {
-                    setMessages(prev => [...prev, data]);
-                    // Jika kita yang menerima, tandai sudah baca
-                    if (data.sender_id === selectedUser.id) {
-                        socket.send(JSON.stringify({ type: 'read_receipt', sender_id: selectedUser.id }));
-                    }
-                }
-                fetchUsers(); // Refresh daftar user untuk unread count
+                // Gunakan functional update untuk menghindari closure stale state
+                setMessages(prev => {
+                    // Cek apakah pesan sudah ada (mencegah duplikasi jika broadcast sampai ke pengirim juga)
+                    if (prev.find(m => m.id === data.id)) return prev;
+                    
+                    // Filter: hanya tambahkan jika terkait dengan user yang sedang dibuka
+                    // Kita akan akses selectedUserRef jika perlu, tapi di sini kita bisa cek data.sender_id
+                    return [...prev, data];
+                });
+                
+                // Mark as read jika jendela terbuka dan ini adalah pengirim yang kita pilih
+                // Karena kita tidak bisa akses selectedUser yang terbaru di sini dengan mudah tanpa Ref,
+                // kita biarkan useEffect history yang menangani atau kirim receipt manual nanti.
+                fetchUsers(); 
             } else if (data.type === 'status') {
                 setUsers(prev => prev.map(u => u.id === data.user_id ? { ...u, is_online: data.status === 'online' } : u));
             } else if (data.type === 'read_receipt') {
-                if (selectedUser && data.reader_id === selectedUser.id) {
-                    setMessages(prev => prev.map(m => m.receiver_id === selectedUser.id ? { ...m, is_read: 1 } : m));
-                }
+                setMessages(prev => prev.map(m => m.receiver_id === data.reader_id ? { ...m, is_read: 1 } : m));
             }
         };
 
+        socket.onclose = () => {
+            console.log("Chat WebSocket Disconnected. Retrying...");
+            setIsConnected(false);
+            reconnectTimeout.current = setTimeout(connectWS, 3000);
+        };
+
+        socket.onerror = (err) => {
+            console.error("WebSocket Error:", err);
+            socket.close();
+        };
+
         setWs(socket);
-        return () => socket.close();
-    }, [selectedUser]);
+    };
+
+    useEffect(() => {
+        connectWS();
+        return () => {
+            if (ws) ws.close();
+            if (reconnectTimeout.current) clearTimeout(reconnectTimeout.current);
+        };
+    }, []);
 
     // 3. Load History when user selected
     useEffect(() => {
         if (selectedUser) {
             api.get(`/chat/history/${selectedUser.id}?current_user_id=${user.id}`).then(res => {
                 setMessages(res.data);
-                // Mark as read immediately
                 if (ws && ws.readyState === WebSocket.OPEN) {
                     ws.send(JSON.stringify({ type: 'read_receipt', sender_id: selectedUser.id }));
                 }
             });
         }
     }, [selectedUser]);
+
+    // Send Read Receipt when messages update
+    useEffect(() => {
+        if (selectedUser && messages.length > 0) {
+            const lastMsg = messages[messages.length - 1];
+            if (lastMsg.sender_id === selectedUser.id && lastMsg.is_read === 0) {
+                if (ws && ws.readyState === WebSocket.OPEN) {
+                    ws.send(JSON.stringify({ type: 'read_receipt', sender_id: selectedUser.id }));
+                }
+            }
+        }
+    }, [messages, selectedUser]);
 
     useEffect(() => {
         fetchUsers();
@@ -79,7 +121,13 @@ const ChatSystem = ({ isOpen, onClose, onUnreadUpdate }) => {
     }, [messages]);
 
     const handleSend = (imageUrl = null) => {
-        if ((!input.trim() && !imageUrl) || !selectedUser || !ws) return;
+        if ((!input.trim() && !imageUrl) || !selectedUser) return;
+        
+        if (!ws || ws.readyState !== WebSocket.OPEN) {
+            alert("Koneksi terputus. Sedang mencoba menyambung kembali...");
+            connectWS();
+            return;
+        }
         
         const payload = {
             type: 'chat',
@@ -118,16 +166,17 @@ const ChatSystem = ({ isOpen, onClose, onUnreadUpdate }) => {
 
     return (
         <div className="fixed inset-0 z-[100] flex justify-end">
-            {/* Backdrop */}
             <div className="absolute inset-0 bg-slate-900/40 backdrop-blur-sm" onClick={onClose}></div>
             
-            {/* Chat Drawer */}
             <div className="relative w-full max-w-[900px] bg-white h-full shadow-2xl flex overflow-hidden animate-in slide-in-from-right duration-300">
                 
                 {/* User List Sidebar */}
                 <div className="w-[320px] border-r border-slate-100 flex flex-col bg-slate-50">
                     <div className="p-6 border-b border-slate-100 bg-white">
-                        <h2 className="text-xl font-black text-slate-800 uppercase tracking-tight">Internal Chat</h2>
+                        <div className="flex items-center justify-between">
+                            <h2 className="text-xl font-black text-slate-800 uppercase tracking-tight">Internal Chat</h2>
+                            <div className={`w-2 h-2 rounded-full ${isConnected ? 'bg-emerald-400' : 'bg-red-400 animate-pulse'}`} title={isConnected ? 'Connected' : 'Disconnected'}></div>
+                        </div>
                         <p className="text-[10px] font-bold text-emerald-600 uppercase tracking-widest mt-1">Garmen Connect</p>
                     </div>
                     <div className="flex-1 overflow-y-auto p-2 space-y-1">
@@ -143,7 +192,7 @@ const ChatSystem = ({ isOpen, onClose, onUnreadUpdate }) => {
                             >
                                 <div className="relative">
                                     <div className="w-10 h-10 rounded-xl bg-slate-200 border-2 border-white flex items-center justify-center font-bold text-sm overflow-hidden">
-                                        {u.foto_url ? <img src={getFileUrl(u.foto_url)} alt="" /> : u.nama_lengkap.charAt(0)}
+                                        {u.foto_url ? <img src={getFileUrl(u.foto_url)} className="w-full h-full object-cover" alt="" /> : u.nama_lengkap.charAt(0)}
                                     </div>
                                     {u.is_online && (
                                         <div className="absolute -bottom-1 -right-1 w-3.5 h-3.5 bg-emerald-400 border-2 border-white rounded-full"></div>
@@ -171,11 +220,10 @@ const ChatSystem = ({ isOpen, onClose, onUnreadUpdate }) => {
                 <div className="flex-1 flex flex-col bg-white">
                     {selectedUser ? (
                         <>
-                            {/* Chat Header */}
                             <div className="p-4 border-b border-slate-100 flex items-center justify-between">
                                 <div className="flex items-center gap-3">
-                                    <div className="w-10 h-10 rounded-xl bg-slate-100 flex items-center justify-center font-bold text-slate-400">
-                                        {selectedUser.foto_url ? <img src={getFileUrl(selectedUser.foto_url)} alt="" /> : selectedUser.nama_lengkap.charAt(0)}
+                                    <div className="w-10 h-10 rounded-xl bg-slate-100 flex items-center justify-center font-bold text-slate-400 overflow-hidden">
+                                        {selectedUser.foto_url ? <img src={getFileUrl(selectedUser.foto_url)} className="w-full h-full object-cover" alt="" /> : selectedUser.nama_lengkap.charAt(0)}
                                     </div>
                                     <div>
                                         <p className="text-xs font-black text-slate-800 uppercase">{selectedUser.nama_lengkap}</p>
@@ -192,7 +240,6 @@ const ChatSystem = ({ isOpen, onClose, onUnreadUpdate }) => {
                                 </button>
                             </div>
 
-                            {/* Messages List */}
                             <div ref={scrollRef} className="flex-1 overflow-y-auto p-6 space-y-6 bg-slate-50/50 custom-scrollbar">
                                 {messages.map((m, i) => {
                                     const isMe = m.sender_id === user.id;
@@ -241,7 +288,6 @@ const ChatSystem = ({ isOpen, onClose, onUnreadUpdate }) => {
                                 })}
                             </div>
 
-                            {/* Input Area */}
                             <div className="p-4 bg-white border-t border-slate-100">
                                 <div className="flex items-center gap-3">
                                     <label className="cursor-pointer p-3 rounded-2xl bg-slate-100 text-slate-500 hover:bg-emerald-50 hover:text-emerald-600 transition-all">

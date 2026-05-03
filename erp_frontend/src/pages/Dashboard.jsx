@@ -335,7 +335,6 @@ export default function Dashboard() {
         </div>
       </div>
 
-      <AIAssistantHub userRole={user.role} />
 
       <InvoiceDetailModal
         isOpen={isModalOpen}
