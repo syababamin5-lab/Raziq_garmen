@@ -215,9 +215,15 @@ export default function LaporanKeuangan() {
                              {renderTable("Pemakaian Bahan Baku", reportData.hpp.bahan?.detail, reportData.hpp.bahan?.total)}
                              {renderTable("Biaya Tenaga Kerja", reportData.hpp.btkl?.detail, reportData.hpp.btkl?.total)}
                              {renderTable("Overhead Pabrik", reportData.hpp.bop?.detail, reportData.hpp.bop?.total)}
-                             {renderTable("Barang Terjual (COGS)", reportData.hpp.terjual?.detail, reportData.hpp.terjual?.total)}
-                             {reportData.hpp.ikhtisar?.total > 0 && renderTable("Ikhtisar Produksi (-)", reportData.hpp.ikhtisar?.detail, reportData.hpp.ikhtisar?.total, true)}
-                             <div className="bg-[#064E3B] p-6 rounded-3xl text-white flex justify-between items-center shadow-xl">
+                             
+                             {/* Selalu tampilkan jika ada saldo, baik positif maupun negatif */}
+                             {Math.abs(reportData.hpp.terjual?.total || 0) > 0 && 
+                                renderTable("HPP Barang Terjual", reportData.hpp.terjual?.detail, reportData.hpp.terjual?.total)}
+                             
+                             {Math.abs(reportData.hpp.ikhtisar?.total || 0) > 0 && 
+                                renderTable("Ikhtisar Produksi (Output/-)", reportData.hpp.ikhtisar?.detail, reportData.hpp.ikhtisar?.total, reportData.hpp.ikhtisar?.total < 0)}
+                             
+                             <div className="bg-[#064E3B] p-6 rounded-3xl text-white flex justify-between items-center shadow-xl mt-4">
                                 <span className="font-black tracking-widest text-xs uppercase">Total Beban Pokok Penjualan (HPP / COGS)</span>
                                 <span className="text-3xl font-black font-outfit">{formatRp(reportData.hpp.total_hpp)}</span>
                              </div>

@@ -54,9 +54,9 @@ def get_laporan_keuangan(bulan: int, tahun: int, db: Session = Depends(get_db)):
         terjual_val, d_terjual = get_saldo_sqlite(db, "51120", start_date, end_date) # khusus HPP barang jual
         
         # Dalam Akuntansi Manufaktur: 
-        # total_hpp_produksi = baku + btkl + bop - ikhtisar_val (WIP/Output)
+        # total_hpp_produksi = baku + btkl + bop + ikhtisar_val (WIP/Output, ikhtisar biasanya kredit/negatif)
         # total_cogs = total_hpp_produksi + terjual_val
-        total_hpp_periode = baku_val + btkl_val + bop_val - ikhtisar_val + terjual_val
+        total_hpp_periode = baku_val + btkl_val + bop_val + ikhtisar_val + terjual_val
         
         # 2. Laba Rugi
         omzet, d_omzet = get_saldo_sqlite(db, "411", start_date, end_date)
