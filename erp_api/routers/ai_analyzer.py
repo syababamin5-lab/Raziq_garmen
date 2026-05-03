@@ -181,8 +181,8 @@ Berikut adalah tabel-tabel utama:
 
 INSTRUKSI: 
 - Hasilkan HANYA query SQL SELECT yang valid untuk SQLite/PostgreSQL.
-- Jika pertanyaan terlalu ambigu, tidak jelas, atau tidak bisa diterjemahkan ke SQL, kembalikan HANYA kata: CLARIFY
-- Jangan berikan penjelasan, ramalan, atau chat santai di tahap perancangan SQL ini.
+- Jika mencari kode/ID (seperti no_invoice, kode_sku), gunakan pencocokan case-insensitive (ILIKE di Postgres, atau UPPER() di SQLite).
+- Jika pertanyaan terlalu ambigu, kembalikan HANYA kata: CLARIFY
 - Pastikan query aman (read-only).
 """
 
