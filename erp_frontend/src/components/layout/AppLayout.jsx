@@ -2,9 +2,12 @@ import React, { useState } from 'react'
 import { Outlet } from 'react-router-dom'
 import Sidebar from './Sidebar'
 import Topbar from './Topbar'
+import ChatSystem from '../chat/ChatSystem'
 
 export default function AppLayout() {
   const [isSidebarOpen, setSidebarOpen] = useState(true);
+  const [isChatOpen, setChatOpen] = useState(false);
+  const [unreadCount, setUnreadCount] = useState(0);
 
   return (
     <div className="min-h-screen bg-slate-50 flex overflow-hidden">
@@ -17,6 +20,14 @@ export default function AppLayout() {
             title="Raziq Garment | Enterprise" 
             onToggleSidebar={() => setSidebarOpen(!isSidebarOpen)} 
             isSidebarOpen={isSidebarOpen}
+            onOpenChat={() => setChatOpen(true)}
+            unreadCount={unreadCount}
+        />
+
+        <ChatSystem 
+            isOpen={isChatOpen} 
+            onClose={() => setChatOpen(false)} 
+            onUnreadUpdate={setUnreadCount}
         />
         
         <main className="flex-1 mt-14 p-10 bg-slate-50 overflow-auto">

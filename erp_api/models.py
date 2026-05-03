@@ -274,6 +274,20 @@ class CompanyConfig(Base):
 
 
 # ==========================================
+# 8. INTERNAL CHAT SYSTEM
+# ==========================================
+class ChatMessage(Base):
+    __tablename__ = "chat_messages"
+    id = Column(Integer, primary_key=True, index=True)
+    sender_id = Column(Integer, index=True) # ID dari tabel User
+    receiver_id = Column(Integer, index=True)
+    message = Column(String, nullable=True)
+    image_url = Column(String, nullable=True)
+    is_read = Column(Integer, default=0) # 0=Unread, 1=Read (sqlite doesn't have native bool always)
+    created_at = Column(DateTime, default=datetime.datetime.utcnow)
+
+
+# ==========================================
 # 7. DYNAMIC MENU REGISTRY
 # ==========================================
 class MenuRegistry(Base):

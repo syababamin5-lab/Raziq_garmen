@@ -18,7 +18,7 @@ import shutil
 from routers import (
     dashboard, produksi, pembelian, penjualan, 
     keuangan, laporan, karyawan, riwayat, reports_mitra,
-    ai_analyzer
+    ai_analyzer, chat
 )
 from passlib.context import CryptContext
 import jwt
@@ -55,6 +55,8 @@ import jwt
 from db_sync_admin import sync_db
 try:
     sync_db()
+    # Cleanup old chat messages (> 7 days) on startup
+    chat.cleanup_old_messages(SessionLocal())
 except Exception as e:
     print(f"Startup DB Sync Warning: {e}")
 
@@ -329,6 +331,7 @@ app.include_router(karyawan.router)
 app.include_router(riwayat.router)
 app.include_router(reports_mitra.router)
 app.include_router(ai_analyzer.router)
+app.include_router(chat.router)
 
 # Folder untuk upload foto profil
 UPLOAD_DIR = os.path.join(os.path.dirname(os.path.abspath(__file__)), "uploads", "profiles")

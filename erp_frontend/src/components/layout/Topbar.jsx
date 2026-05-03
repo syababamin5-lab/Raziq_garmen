@@ -7,7 +7,7 @@ import { getCurrentUser, logout } from '../../api/authApi'
 import api, { getFileUrl } from '../../api/api'
 import PrayerTimesCompact from './PrayerTimesCompact'
 
-export default function Topbar({ title, onToggleSidebar, isSidebarOpen }) {
+export default function Topbar({ title, onToggleSidebar, isSidebarOpen, onOpenChat, unreadCount }) {
   const user = getCurrentUser();
 
   return (
@@ -52,6 +52,20 @@ export default function Topbar({ title, onToggleSidebar, isSidebarOpen }) {
             <p className="text-slate-900 font-bold text-xs uppercase tracking-tighter">{user?.nama_lengkap || 'Syabab Amin'}</p>
             <p className="text-emerald-600 font-black text-[9px] uppercase tracking-widest">{user?.role?.replace('_', ' ') || 'Administrator'}</p>
           </div>
+        </div>
+
+        {/* Chat Toggle Icon */}
+        <div 
+          onClick={onOpenChat}
+          className="relative w-10 h-10 rounded-2xl bg-slate-100 border border-slate-200 flex items-center justify-center text-slate-400 group cursor-pointer hover:bg-emerald-50 hover:border-emerald-200 transition-all"
+          title="Buka Chat Internal"
+        >
+          <span className="material-symbols-rounded group-hover:text-emerald-600 transition-colors">chat</span>
+          {unreadCount > 0 && (
+            <div className="absolute -top-1 -right-1 bg-red-500 text-white text-[9px] font-black w-4 h-4 rounded-full flex items-center justify-center border-2 border-white animate-bounce">
+              {unreadCount}
+            </div>
+          )}
         </div>
         
         <div 
