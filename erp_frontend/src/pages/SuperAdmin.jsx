@@ -159,7 +159,8 @@ export default function SuperAdmin() {
   };
 
   return (
-    <div className="max-w-6xl mx-auto p-6 space-y-8 animate-in fade-in duration-700">
+    <>
+      <div className="max-w-6xl mx-auto p-6 space-y-8 animate-in fade-in duration-700">
       {/* Header Section */}
       <div className="relative overflow-hidden bg-emerald-900 p-10 rounded-[2.5rem] shadow-2xl border border-emerald-800">
         <div className="absolute top-0 right-0 -mt-10 -mr-10 w-64 h-64 bg-emerald-800/30 rounded-full blur-3xl"></div>
@@ -462,10 +463,12 @@ export default function SuperAdmin() {
         </div>
       </div>
 
+      </div>
+
       {/* Prune Modal */}
       {showPruneModal && (
         <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-slate-950/80 backdrop-blur-md">
-          <div className="bg-white w-full max-w-md rounded-[2.5rem] shadow-2xl overflow-hidden animate-in zoom-in duration-300">
+          <div className="bg-white w-full max-w-md rounded-[2.5rem] shadow-2xl overflow-hidden animate-in duration-300">
             <div className="bg-red-600 p-8 text-white text-center relative overflow-hidden">
                <div className="absolute top-0 right-0 -mt-8 -mr-8 w-24 h-24 bg-white/10 rounded-full"></div>
               <span className="material-symbols-rounded text-6xl mb-2">warning</span>
@@ -539,10 +542,12 @@ export default function SuperAdmin() {
         </div>
       )}
 
+      )}
+
       {/* Backup Transaksi Modal */}
       {showBackupModal && (
         <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-slate-950/80 backdrop-blur-md">
-          <div className="bg-white w-full max-w-md rounded-[2.5rem] shadow-2xl overflow-hidden animate-in zoom-in duration-300">
+          <div className="bg-white w-full max-w-md rounded-[2.5rem] shadow-2xl overflow-hidden animate-in duration-300">
             <div className="bg-blue-600 p-8 text-white text-center relative overflow-hidden">
                <div className="absolute top-0 right-0 -mt-8 -mr-8 w-24 h-24 bg-white/10 rounded-full"></div>
               <span className="material-symbols-rounded text-6xl mb-2">history</span>
@@ -589,6 +594,6 @@ export default function SuperAdmin() {
           </div>
         </div>
       )}
-    </div>
+    </>
   );
 }
