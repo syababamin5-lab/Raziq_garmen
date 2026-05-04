@@ -357,8 +357,18 @@ export default function MasterData() {
         {/* KARYAWAN TAB */}
         {activeTab === 'Karyawan' && (
           <div>
-            <div className="flex justify-end mb-4">
-               <button onClick={() => openModal('add_karyawan')} className="bg-[#10B981] text-white px-4 py-2 text-sm font-medium rounded-lg hover:bg-emerald-600 transition-all">Tambah Karyawan</button>
+            <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4 mb-4">
+               <div className="relative w-full md:w-64">
+                 <span className="material-symbols-rounded absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 text-sm">search</span>
+                 <input 
+                   type="text" 
+                   placeholder="Cari Nama / Divisi..." 
+                   value={searchTerm}
+                   onChange={(e) => setSearchTerm(e.target.value)}
+                   className="w-full pl-9 pr-4 py-2 bg-slate-50 border border-slate-200 rounded-lg text-xs font-medium focus:ring-2 focus:ring-emerald-500/20 focus:border-emerald-500 outline-none transition-all"
+                 />
+               </div>
+               <button onClick={() => openModal('add_karyawan')} className="bg-[#10B981] text-white px-4 py-2 text-sm font-medium rounded-lg hover:bg-emerald-600 transition-all shadow-sm">Tambah Karyawan</button>
             </div>
             <div className="overflow-x-auto">
               <table className="w-full text-left border-collapse text-sm">
@@ -372,7 +382,11 @@ export default function MasterData() {
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-slate-50">
-                  {data.karyawan.map(karyawan => (
+                  {data.karyawan.filter(k => {
+                    return !searchTerm || 
+                      k.nama_karyawan.toLowerCase().includes(searchTerm.toLowerCase()) ||
+                      k.divisi.toLowerCase().includes(searchTerm.toLowerCase());
+                  }).map(karyawan => (
                     <tr key={karyawan.id} className="hover:bg-slate-50/50 transition-colors">
                       <td className="py-3 px-4 font-medium text-slate-800">{karyawan.nama_karyawan}</td>
                       <td className="py-3 px-4">{karyawan.divisi}</td>
@@ -390,7 +404,11 @@ export default function MasterData() {
                   ))}
                 </tbody>
               </table>
-              {data.karyawan.length === 0 && <div className="text-center py-10 text-slate-400">Belum ada data karyawan.</div>}
+              {data.karyawan.filter(k => {
+                return !searchTerm || 
+                  k.nama_karyawan.toLowerCase().includes(searchTerm.toLowerCase()) ||
+                  k.divisi.toLowerCase().includes(searchTerm.toLowerCase());
+              }).length === 0 && <div className="text-center py-10 text-slate-400">Data karyawan tidak ditemukan.</div>}
             </div>
           </div>
         )}
