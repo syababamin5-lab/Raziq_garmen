@@ -140,8 +140,30 @@ class PDF(FPDF):
 
 def format_rp_pdf(angka):
     if angka is None: return ""
-    if angka < 0: return f"(Rp {abs(angka):,.0f})".replace(',', '.')
-    return f"Rp {angka:,.0f}".replace(',', '.')
+    if angka < 0: return f"({abs(angka):,.0f})".replace(',', '.')
+    return f"{angka:,.0f}".replace(',', '.')
+
+def cell_accounting(pdf, w, h, angka, border=1, ln=0, fill=0):
+    """Mencetak cell dengan format Accounting (Rp di kiri, angka di kanan)"""
+    x = pdf.get_x()
+    y = pdf.get_y()
+    
+    # 1. Cetak Border & Background dulu
+    pdf.cell(w, h, "", border, 0, 'L', fill)
+    
+    # 2. Cetak "Rp" di kiri
+    pdf.set_xy(x + 1, y)
+    pdf.cell(w - 2, h, "Rp", 0, 0, 'L')
+    
+    # 3. Cetak Angka di kanan
+    pdf.set_xy(x + 1, y)
+    text = format_rp_pdf(angka)
+    pdf.cell(w - 2, h, text, 0, 0, 'R')
+    
+    # 4. Kembalikan posisi X ke ujung cell
+    pdf.set_xy(x + w, y)
+    if ln > 0:
+        pdf.ln(h)
 
 # ====================================================================
 # 1. ENGINE LAPORAN 2 KOLOM (PORTRAIT) - UNTUK HPP & LABA RUGI
@@ -323,11 +345,11 @@ def export_stok_inventory_pdf(judul, periode, df, col_widths, config=None, nama_
             # Label Halaman (Semua kolom kecuali kolom terakhir)
             label_w = sum(actual_widths[:-1])
             pdf.cell(label_w, 8, f" TOTAL NILAI HALAMAN {pdf.page_no()}", 1, 0, 'R', 1)
-            pdf.cell(actual_widths[-1], 8, format_rp_pdf(page_total), 1, 1, 'R', 1)
+            cell_accounting(pdf, actual_widths[-1], 8, page_total, border=1, ln=1, fill=1)
                 
             # Cetak Akumulasi
             pdf.cell(label_w, 8, f" TOTAL AKUMULASI (S.D HALAMAN {pdf.page_no()})", 1, 0, 'R', 1)
-            pdf.cell(actual_widths[-1], 8, format_rp_pdf(cumulative_total), 1, 1, 'R', 1)
+            cell_accounting(pdf, actual_widths[-1], 8, cumulative_total, border=1, ln=1, fill=1)
                 
             page_total = 0 # Reset page total
             pdf.add_page()
@@ -337,20 +359,31 @@ def export_stok_inventory_pdf(judul, periode, df, col_widths, config=None, nama_
         for i, col in enumerate(cols):
             val = row[col]
             
-            # Jika ini kolom Total Nilai (kolom terakhir), format jadi Rupiah
+            # Jika ini kolom Total Nilai (kolom terakhir), format jadi Rupiah Accounting
             if i == len(cols) - 1:
                 num_val = float(val) if val else 0
                 page_total += num_val
                 cumulative_total += num_val
-                text = format_rp_pdf(num_val)
-                align = 'R'
+                cell_accounting(pdf, actual_widths[i], 7, num_val)
+            elif "Harga Modal" in col or "Harga Jual" in col:
+                # Coba ekstrak angka dari string "Rp 123.000/Pcs"
+                try:
+                    import re
+                    clean_str = str(val).replace('.', '').replace(',', '')
+                    num_match = re.search(r'(\d+)', clean_str)
+                    if num_match:
+                        num_val = float(num_match.group(1))
+                        cell_accounting(pdf, actual_widths[i], 7, num_val)
+                    else:
+                        pdf.cell(actual_widths[i], 7, str(val), 1, 0, 'L')
+                except:
+                    pdf.cell(actual_widths[i], 7, str(val), 1, 0, 'L')
             else:
                 text = str(val)
                 align = 'L'
-                if any(x in text for x in ['Rp', 'Pcs', 'LS']) or isinstance(val, (int, float)):
+                if any(x in text for x in ['Pcs', 'LS']) or isinstance(val, (int, float)):
                     align = 'R'
-            
-            pdf.cell(actual_widths[i], 7, text, 1, 0, align)
+                pdf.cell(actual_widths[i], 7, text, 1, 0, align)
         pdf.ln()
 
     # Cetak Footer untuk Halaman Terakhir (jika belum tercetak di dalam loop)
@@ -359,9 +392,9 @@ def export_stok_inventory_pdf(judul, periode, df, col_widths, config=None, nama_
         pdf.set_fill_color(245, 245, 245)
         label_w = sum(actual_widths[:-1])
         pdf.cell(label_w, 8, f" TOTAL NILAI HALAMAN {pdf.page_no()}", 1, 0, 'R', 1)
-        pdf.cell(actual_widths[-1], 8, format_rp_pdf(page_total), 1, 1, 'R', 1)
+        cell_accounting(pdf, actual_widths[-1], 8, page_total, border=1, ln=1, fill=1)
         pdf.cell(label_w, 8, f" TOTAL AKUMULASI (S.D HALAMAN {pdf.page_no()})", 1, 0, 'R', 1)
-        pdf.cell(actual_widths[-1], 8, format_rp_pdf(cumulative_total), 1, 1, 'R', 1)
+        cell_accounting(pdf, actual_widths[-1], 8, cumulative_total, border=1, ln=1, fill=1)
 
     # Final Summary (Grand Total)
     pdf.ln(2)
@@ -371,7 +404,7 @@ def export_stok_inventory_pdf(judul, periode, df, col_widths, config=None, nama_
     
     label_w = sum(actual_widths[:-1])
     pdf.cell(label_w, 12, " GRAND TOTAL NILAI PERSEDIAAN GUDANG", 1, 0, 'R', 1)
-    pdf.cell(actual_widths[-1], 12, format_rp_pdf(cumulative_total), 1, 1, 'R', 1)
+    cell_accounting(pdf, actual_widths[-1], 12, cumulative_total, border=1, ln=1, fill=1)
 
     pdf.set_text_color(0, 0, 0)
     pdf.add_ttd(config, nama=nama_ttd, jabatan=jabatan_ttd, nama_admin=nama_admin, jabatan_admin=jabatan_admin)
