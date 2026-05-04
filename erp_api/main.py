@@ -936,13 +936,26 @@ async def import_excel(tipe: str, overwrite: bool = False, file: UploadFile = Fi
                 
                 if stok_pcs > 0 and harga_modal > 0:
                     total_aset_baju += (stok_pcs * harga_modal)
+                    # Catat Histori Per SKU untuk Kartu Stok
+                    db.add(models.JurnalUmum(
+                        tanggal=datetime.now(), 
+                        kode_akun="12150", 
+                        nama_akun="Persediaan Barang Jadi", 
+                        keterangan=f"SALDO AWAL [Qty: {stok_pcs}] (Import Excel - {sku})", 
+                        debit=stok_pcs * harga_modal, 
+                        kredit=0
+                    ))
+                    db.add(models.JurnalUmum(
+                        tanggal=datetime.now(), 
+                        kode_akun="31110", 
+                        nama_akun="Modal Disetor", 
+                        keterangan=f"SALDO AWAL [Qty: {stok_pcs}] (Import Excel - {sku})", 
+                        debit=0, 
+                        kredit=stok_pcs * harga_modal
+                    ))
                 
                 count += 1
 
-            if total_aset_baju > 0:
-                db.add(models.JurnalUmum(tanggal=datetime.now(), kode_akun="12150", nama_akun="Persediaan Barang Jadi", keterangan="Saldo Awal Baju (SQLite Import)", debit=total_aset_baju, kredit=0))
-                db.add(models.JurnalUmum(tanggal=datetime.now(), kode_akun="31110", nama_akun="Modal Disetor", keterangan="Saldo Awal Baju (SQLite Import)", debit=0, kredit=total_aset_baju))
-            
             db.commit()
             return {"status": "success", "message": f"Berhasil Import {count} data Baju ke SQLite!"}
 
@@ -970,13 +983,26 @@ async def import_excel(tipe: str, overwrite: bool = False, file: UploadFile = Fi
                     db.add(new_barang)
                     
                     if stok > 0 and hrg_m > 0:
-                        nilai = stok * hrg_m
-                        akun_bhn = "12110" if kategori == "Bahan Baku (Kain)" else "12120"
-                        db.add(models.JurnalUmum(tanggal=datetime.now(), kode_akun=akun_bhn, nama_akun=f"Persediaan {kategori}", keterangan=f"Saldo Awal {sku}", debit=nilai, kredit=0))
-                        db.add(models.JurnalUmum(tanggal=datetime.now(), kode_akun="31110", nama_akun="Modal Disetor", keterangan=f"Saldo Awal {sku}", debit=0, kredit=nilai))
+                        # Catat Histori Per SKU untuk Kartu Stok
+                        db.add(models.JurnalUmum(
+                            tanggal=datetime.now(), 
+                            kode_akun="12110", 
+                            nama_akun="Persediaan Bahan Baku", 
+                            keterangan=f"SALDO AWAL [Qty: {stok}] (Import Excel - {sku})", 
+                            debit=stok * hrg_m, 
+                            kredit=0
+                        ))
+                        db.add(models.JurnalUmum(
+                            tanggal=datetime.now(), 
+                            kode_akun="31110", 
+                            nama_akun="Modal Disetor", 
+                            keterangan=f"SALDO AWAL [Qty: {stok}] (Import Excel - {sku})", 
+                            debit=0, 
+                            kredit=stok * hrg_m
+                        ))
                 count += 1
             db.commit()
-            return {"status": "success", "message": f"Berhasil Import {count} data Bahan ke SQLite!"}
+            return {"status": "success", "message": f"Berhasil Import {count} data Bahan Baku ke SQLite!"}
     except Exception as e:
         db.rollback()
         return {"status": "error", "message": str(e)}
