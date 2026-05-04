@@ -591,15 +591,15 @@ def print_master_barang(tipe: str = "all", db: Session = Depends(get_db)):
             
         df = pd.DataFrame(data)
         
-        # Lebar kolom dinamis
+        # Lebar kolom dinamis (Disesuaikan agar kolom uang lebih lebar)
         if tipe == "bahan":
-            col_widths = [45, 35, 75, 30, 25, 32, 40]
+            col_widths = [40, 30, 70, 30, 25, 35, 45]
             judul = "LAPORAN STOK GUDANG BAHAN BAKU"
         elif tipe == "baju":
-            col_widths = [40, 30, 65, 30, 25, 30, 35, 32] # Total Nilai paling kanan
+            col_widths = [35, 25, 60, 30, 25, 35, 40, 45] # Total Nilai diperlebar (45)
             judul = "LAPORAN STOK GUDANG BARANG JADI"
         else:
-            col_widths = [40, 30, 65, 30, 25, 30, 35, 32]
+            col_widths = [35, 25, 60, 30, 25, 35, 40, 45]
             judul = "LAPORAN STOK GUDANG (REAL-TIME)"
             
         # Ambil Profil

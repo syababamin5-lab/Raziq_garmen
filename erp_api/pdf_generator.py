@@ -339,7 +339,7 @@ def export_stok_inventory_pdf(judul, periode, df, col_widths, config=None, nama_
         # Kita butuh ruang lega untuk: 2 Baris Total (16mm) agar tidak terpisah
         if pdf.get_y() > 165: 
             # Cetak Footer Halaman (Subtotal)
-            pdf.set_font('Arial', 'B', 8)
+            pdf.set_font('Arial', 'B', 9) # Diselaraskan ke 9pt
             pdf.set_fill_color(245, 245, 245)
             
             # Label Halaman (Semua kolom kecuali kolom terakhir)
@@ -388,7 +388,7 @@ def export_stok_inventory_pdf(judul, periode, df, col_widths, config=None, nama_
 
     # Cetak Footer untuk Halaman Terakhir (jika belum tercetak di dalam loop)
     if page_total > 0:
-        pdf.set_font('Arial', 'B', 8)
+        pdf.set_font('Arial', 'B', 9) # Diselaraskan ke 9pt
         pdf.set_fill_color(245, 245, 245)
         label_w = sum(actual_widths[:-1])
         pdf.cell(label_w, 8, f" TOTAL NILAI HALAMAN {pdf.page_no()}", 1, 0, 'R', 1)
