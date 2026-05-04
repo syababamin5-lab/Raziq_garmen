@@ -314,8 +314,8 @@ def export_stok_inventory_pdf(judul, periode, df, col_widths, config=None, nama_
             
     for idx, row in df.iterrows():
         # Cek Ganti Halaman
-        # Jika posisi Y sudah di bawah, cetak summary halaman dulu
-        if pdf.get_y() > 180: # Margin bawah Landscape
+        # Kita butuh ruang untuk: Baris Data (7mm) + 2 Baris Total (16mm)
+        if pdf.get_y() > 175: 
             # Cetak Footer Halaman (Subtotal)
             pdf.set_font('Arial', 'B', 8)
             pdf.set_fill_color(245, 245, 245)
@@ -323,8 +323,6 @@ def export_stok_inventory_pdf(judul, periode, df, col_widths, config=None, nama_
             # Label Halaman (Semua kolom kecuali kolom terakhir)
             label_w = sum(actual_widths[:-1])
             pdf.cell(label_w, 8, f" TOTAL NILAI HALAMAN {pdf.page_no()}", 1, 0, 'R', 1)
-            
-            # Nilai Halaman (Kolom terakhir)
             pdf.cell(actual_widths[-1], 8, format_rp_pdf(page_total), 1, 1, 'R', 1)
                 
             # Cetak Akumulasi
