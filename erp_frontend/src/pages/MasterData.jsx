@@ -551,7 +551,9 @@ export default function MasterData() {
                       a.nama_akun.toLowerCase().includes(searchTerm.toLowerCase()) ||
                       a.kode_akun.toLowerCase().includes(searchTerm.toLowerCase()) ||
                       a.kategori.toLowerCase().includes(searchTerm.toLowerCase());
-                  }).map(a => (
+                  })
+                  .sort((a, b) => a.kode_akun.localeCompare(b.kode_akun))
+                  .map(a => (
                     <tr key={a.kode_akun} className="hover:bg-slate-50/50 transition-colors">
                       <td className="py-3 px-4 font-mono font-semibold text-emerald-800">{a.kode_akun}</td>
                       <td className="py-3 px-4 text-slate-800">{a.nama_akun}</td>
