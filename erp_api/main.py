@@ -899,10 +899,31 @@ def delete_master_barang(item_id: int, db: Session = Depends(get_db)):
         item = db.query(models.Barang).filter(models.Barang.id == item_id).first()
         if not item: return {"status": "error", "message": "Barang tidak ditemukan"}
         
+        # JURNAL PEMBALIK (REVERSAL) UNTUK MENGHAPUS ASET HANTU
+        # Jika barang punya stok dan harga modal, kita harus "menghanguskan" nilainya dari laporan keuangan
+        nilai_aset = item.stok_saat_ini * item.harga_modal
+        if nilai_aset > 0:
+            akun_persediaan = "12150" if "Barang Jadi" in item.kategori else "12110"
+            nama_persediaan = "Persediaan Barang Jadi" if "Barang Jadi" in item.kategori else "Persediaan Bahan Baku"
+            
+            # Balik Jurnal: Kredit Persediaan (Ngurangin aset), Debit Modal (Ngurangin ekuitas)
+            db.add(models.JurnalUmum(
+                kode_akun=akun_persediaan, nama_akun=nama_persediaan,
+                keterangan=f"Koreksi Penghapusan Barang: {item.nama_barang}",
+                debit=0, kredit=nilai_aset, tanggal=datetime.now()
+            ))
+            db.add(models.JurnalUmum(
+                kode_akun="31110", nama_akun="Modal Disetor",
+                keterangan=f"Koreksi Penghapusan Barang: {item.nama_barang}",
+                debit=nilai_aset, kredit=0, tanggal=datetime.now()
+            ))
+            # Nolkan stok agar bersih
+            item.stok_saat_ini = 0
+
         # Soft delete
         item.is_active = 0
         db.commit()
-        return {"status": "success", "message": "Barang berhasil diarsipkan (dihapus dari daftar aktif)"}
+        return {"status": "success", "message": "Barang berhasil dihapus dan nilai asetnya telah dikoreksi di laporan keuangan"}
     except Exception as e:
         db.rollback()
         return {"status": "error", "message": str(e)}
