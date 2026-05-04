@@ -14,6 +14,7 @@ export default function MasterData() {
   
   const [modal, setModal] = useState({ show: false, type: '', item: null });
   const [loading, setLoading] = useState(false);
+  const [searchTerm, setSearchTerm] = useState('');
 
   // Form states
   const [formData, setFormData] = useState({});
@@ -171,7 +172,7 @@ export default function MasterData() {
         {tabs.map(tab => (
           <button
             key={tab}
-            onClick={() => setActiveTab(tab)}
+            onClick={() => { setActiveTab(tab); setSearchTerm(''); }}
             className={`px-6 py-2.5 rounded-lg text-sm font-semibold whitespace-nowrap transition-all ${
               activeTab === tab 
                 ? 'bg-[#064E3B] text-white shadow-md' 
@@ -188,15 +189,27 @@ export default function MasterData() {
         {/* KARTU BARANG JADI TAB */}
         {activeTab === 'Kartu Barang Jadi' && (
           <div className="space-y-6">
-            <div className="flex justify-between items-center mb-4">
+            <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4 mb-4">
                <h3 className="text-lg font-bold text-slate-800">Gudang Barang Jadi (Baju)</h3>
-               <button 
-                  onClick={() => handlePrintStock('baju')}
-                  className="flex items-center gap-2 text-xs font-bold text-emerald-700 bg-emerald-50 px-3 py-1.5 rounded-lg border border-emerald-100 hover:bg-emerald-100 transition-all"
-               >
-                  <span className="material-symbols-rounded text-sm">picture_as_pdf</span>
-                  Cetak Laporan Stok PDF
-               </button>
+               <div className="flex items-center gap-3 w-full md:w-auto">
+                 <div className="relative flex-1 md:w-64">
+                   <span className="material-symbols-rounded absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 text-sm">search</span>
+                   <input 
+                     type="text" 
+                     placeholder="Cari SKU / Nama / Model..." 
+                     value={searchTerm}
+                     onChange={(e) => setSearchTerm(e.target.value)}
+                     className="w-full pl-9 pr-4 py-1.5 bg-slate-50 border border-slate-200 rounded-lg text-xs font-medium focus:ring-2 focus:ring-emerald-500/20 focus:border-emerald-500 outline-none transition-all"
+                   />
+                 </div>
+                 <button 
+                    onClick={() => handlePrintStock('baju')}
+                    className="flex items-center gap-2 text-xs font-bold text-emerald-700 bg-emerald-50 px-3 py-1.5 rounded-lg border border-emerald-100 hover:bg-emerald-100 transition-all whitespace-nowrap"
+                 >
+                    <span className="material-symbols-rounded text-sm">picture_as_pdf</span>
+                    Cetak Laporan Stok PDF
+                 </button>
+               </div>
             </div>
             <div className="overflow-x-auto border border-slate-100 rounded-xl">
               <table className="w-full text-left border-collapse text-sm">
@@ -212,7 +225,14 @@ export default function MasterData() {
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-slate-50">
-                  {data.barang.filter(item => item.kategori.includes('Barang Jadi')).map(item => {
+                  {data.barang.filter(item => {
+                    const matchesCategory = item.kategori.includes('Barang Jadi');
+                    const matchesSearch = !searchTerm || 
+                      item.nama_barang.toLowerCase().includes(searchTerm.toLowerCase()) ||
+                      item.kode_sku.toLowerCase().includes(searchTerm.toLowerCase()) ||
+                      (item.model_code && item.model_code.toLowerCase().includes(searchTerm.toLowerCase()));
+                    return matchesCategory && matchesSearch;
+                  }).map(item => {
                     const stokTampil = `${(item.stok_saat_ini / 12).toFixed(1)} Lusin (${item.stok_saat_ini} Pcs)`;
                     
                     return (
@@ -242,7 +262,14 @@ export default function MasterData() {
                   })}
                 </tbody>
               </table>
-              {data.barang.filter(item => item.kategori.includes('Barang Jadi')).length === 0 && <div className="text-center py-20 text-slate-400 font-medium">Belum ada data barang jadi.</div>}
+              {data.barang.filter(item => {
+                const matchesCategory = item.kategori.includes('Barang Jadi');
+                const matchesSearch = !searchTerm || 
+                  item.nama_barang.toLowerCase().includes(searchTerm.toLowerCase()) ||
+                  item.kode_sku.toLowerCase().includes(searchTerm.toLowerCase()) ||
+                  (item.model_code && item.model_code.toLowerCase().includes(searchTerm.toLowerCase()));
+                return matchesCategory && matchesSearch;
+              }).length === 0 && <div className="text-center py-20 text-slate-400 font-medium">Data tidak ditemukan atau belum ada data barang jadi.</div>}
             </div>
           </div>
         )}
@@ -250,15 +277,27 @@ export default function MasterData() {
         {/* KARTU BAHAN BAKU TAB */}
         {activeTab === 'Kartu Bahan Baku' && (
           <div className="space-y-6">
-            <div className="flex justify-between items-center mb-4">
+            <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4 mb-4">
                <h3 className="text-lg font-bold text-slate-800">Gudang Bahan Baku & Aksesoris</h3>
-               <button 
-                  onClick={() => handlePrintStock('bahan')}
-                  className="flex items-center gap-2 text-xs font-bold text-emerald-700 bg-emerald-50 px-3 py-1.5 rounded-lg border border-emerald-100 hover:bg-emerald-100 transition-all"
-               >
-                  <span className="material-symbols-rounded text-sm">picture_as_pdf</span>
-                  Cetak Laporan Stok PDF
-               </button>
+               <div className="flex items-center gap-3 w-full md:w-auto">
+                 <div className="relative flex-1 md:w-64">
+                   <span className="material-symbols-rounded absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 text-sm">search</span>
+                   <input 
+                     type="text" 
+                     placeholder="Cari Bahan / SKU..." 
+                     value={searchTerm}
+                     onChange={(e) => setSearchTerm(e.target.value)}
+                     className="w-full pl-9 pr-4 py-1.5 bg-slate-50 border border-slate-200 rounded-lg text-xs font-medium focus:ring-2 focus:ring-emerald-500/20 focus:border-emerald-500 outline-none transition-all"
+                   />
+                 </div>
+                 <button 
+                    onClick={() => handlePrintStock('bahan')}
+                    className="flex items-center gap-2 text-xs font-bold text-emerald-700 bg-emerald-50 px-3 py-1.5 rounded-lg border border-emerald-100 hover:bg-emerald-100 transition-all whitespace-nowrap"
+                 >
+                    <span className="material-symbols-rounded text-sm">picture_as_pdf</span>
+                    Cetak Laporan Stok PDF
+                 </button>
+               </div>
             </div>
             <div className="overflow-x-auto border border-slate-100 rounded-xl">
               <table className="w-full text-left border-collapse text-sm">
@@ -273,7 +312,13 @@ export default function MasterData() {
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-slate-50">
-                  {data.barang.filter(item => !item.kategori.includes('Barang Jadi')).map(item => {
+                  {data.barang.filter(item => {
+                    const matchesCategory = !item.kategori.includes('Barang Jadi');
+                    const matchesSearch = !searchTerm || 
+                      item.nama_barang.toLowerCase().includes(searchTerm.toLowerCase()) ||
+                      item.kode_sku.toLowerCase().includes(searchTerm.toLowerCase());
+                    return matchesCategory && matchesSearch;
+                  }).map(item => {
                     const stokTampil = `${item.stok_saat_ini} ${item.satuan || 'Kg'}`;
                     
                     return (
@@ -298,7 +343,13 @@ export default function MasterData() {
                   })}
                 </tbody>
               </table>
-              {data.barang.filter(item => !item.kategori.includes('Barang Jadi')).length === 0 && <div className="text-center py-20 text-slate-400 font-medium">Belum ada data bahan baku.</div>}
+              {data.barang.filter(item => {
+                const matchesCategory = !item.kategori.includes('Barang Jadi');
+                const matchesSearch = !searchTerm || 
+                  item.nama_barang.toLowerCase().includes(searchTerm.toLowerCase()) ||
+                  item.kode_sku.toLowerCase().includes(searchTerm.toLowerCase());
+                return matchesCategory && matchesSearch;
+              }).length === 0 && <div className="text-center py-20 text-slate-400 font-medium">Data tidak ditemukan atau belum ada data bahan baku.</div>}
             </div>
           </div>
         )}
