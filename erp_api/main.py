@@ -771,18 +771,21 @@ def add_master_karyawan(data: schemas.MasterKaryawanRequest, db: Session = Depen
 @app.post("/api/master/mitra")
 def add_master_mitra(data: schemas.MasterMitraRequest, db: Session = Depends(get_db)):
     try:
+        # Pengecekan kategori secara lebih fleksibel (menghindari bug case-sensitive)
+        is_customer = "customer" in data.kategori.lower()
+        
         new_mitra = models.Mitra(
             nama_mitra=data.nama_mitra, 
             kategori=data.kategori, 
             no_hp=data.no_hp, 
             alamat=data.alamat,
-            saldo_piutang=data.saldo_awal if data.kategori == "CUSTOMER" else 0,
-            saldo_utang=data.saldo_awal if data.kategori != "CUSTOMER" else 0
+            saldo_piutang=data.saldo_awal if is_customer else 0,
+            saldo_utang=data.saldo_awal if not is_customer else 0
         )
         db.add(new_mitra)
 
         if data.saldo_awal > 0:
-            if data.kategori == "CUSTOMER":
+            if is_customer:
                 db.add(models.JurnalUmum(kode_akun="11210", nama_akun="Piutang Usaha", keterangan=f"Saldo Awal - {data.nama_mitra}", debit=data.saldo_awal, kredit=0, tanggal=datetime.now()))
                 db.add(models.JurnalUmum(kode_akun="31110", nama_akun="Modal Disetor", keterangan=f"Saldo Awal - {data.nama_mitra}", debit=0, kredit=data.saldo_awal, tanggal=datetime.now()))
             else:
@@ -972,10 +975,41 @@ def delete_master_mitra(item_id: int, db: Session = Depends(get_db)):
         item = db.query(models.Mitra).filter(models.Mitra.id == item_id).first()
         if not item: return {"status": "error", "message": "Mitra tidak ditemukan"}
         
+        msg = "Mitra berhasil diarsipkan"
+        
+        # JURNAL PEMUTIHAN (WRITE-OFF) UNTUK SISA SALDO
+        if item.saldo_piutang > 0:
+            db.add(models.JurnalUmum(
+                kode_akun="62191", nama_akun="Beban Piutang Tak Tertagih",
+                keterangan=f"Pemutihan Piutang (Mitra Dihapus): {item.nama_mitra}",
+                debit=item.saldo_piutang, kredit=0, tanggal=datetime.now()
+            ))
+            db.add(models.JurnalUmum(
+                kode_akun="11210", nama_akun="Piutang Usaha",
+                keterangan=f"Pemutihan Piutang (Mitra Dihapus): {item.nama_mitra}",
+                debit=0, kredit=item.saldo_piutang, tanggal=datetime.now()
+            ))
+            item.saldo_piutang = 0
+            msg += " & Piutang diputihkan"
+            
+        if item.saldo_utang > 0:
+            db.add(models.JurnalUmum(
+                kode_akun="21110", nama_akun="Utang Usaha",
+                keterangan=f"Pemutihan Utang (Mitra Dihapus): {item.nama_mitra}",
+                debit=item.saldo_utang, kredit=0, tanggal=datetime.now()
+            ))
+            db.add(models.JurnalUmum(
+                kode_akun="31110", nama_akun="Modal Disetor",
+                keterangan=f"Pemutihan Utang (Mitra Dihapus): {item.nama_mitra}",
+                debit=0, kredit=item.saldo_utang, tanggal=datetime.now()
+            ))
+            item.saldo_utang = 0
+            msg += " & Utang diputihkan"
+
         # Soft delete
         item.is_active = 0
         db.commit()
-        return {"status": "success", "message": "Mitra berhasil diarsipkan (dihapus dari daftar aktif)"}
+        return {"status": "success", "message": msg}
     except Exception as e:
         db.rollback()
         return {"status": "error", "message": str(e)}
