@@ -186,6 +186,27 @@ class ProductionLog(Base):
     keterangan = Column(String, nullable=True)
 
 
+class WipSaldoAwal(Base):
+    """Tabel khusus untuk mencatat Saldo Awal WIP saat setup/cut-off sistem.
+    Entri di sini TIDAK memotong stok bahan baku maupun kas/bank.
+    Jurnal: Debit Persediaan WIP (12130), Kredit Ekuitas Saldo Awal Setup (31120).
+    """
+    __tablename__ = "wip_saldo_awal"
+    id = Column(Integer, primary_key=True, index=True)
+    tanggal_input = Column(DateTime, default=datetime.datetime.utcnow)
+    tanggal_cutoff = Column(DateTime)           # Tanggal efektif cut-off
+    kode_sku = Column(String, index=True)
+    nama_barang = Column(String)
+    qty_pcs = Column(Integer)                   # Jumlah pcs dalam proses
+    tahap_saat_ini = Column(String)             # "Siap Jahit", "Siap Finishing", dll.
+    modal_bahan_baku = Column(Float, default=0.0)   # Biaya bahan baku yang sudah terserap (Rp)
+    modal_upah_cutting = Column(Float, default=0.0) # Upah cutting yang sudah dibayar (Rp)
+    modal_lain = Column(Float, default=0.0)         # Biaya lain-lain yang sudah terserap (Rp)
+    total_modal_terserap = Column(Float, default=0.0)  # Total sunk cost
+    keterangan = Column(String, nullable=True)
+    dibuat_oleh = Column(String, nullable=True)     # Username yang menginput
+
+
 # ==========================================
 # 4. TABEL BUKU BESAR KEUANGAN
 # ==========================================

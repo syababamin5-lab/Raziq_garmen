@@ -26,3 +26,21 @@ export const getWip = async () => {
   const { data } = await api.get('/produksi/wip');
   return data;
 };
+
+// ── Saldo Awal WIP (Setup Cut-off) ──────────────────────────────
+export const submitSaldoAwalWip = async (payload) => {
+  const { data } = await api.post('/produksi/saldo-awal-wip', payload);
+  if (!data?.success) throw new Error(data?.message || 'Error occurred');
+  return data;
+};
+
+export const getSaldoAwalWipList = async () => {
+  const { data } = await api.get('/produksi/saldo-awal-wip');
+  return data;
+};
+
+export const deleteSaldoAwalWip = async (entryId) => {
+  const { data } = await api.delete(`/produksi/saldo-awal-wip/${entryId}`);
+  if (!data?.success) throw new Error(data?.message || 'Error occurred');
+  return data;
+};

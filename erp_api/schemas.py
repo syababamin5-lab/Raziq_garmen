@@ -150,6 +150,47 @@ class WipResponse(BaseModel):
     sisa_wip: int
 
 # ============================================================
+# SCHEMA: Saldo Awal WIP (Setup Cut-off)
+# ============================================================
+class SaldoAwalWipRequest(BaseModel):
+    """Request untuk mencatat Saldo Awal Persediaan Barang Dalam Proses (WIP).
+    ATURAN AKUNTANSI MUTLAK:
+    - TIDAK memotong stok bahan baku
+    - TIDAK memotong saldo Kas/Bank/Utang
+    - Jurnal: Debit 12130 (Persediaan WIP) | Kredit 31120 (Ekuitas Saldo Awal Setup)
+    """
+    tanggal_cutoff: str          # Tanggal cut-off (YYYY-MM-DD)
+    produk_id: int               # ID barang dari tabel barang
+    qty_pcs: int                 # Jumlah pcs dalam proses
+    tahap_saat_ini: str          # "Siap Jahit" | "Siap Finishing" | "Siap QC" | dll.
+    modal_bahan_baku: float      # Nilai bahan baku yang sudah terserap (Rp)
+    modal_upah_cutting: float    # Upah cutting yang sudah dibayar (Rp)
+    modal_lain: float            # Biaya lain (Rp)
+    keterangan: Optional[str] = ""
+    dibuat_oleh: Optional[str] = "admin"
+
+class SaldoAwalWipItem(BaseModel):
+    id: int
+    tanggal_cutoff: str
+    tanggal_input: str
+    kode_sku: str
+    nama_barang: str
+    qty_pcs: int
+    tahap_saat_ini: str
+    modal_bahan_baku: float
+    modal_upah_cutting: float
+    modal_lain: float
+    total_modal_terserap: float
+    hpp_per_pcs: float           # Dihitung: total_modal / qty_pcs
+    keterangan: Optional[str] = ""
+    dibuat_oleh: Optional[str] = ""
+
+class SaldoAwalWipListResponse(BaseModel):
+    data: List[SaldoAwalWipItem]
+    total_qty_pcs: int
+    total_nilai_wip: float
+
+# ============================================================
 # SCHEMA: Master Data
 # ============================================================
 class DashboardStats(BaseModel):

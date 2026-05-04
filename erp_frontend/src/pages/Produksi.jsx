@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import {
-  getProduksiOptions, submitCutting, submitJahit, getRekapCutting, getWip 
+  getProduksiOptions, submitCutting, submitJahit, getRekapCutting, getWip,
+  submitSaldoAwalWip, getSaldoAwalWipList, deleteSaldoAwalWip
 } from '../api/produksiApi';
 import { formatInputNumber, parseNumber } from '../utils/formatters';
 
@@ -15,6 +16,20 @@ export default function Produksi() {
   // Tab Rekap & WIP
   const [rekapData, setRekapData] = useState(null);
   const [wipData, setWipData] = useState(null);
+
+  // Tab Setup WIP Awal
+  const [wipAwalList, setWipAwalList] = useState(null);
+  const TAHAP_OPTIONS = ['Siap Jahit','Siap Finishing','Siap QC','Siap Packing','Siap Kirim','Lainnya'];
+  const [wipAwalForm, setWipAwalForm] = useState({
+    tanggal_cutoff: new Date().toISOString().split('T')[0],
+    produk_id: '',
+    qty_pcs: '',
+    tahap_saat_ini: 'Siap Jahit',
+    modal_bahan_baku: '',
+    modal_upah_cutting: '',
+    modal_lain: '',
+    keterangan: '',
+  });
 
   // Form State Cutting
   const [cuttingForm, setCuttingForm] = useState({
@@ -65,6 +80,57 @@ export default function Produksi() {
     setLoading(false);
   };
 
+  const loadWipAwal = async () => {
+    setLoading(true);
+    try { const res = await getSaldoAwalWipList(); setWipAwalList(res.data); } catch(err) { console.error(err); }
+    setLoading(false);
+  };
+
+  const handleWipAwalSubmit = async (e) => {
+    e.preventDefault();
+    setLoading(true); setMsg({ text: '', type: '' });
+    try {
+      if (!wipAwalForm.produk_id) throw new Error('Pilih model baju terlebih dahulu!');
+      if (!wipAwalForm.qty_pcs || Number(wipAwalForm.qty_pcs) <= 0) throw new Error('Jumlah pcs harus diisi!');
+      const totalModal = (parseNumber(wipAwalForm.modal_bahan_baku)||0) +
+                         (parseNumber(wipAwalForm.modal_upah_cutting)||0) +
+                         (parseNumber(wipAwalForm.modal_lain)||0);
+      if (totalModal <= 0) throw new Error('Minimal satu komponen biaya harus diisi (Bahan/Upah/Lain)!');
+      const res = await submitSaldoAwalWip({
+        tanggal_cutoff: wipAwalForm.tanggal_cutoff,
+        produk_id: Number(wipAwalForm.produk_id),
+        qty_pcs: Number(wipAwalForm.qty_pcs),
+        tahap_saat_ini: wipAwalForm.tahap_saat_ini,
+        modal_bahan_baku: parseNumber(wipAwalForm.modal_bahan_baku) || 0,
+        modal_upah_cutting: parseNumber(wipAwalForm.modal_upah_cutting) || 0,
+        modal_lain: parseNumber(wipAwalForm.modal_lain) || 0,
+        keterangan: wipAwalForm.keterangan,
+        dibuat_oleh: user.username || 'admin',
+      });
+      setMsg({ text: res.message, type: 'success' });
+      setWipAwalForm(prev => ({
+        ...prev, qty_pcs: '', modal_bahan_baku: '', modal_upah_cutting: '', modal_lain: '', keterangan: ''
+      }));
+      loadWipAwal();
+    } catch(err) {
+      setMsg({ text: err.message, type: 'error' });
+    }
+    setLoading(false);
+  };
+
+  const handleDeleteWipAwal = async (id, nama) => {
+    if (!window.confirm(`Hapus entri WIP Awal "${nama}"? Jurnal terkait juga akan dihapus.`)) return;
+    setLoading(true);
+    try {
+      const res = await deleteSaldoAwalWip(id);
+      setMsg({ text: res.message, type: 'success' });
+      loadWipAwal();
+    } catch(err) {
+      setMsg({ text: err.message, type: 'error' });
+    }
+    setLoading(false);
+  };
+
   useEffect(() => {
     fetchOptions();
   }, []);
@@ -72,6 +138,7 @@ export default function Produksi() {
   useEffect(() => {
     if (activeTab === 'rekap') loadRekap();
     if (activeTab === 'wip') loadWip();
+    if (activeTab === 'wip_awal') loadWipAwal();
   }, [activeTab]);
 
   const handleCuttingSubmit = async (e) => {
@@ -139,10 +206,11 @@ export default function Produksi() {
   };
 
   const TABS = [
-    { id: 'cutting', label: 'Cutting (Kg -> Pcs)', icon: 'content_cut' },
-    { id: 'jahit', label: 'Jahit/Finishing (Pcs -> Lusin)', icon: 'checkroom' },
+    { id: 'cutting', label: 'Cutting (Kg → Pcs)', icon: 'content_cut' },
+    { id: 'jahit', label: 'Jahit/Finishing (Pcs → Lusin)', icon: 'checkroom' },
     { id: 'rekap', label: 'Rekap Tagihan Cutting', icon: 'payments' },
     { id: 'wip', label: 'WIP Cutting', icon: 'inventory_2' },
+    { id: 'wip_awal', label: '⚙️ Setup WIP Awal (Cut-off)', icon: 'settings_backup_restore', isSetup: true },
   ];
 
   return (
@@ -171,9 +239,13 @@ export default function Produksi() {
             key={tab.id}
             onClick={() => { setActiveTab(tab.id); setMsg({text:'', type:''}); }}
             className={`flex items-center gap-2 px-5 py-3 border-b-2 font-bold text-sm tracking-wide transition-all whitespace-nowrap ${
-              activeTab === tab.id 
-                ? 'border-emerald-600 text-emerald-700 bg-emerald-50/50' 
-                : 'border-transparent text-slate-500 hover:text-slate-800 hover:bg-slate-50'
+              tab.isSetup
+                ? activeTab === tab.id
+                  ? 'border-amber-500 text-amber-700 bg-amber-50/60'
+                  : 'border-transparent text-amber-600 hover:text-amber-700 hover:bg-amber-50/40'
+                : activeTab === tab.id 
+                  ? 'border-emerald-600 text-emerald-700 bg-emerald-50/50' 
+                  : 'border-transparent text-slate-500 hover:text-slate-800 hover:bg-slate-50'
             }`}
           >
             <span className="material-symbols-rounded text-[20px]">{tab.icon}</span>
@@ -411,6 +483,246 @@ export default function Produksi() {
                 </div>
               </>
             )}
+          </div>
+        )}
+
+        {/* SETUP WIP AWAL */}
+        {activeTab === 'wip_awal' && (
+          <div className="space-y-6">
+
+            {/* ── BANNER PERINGATAN AKUNTANSI ─────────────────────── */}
+            <div className="rounded-2xl border-2 border-red-300 bg-red-50 p-5">
+              <div className="flex items-start gap-3">
+                <span className="material-symbols-rounded text-red-500 text-3xl mt-0.5 shrink-0">gpp_bad</span>
+                <div>
+                  <p className="font-black text-red-700 text-base mb-1">⚠️ FITUR SETUP AWAL — HANYA UNTUK CUT-OFF SISTEM</p>
+                  <p className="text-red-600 text-sm font-medium mb-3">
+                    Form ini digunakan <strong>SEKALI SAJA</strong> saat transisi ke sistem ini, untuk barang yang sudah dalam proses produksi di periode <em>sebelum</em> sistem ini dipakai.
+                  </p>
+                  <div className="grid grid-cols-1 sm:grid-cols-3 gap-2 text-xs font-bold">
+                    <div className="flex items-center gap-2 bg-red-100 rounded-lg px-3 py-2 text-red-700">
+                      <span className="material-symbols-rounded text-[16px]">block</span>
+                      Stok Kain TIDAK berkurang
+                    </div>
+                    <div className="flex items-center gap-2 bg-red-100 rounded-lg px-3 py-2 text-red-700">
+                      <span className="material-symbols-rounded text-[16px]">block</span>
+                      Kas / Bank TIDAK berkurang
+                    </div>
+                    <div className="flex items-center gap-2 bg-red-100 rounded-lg px-3 py-2 text-red-700">
+                      <span className="material-symbols-rounded text-[16px]">block</span>
+                      Utang Dagang TIDAK bertambah
+                    </div>
+                  </div>
+                  <div className="mt-3 p-3 bg-white/70 rounded-xl border border-red-200">
+                    <p className="text-[11px] font-mono text-slate-600">
+                      <span className="font-black text-emerald-700">DEBIT</span> &nbsp;12130 — Persediaan Barang Dalam Proses (WIP) &nbsp;Rp xxx<br/>
+                      <span className="font-black text-red-600">KREDIT</span> 31120 — Ekuitas Saldo Awal Setup &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;Rp xxx
+                    </p>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            {/* ── FORM INPUT ──────────────────────────────────────── */}
+            <form onSubmit={handleWipAwalSubmit} className="space-y-5">
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                <div>
+                  <label className="block text-xs font-bold text-slate-600 mb-1.5 uppercase tracking-wide">Tanggal Cut-off</label>
+                  <input type="date" value={wipAwalForm.tanggal_cutoff}
+                    onChange={e => setWipAwalForm({...wipAwalForm, tanggal_cutoff: e.target.value})}
+                    className="w-full bg-slate-50 border border-slate-200 text-slate-700 text-sm rounded-lg p-2.5 outline-none focus:border-amber-500 focus:ring-1 focus:ring-amber-400 font-medium"/>
+                </div>
+                <div>
+                  <label className="block text-xs font-bold text-slate-600 mb-1.5 uppercase tracking-wide">Model Baju (SKU)</label>
+                  <select value={wipAwalForm.produk_id}
+                    onChange={e => setWipAwalForm({...wipAwalForm, produk_id: e.target.value})}
+                    className="w-full bg-slate-50 border border-slate-200 text-slate-700 text-sm rounded-lg p-2.5 outline-none focus:border-amber-500 focus:ring-1 focus:ring-amber-400 font-medium">
+                    <option value="">-- Pilih Model --</option>
+                    {options.baju_list.map(b => <option key={b.id} value={b.id}>{b.label}</option>)}
+                  </select>
+                </div>
+                <div>
+                  <label className="block text-xs font-bold text-slate-600 mb-1.5 uppercase tracking-wide">Tahap Saat Ini</label>
+                  <select value={wipAwalForm.tahap_saat_ini}
+                    onChange={e => setWipAwalForm({...wipAwalForm, tahap_saat_ini: e.target.value})}
+                    className="w-full bg-slate-50 border border-slate-200 text-slate-700 text-sm rounded-lg p-2.5 outline-none focus:border-amber-500 focus:ring-1 focus:ring-amber-400 font-medium">
+                    {TAHAP_OPTIONS.map(t => <option key={t} value={t}>{t}</option>)}
+                  </select>
+                </div>
+              </div>
+
+              <div>
+                <label className="block text-xs font-bold text-slate-600 mb-1.5 uppercase tracking-wide">Jumlah Barang Dalam Proses (Pcs)</label>
+                <input type="number" min="1" value={wipAwalForm.qty_pcs}
+                  onChange={e => setWipAwalForm({...wipAwalForm, qty_pcs: e.target.value})}
+                  className="w-full md:w-48 bg-slate-50 border border-slate-200 text-slate-800 text-sm rounded-lg p-2.5 outline-none focus:border-amber-500 focus:ring-1 focus:ring-amber-400 font-black"
+                  placeholder="Contoh: 100"/>
+              </div>
+
+              {/* Breakdown Biaya */}
+              <div className="p-5 bg-amber-50/40 border border-amber-200 rounded-2xl space-y-4">
+                <p className="text-xs font-black text-amber-800 uppercase tracking-widest flex items-center gap-2">
+                  <span className="material-symbols-rounded text-[16px]">account_balance_wallet</span>
+                  Modal Mengendap (Sunk Cost) — Wajib diisi minimal satu komponen
+                </p>
+                <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                  <div>
+                    <label className="block text-[11px] font-bold text-amber-700 mb-1 uppercase tracking-wide">Nilai Bahan Baku Terpakai (Rp)</label>
+                    <input type="text"
+                      value={formatInputNumber(wipAwalForm.modal_bahan_baku)}
+                      onChange={e => setWipAwalForm({...wipAwalForm, modal_bahan_baku: parseNumber(e.target.value)})}
+                      className="w-full bg-white border border-amber-200 text-slate-800 text-sm rounded-lg p-2.5 outline-none focus:border-amber-500 font-bold"
+                      placeholder="0"/>
+                    <p className="mt-1 text-[10px] text-slate-500">Harga kain yang sudah dipakai</p>
+                  </div>
+                  <div>
+                    <label className="block text-[11px] font-bold text-amber-700 mb-1 uppercase tracking-wide">Upah Cutting Sudah Dibayar (Rp)</label>
+                    <input type="text"
+                      value={formatInputNumber(wipAwalForm.modal_upah_cutting)}
+                      onChange={e => setWipAwalForm({...wipAwalForm, modal_upah_cutting: parseNumber(e.target.value)})}
+                      className="w-full bg-white border border-amber-200 text-slate-800 text-sm rounded-lg p-2.5 outline-none focus:border-amber-500 font-bold"
+                      placeholder="0"/>
+                    <p className="mt-1 text-[10px] text-slate-500">Upah tukang potong</p>
+                  </div>
+                  <div>
+                    <label className="block text-[11px] font-bold text-amber-700 mb-1 uppercase tracking-wide">Biaya Lain-lain (Rp)</label>
+                    <input type="text"
+                      value={formatInputNumber(wipAwalForm.modal_lain)}
+                      onChange={e => setWipAwalForm({...wipAwalForm, modal_lain: parseNumber(e.target.value)})}
+                      className="w-full bg-white border border-amber-200 text-slate-800 text-sm rounded-lg p-2.5 outline-none focus:border-amber-500 font-bold"
+                      placeholder="0"/>
+                    <p className="mt-1 text-[10px] text-slate-500">Opsional (BOP, dll)</p>
+                  </div>
+                </div>
+
+                {/* Auto-kalkulasi summary */}
+                {(() => {
+                  const total = (parseNumber(wipAwalForm.modal_bahan_baku)||0) +
+                                (parseNumber(wipAwalForm.modal_upah_cutting)||0) +
+                                (parseNumber(wipAwalForm.modal_lain)||0);
+                  const qty   = Number(wipAwalForm.qty_pcs) || 0;
+                  const hpp   = qty > 0 ? total / qty : 0;
+                  if (total <= 0) return null;
+                  return (
+                    <div className="flex flex-wrap gap-4 pt-3 border-t border-amber-200">
+                      <div className="flex items-center gap-2 bg-white rounded-xl px-4 py-2.5 border border-amber-200 shadow-sm">
+                        <span className="material-symbols-rounded text-amber-600 text-[18px]">summarize</span>
+                        <div>
+                          <p className="text-[10px] font-bold text-amber-700 uppercase tracking-wider">Total Modal WIP</p>
+                          <p className="text-base font-black text-slate-800">Rp {total.toLocaleString('id-ID')}</p>
+                        </div>
+                      </div>
+                      {hpp > 0 && (
+                        <div className="flex items-center gap-2 bg-white rounded-xl px-4 py-2.5 border border-emerald-200 shadow-sm">
+                          <span className="material-symbols-rounded text-emerald-600 text-[18px]">price_check</span>
+                          <div>
+                            <p className="text-[10px] font-bold text-emerald-700 uppercase tracking-wider">Estimasi HPP / Pcs</p>
+                            <p className="text-base font-black text-slate-800">Rp {hpp.toLocaleString('id-ID', {maximumFractionDigits:0})}</p>
+                          </div>
+                        </div>
+                      )}
+                    </div>
+                  );
+                })()}
+              </div>
+
+              <div>
+                <label className="block text-xs font-bold text-slate-600 mb-1.5 uppercase tracking-wide">Keterangan (Opsional)</label>
+                <input type="text" value={wipAwalForm.keterangan}
+                  onChange={e => setWipAwalForm({...wipAwalForm, keterangan: e.target.value})}
+                  className="w-full bg-slate-50 border border-slate-200 text-slate-700 text-sm rounded-lg p-2.5 outline-none focus:border-amber-500 font-medium"
+                  placeholder="Contoh: Batch April minggu ke-4"/>
+              </div>
+
+              <button type="submit" disabled={loading || isBos}
+                className={`flex items-center gap-2 px-8 py-3 rounded-xl font-black text-sm tracking-wide transition-all ${
+                  isBos ? 'bg-slate-300 text-slate-500 cursor-not-allowed' :
+                  'bg-amber-500 hover:bg-amber-600 text-white shadow-md hover:shadow-amber-200 active:scale-95'
+                }`}>
+                <span className="material-symbols-rounded text-[20px]">save</span>
+                {isBos ? 'VIEW ONLY (BOS)' : loading ? 'Menyimpan...' : 'Simpan Saldo Awal WIP'}
+              </button>
+            </form>
+
+            {/* ── HISTORY LIST ────────────────────────────────────── */}
+            {wipAwalList && (
+              <div className="pt-4 border-t border-slate-100">
+                <div className="flex items-center justify-between mb-3">
+                  <h3 className="text-sm font-black text-slate-800 uppercase tracking-wide flex items-center gap-2">
+                    <span className="material-symbols-rounded text-amber-600">history</span>
+                    Riwayat Entri Saldo Awal WIP
+                  </h3>
+                  <div className="flex gap-3">
+                    <div className="bg-amber-50 border border-amber-200 rounded-lg px-3 py-1.5 text-center">
+                      <p className="text-[10px] font-bold text-amber-700 uppercase">Total Pcs</p>
+                      <p className="text-sm font-black text-amber-900">{wipAwalList.total_qty_pcs?.toLocaleString('id-ID')} pcs</p>
+                    </div>
+                    <div className="bg-slate-50 border border-slate-200 rounded-lg px-3 py-1.5 text-center">
+                      <p className="text-[10px] font-bold text-slate-600 uppercase">Total Nilai WIP</p>
+                      <p className="text-sm font-black text-slate-800">Rp {wipAwalList.total_nilai_wip?.toLocaleString('id-ID')}</p>
+                    </div>
+                  </div>
+                </div>
+                <div className="overflow-x-auto rounded-xl border border-slate-200 shadow-sm">
+                  <table className="w-full text-left border-collapse">
+                    <thead>
+                      <tr className="bg-slate-50 border-b border-slate-200 text-[11px] text-slate-500 uppercase tracking-wider">
+                        <th className="p-3 font-bold">Cut-off</th>
+                        <th className="p-3 font-bold">SKU / Barang</th>
+                        <th className="p-3 font-bold text-center">Qty</th>
+                        <th className="p-3 font-bold">Tahap</th>
+                        <th className="p-3 font-bold text-right">Bahan (Rp)</th>
+                        <th className="p-3 font-bold text-right">Upah (Rp)</th>
+                        <th className="p-3 font-bold text-right">Total Modal</th>
+                        <th className="p-3 font-bold text-right">HPP/Pcs</th>
+                        <th className="p-3 font-bold text-center">Aksi</th>
+                      </tr>
+                    </thead>
+                    <tbody className="divide-y divide-slate-100 text-sm font-medium text-slate-700">
+                      {wipAwalList.data?.map(row => (
+                        <tr key={row.id} className="hover:bg-amber-50/30 transition-colors">
+                          <td className="p-3 text-slate-500 text-xs whitespace-nowrap">{row.tanggal_cutoff}</td>
+                          <td className="p-3">
+                            <div className="font-bold text-slate-800 text-xs">{row.kode_sku}</div>
+                            <div className="text-slate-400 text-[11px]">{row.nama_barang}</div>
+                          </td>
+                          <td className="p-3 text-center">
+                            <span className="inline-block bg-amber-100 text-amber-800 font-black text-xs px-2 py-0.5 rounded-full">{row.qty_pcs} pcs</span>
+                          </td>
+                          <td className="p-3">
+                            <span className="inline-block bg-blue-50 text-blue-700 font-bold text-xs px-2 py-0.5 rounded-full border border-blue-100">{row.tahap_saat_ini}</span>
+                          </td>
+                          <td className="p-3 text-right tabular-nums text-slate-500 text-xs">{row.modal_bahan_baku.toLocaleString('id-ID')}</td>
+                          <td className="p-3 text-right tabular-nums text-slate-500 text-xs">{row.modal_upah_cutting.toLocaleString('id-ID')}</td>
+                          <td className="p-3 text-right">
+                            <span className="font-black text-slate-800">Rp {row.total_modal_terserap.toLocaleString('id-ID')}</span>
+                          </td>
+                          <td className="p-3 text-right">
+                            <span className="text-emerald-700 font-bold text-xs">Rp {row.hpp_per_pcs.toLocaleString('id-ID', {maximumFractionDigits:0})}</span>
+                          </td>
+                          <td className="p-3 text-center">
+                            <button onClick={() => handleDeleteWipAwal(row.id, row.nama_barang)}
+                              disabled={loading || isBos}
+                              title="Hapus entri ini"
+                              className="p-1.5 rounded-lg text-red-400 hover:bg-red-50 hover:text-red-600 transition-all disabled:opacity-40">
+                              <span className="material-symbols-rounded text-[18px]">delete</span>
+                            </button>
+                          </td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                  {wipAwalList.data?.length === 0 && (
+                    <div className="p-10 text-center">
+                      <span className="material-symbols-rounded text-5xl text-slate-200 block mb-2">inventory</span>
+                      <p className="text-slate-400 text-sm font-medium">Belum ada entri Saldo Awal WIP.</p>
+                      <p className="text-slate-300 text-xs mt-1">Gunakan form di atas untuk mulai setup cut-off.</p>
+                    </div>
+                  )}
+                </div>
+              </div>
+            )}
+
           </div>
         )}
 
