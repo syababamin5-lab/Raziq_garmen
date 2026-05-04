@@ -665,6 +665,130 @@ def audit_investigasi_kas(db: Session = Depends(get_db)):
     except Exception as e:
         return {"status": "error", "message": str(e)}
 
+@router.get("/kartu-stok/{kode_sku}")
+def get_kartu_stok(kode_sku: str, db: Session = Depends(get_db)):
+    """Mengambil riwayat mutasi stok untuk satu SKU (Kartu Stok)"""
+    try:
+        # 1. Ambil info barang
+        barang = db.query(models.Barang).filter(models.Barang.kode_sku == kode_sku).first()
+        if not barang:
+            return {"success": False, "message": "Barang tidak ditemukan"}
+            
+        is_barang_jadi = "Barang Jadi" in (barang.kategori or "")
+        
+        mutasi = []
+        
+        # 2. Ambil dari Produksi (Jahit menambah Barang Jadi, Cutting mengurangi Bahan Baku)
+        logs = db.query(models.ProductionLog).filter(models.ProductionLog.kode_sku == kode_sku).all()
+        for l in logs:
+            qty = l.qty_hasil or 0
+            if l.divisi == "Jahit":
+                # Masuk ke Barang Jadi
+                mutasi.append({
+                    "tanggal": l.tanggal,
+                    "keterangan": f"Produksi Jahit: {l.nama_barang}",
+                    "masuk": qty,
+                    "keluar": 0,
+                    "tipe": "PRODUKSI"
+                })
+            elif l.divisi == "Cutting":
+                # Keluar dari Bahan Baku (Log ini biasanya mencatat hasil potong, bukan pemakaian kain)
+                # Namun di sistem ini, log cutting mencatat berapa pcs yang dipotong.
+                # Jika SKU yang dicari adalah Bahan Baku, pemakaian kain dicatat di Jurnal (51110).
+                pass
+
+        # 3. Ambil dari Penjualan (Mengurangi Barang Jadi)
+        sales = db.query(models.DetailPenjualan).filter(models.DetailPenjualan.kode_sku == kode_sku).all()
+        for s in sales:
+            # Cari tanggal dari header
+            header = db.query(models.HeaderPenjualan).filter(models.HeaderPenjualan.no_invoice == s.no_invoice).first()
+            tgl = header.tanggal if header else datetime.datetime.now()
+            mutasi.append({
+                "tanggal": tgl,
+                "keterangan": f"Penjualan: {s.no_invoice} ({s.nama_customer or 'Umum'})",
+                "masuk": 0,
+                "keluar": s.qty_lusin * 12, # Konversi ke Pcs jika barang jadi
+                "tipe": "PENJUALAN"
+            })
+
+        # 4. Ambil dari Pembelian (Menambah Bahan Baku)
+        purchases = db.query(models.DetailPembelian).filter(models.DetailPembelian.kode_sku == kode_sku).all()
+        for p in purchases:
+            header = db.query(models.HeaderPembelian).filter(models.HeaderPembelian.no_po == p.no_po).first()
+            tgl = header.tanggal if header else datetime.datetime.now()
+            mutasi.append({
+                "tanggal": tgl,
+                "keterangan": f"Pembelian: {p.no_po} ({p.nama_supplier or 'Umum'})",
+                "masuk": p.qty_kg,
+                "keluar": 0,
+                "tipe": "PEMBELIAN"
+            })
+
+        # 5. Ambil dari Jurnal Umum (Penyesuaian / Stock Opname / Pemakaian)
+        # Cari jurnal yang mengandung SKU di keterangan dan akun persediaan (12110 atau 12150)
+        kode_akun_psd = "12150" if is_barang_jadi else "12110"
+        jurnals = db.query(models.JurnalUmum).filter(
+            models.JurnalUmum.kode_akun == kode_akun_psd,
+            models.JurnalUmum.keterangan.ilike(f"%{kode_sku}%")
+        ).all()
+        
+        for j in jurnals:
+            # Cek apakah sudah ada di mutasi (hindari double count dari jahit/penjualan yang juga menjurnal)
+            # Biasanya keterangan jurnal jahit: "Masuk ... (Jahit)"
+            if "(Jahit)" in j.keterangan or "Penjualan" in j.keterangan or "PO-" in j.keterangan:
+                continue
+                
+            qty_adj = 0
+            # Coba ekstrak qty dari keterangan jika ada format "... [Qty: 10] ..."
+            import re
+            match = re.search(r'\[Qty:\s*([\d\.]+)\]', j.keterangan)
+            if match:
+                qty_adj = float(match.group(1))
+            else:
+                # Jika tidak ada, kita asumsikan ini adjustment nilai uang, tapi user butuh Qty.
+                # Untuk Stock Opname, biasanya ada qty.
+                pass
+            
+            if j.debit > 0:
+                mutasi.append({
+                    "tanggal": j.tanggal,
+                    "keterangan": j.keterangan,
+                    "masuk": qty_adj,
+                    "keluar": 0,
+                    "tipe": "ADJUSTMENT"
+                })
+            else:
+                mutasi.append({
+                    "tanggal": j.tanggal,
+                    "keterangan": j.keterangan,
+                    "masuk": 0,
+                    "keluar": qty_adj,
+                    "tipe": "ADJUSTMENT"
+                })
+
+        # Urutkan berdasarkan tanggal
+        mutasi.sort(key=lambda x: x["tanggal"])
+        
+        # Hitung Saldo Berjalan
+        # Karena kita tidak punya snapshot saldo awal historis yang kaku, 
+        # kita asumsikan stok saat ini adalah hasil akhir.
+        # Jadi kita hitung mundur? Tidak, biasanya kartu stok mulai dari 0 atau Saldo Awal Sistem.
+        
+        return {
+            "success": True,
+            "barang": {
+                "nama": barang.nama_barang,
+                "sku": barang.kode_sku,
+                "stok_akhir": barang.stok_saat_ini,
+                "satuan": barang.satuan
+            },
+            "history": mutasi
+        }
+    except Exception as e:
+        import traceback
+        print(traceback.format_exc())
+        return {"success": False, "message": str(e)}
+
 @router.post("/fix-hapus-jurnal-masal")
 def fix_hapus_jurnal_masal(ids: list[int], db: Session = Depends(get_db)):
     """Hard Delete Jurnal berdasarkan ID (Untuk pembersihan data salah)"""

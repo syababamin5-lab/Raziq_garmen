@@ -15,6 +15,8 @@ export default function MasterData() {
   const [modal, setModal] = useState({ show: false, type: '', item: null });
   const [loading, setLoading] = useState(false);
   const [searchTerm, setSearchTerm] = useState('');
+  const [stokHistory, setStokHistory] = useState({ barang: {}, list: [] });
+  const [historyLoading, setHistoryLoading] = useState(false);
 
   // Form states
   const [formData, setFormData] = useState({});
@@ -61,6 +63,21 @@ export default function MasterData() {
   const closeModal = () => {
     setModal({ show: false, type: '', item: null });
     setFormData({});
+    setStokHistory({ barang: {}, list: [] });
+  };
+
+  const openKartuStok = async (item) => {
+    setModal({ show: true, type: 'kartu_stok', item });
+    setHistoryLoading(true);
+    try {
+      const res = await api.get(`/laporan/kartu-stok/${item.kode_sku}`);
+      if (res.data.success) {
+        setStokHistory({ barang: res.data.barang, list: res.data.history });
+      }
+    } catch (err) {
+      console.error(err);
+    }
+    setHistoryLoading(false);
   };
 
   const submitForm = async (e) => {
@@ -250,6 +267,9 @@ export default function MasterData() {
                           <div>Rp {item.harga_jual?.toLocaleString('id-ID')} <span className="text-[10px] font-normal text-slate-400">/ Lusin</span></div>
                         </td>
                         <td className="py-3 px-4 text-right">
+                          <button onClick={() => openKartuStok(item)} className="text-slate-400 hover:bg-slate-50 p-2 rounded-lg transition-all" title="Lihat Kartu Stok / History">
+                            <span className="material-symbols-rounded text-[20px]">history</span>
+                          </button>
                           <button onClick={() => openModal('edit_barang', item)} className="text-emerald-600 hover:bg-emerald-50 p-2 rounded-lg transition-all" title="Quick Edit / Stock Opname">
                             <span className="material-symbols-rounded text-[20px]">edit_square</span>
                           </button>
@@ -331,6 +351,9 @@ export default function MasterData() {
                           <div>Rp {item.harga_modal?.toLocaleString('id-ID')} <span className="text-[10px] font-normal text-slate-400">/ {item.satuan || 'Kg'}</span></div>
                         </td>
                         <td className="py-3 px-4 text-right">
+                          <button onClick={() => openKartuStok(item)} className="text-slate-400 hover:bg-slate-50 p-2 rounded-lg transition-all" title="Lihat Kartu Stok / History">
+                            <span className="material-symbols-rounded text-[20px]">history</span>
+                          </button>
                           <button onClick={() => openModal('edit_barang', item)} className="text-emerald-600 hover:bg-emerald-50 p-2 rounded-lg transition-all" title="Quick Edit / Stock Opname">
                             <span className="material-symbols-rounded text-[20px]">edit_square</span>
                           </button>
@@ -558,12 +581,70 @@ export default function MasterData() {
                 {modal.type === 'edit_karyawan' && 'Edit Data Karyawan'}
                 {modal.type === 'add_mitra' && 'Tambah Mitra Baru'}
                 {modal.type === 'edit_mitra' && 'Edit Profil Mitra Bisnis'}
-                {modal.type === 'add_akun' && 'Chart of Account (COA)'}
-                {modal.type === 'saldo_awal' && 'Input Saldo Kas Awal'}
-                {modal.type === 'import_excel' && 'Import Excel Stok'}
+                {modal.type === 'kartu_stok' && `Kartu Stok: ${modal.item?.nama_barang}`}
               </h2>
               <button onClick={closeModal} className="text-slate-400 hover:text-slate-700 bg-slate-100 p-1 rounded-full"><span className="material-symbols-rounded text-[20px]">close</span></button>
             </div>
+
+            {/* KARTU STOK CONTENT */}
+            {modal.type === 'kartu_stok' && (
+              <div className="space-y-4">
+                <div className="flex justify-between items-end bg-slate-50 p-4 rounded-xl border border-slate-100">
+                  <div>
+                    <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest">SKU Terpilih</p>
+                    <p className="text-sm font-bold text-slate-700">{stokHistory.barang.sku}</p>
+                  </div>
+                  <div className="text-right">
+                    <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest">Stok Saat Ini</p>
+                    <p className="text-xl font-black text-emerald-600">{stokHistory.barang.stok_akhir} <span className="text-xs font-medium text-slate-400">{stokHistory.barang.satuan}</span></p>
+                  </div>
+                </div>
+
+                <div className="overflow-x-auto border border-slate-100 rounded-xl max-h-[400px] overflow-y-auto">
+                  <table className="w-full text-left text-xs border-collapse">
+                    <thead className="sticky top-0 bg-white shadow-sm z-10">
+                      <tr className="bg-slate-100 text-slate-500 font-bold uppercase text-[9px] tracking-wider border-b border-slate-200">
+                        <th className="py-3 px-4">Tanggal</th>
+                        <th className="py-3 px-4">Keterangan / Transaksi</th>
+                        <th className="py-3 px-4 text-center">Masuk</th>
+                        <th className="py-3 px-4 text-center">Keluar</th>
+                      </tr>
+                    </thead>
+                    <tbody className="divide-y divide-slate-50">
+                      {historyLoading ? (
+                        <tr><td colSpan="4" className="py-10 text-center text-slate-400">Memuat data histori...</td></tr>
+                      ) : (
+                        <>
+                          {stokHistory.list.length === 0 ? (
+                            <tr><td colSpan="4" className="py-10 text-center text-slate-400">Belum ada mutasi tercatat untuk barang ini.</td></tr>
+                          ) : (
+                            stokHistory.list.map((h, i) => (
+                              <tr key={i} className="hover:bg-slate-50/50">
+                                <td className="py-2.5 px-4 text-slate-400 font-mono">
+                                  {new Date(h.tanggal).toLocaleDateString('id-ID', { day: '2-digit', month: '2-digit', year: '2-digit', hour: '2-digit', minute: '2-digit' })}
+                                </td>
+                                <td className="py-2.5 px-4 font-medium text-slate-600">
+                                  <div className="flex items-center gap-2">
+                                    <span className={`w-1.5 h-1.5 rounded-full ${h.masuk > 0 ? 'bg-emerald-400' : 'bg-red-400'}`}></span>
+                                    {h.keterangan}
+                                  </div>
+                                </td>
+                                <td className="py-2.5 px-4 text-center font-bold text-emerald-600">{h.masuk > 0 ? `+${h.masuk}` : '-'}</td>
+                                <td className="py-2.5 px-4 text-center font-bold text-red-600">{h.keluar > 0 ? `-${h.keluar}` : '-'}</td>
+                              </tr>
+                            ))
+                          )}
+                        </>
+                      )}
+                    </tbody>
+                  </table>
+                </div>
+                <div className="bg-blue-50 p-3 rounded-lg flex gap-3 items-start">
+                   <span className="material-symbols-rounded text-blue-500 text-sm">info</span>
+                   <p className="text-[10px] text-blue-700 leading-tight">Histori ini ditarik dari Log Produksi, Detail Penjualan, dan Jurnal Penyesuaian SKU terkait sejak sistem digunakan.</p>
+                </div>
+              </div>
+            )}
 
             {/* FORM IMPORT (Tanpa hit API biasa) */}
             {modal.type === 'import_excel' ? (
