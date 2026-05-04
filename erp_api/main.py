@@ -577,11 +577,13 @@ def print_master_barang(tipe: str = "all", db: Session = Depends(get_db)):
                 "Nama Barang": b.nama_barang,
                 "SKU": b.kode_sku,
                 "Stok": f"{b.stok_saat_ini:g} {b.satuan}",
-                "Harga Modal": f"Rp {b.harga_modal:,.0f}/{b.satuan}".replace(',', '.'),
-                "Total Nilai": total_nilai # Simpan numerik untuk PDF engine
+                "Harga Modal": f"Rp {b.harga_modal:,.0f}/{b.satuan}".replace(',', '.')
             }
             if tipe != "bahan":
                 row["Harga Jual/LS"] = f"Rp {b.harga_jual:,.0f}".replace(',', '.') if "Barang Jadi" in b.kategori else "-"
+            
+            # Pindahkan Total Nilai ke paling kanan
+            row["Total Nilai"] = total_nilai 
             data.append(row)
         
         if not data:
@@ -594,10 +596,10 @@ def print_master_barang(tipe: str = "all", db: Session = Depends(get_db)):
             col_widths = [45, 35, 75, 30, 25, 32, 40]
             judul = "LAPORAN STOK GUDANG BAHAN BAKU"
         elif tipe == "baju":
-            col_widths = [40, 30, 65, 30, 25, 30, 32, 35]
+            col_widths = [40, 30, 65, 30, 25, 30, 35, 32] # Total Nilai paling kanan
             judul = "LAPORAN STOK GUDANG BARANG JADI"
         else:
-            col_widths = [40, 30, 65, 30, 25, 30, 32, 35]
+            col_widths = [40, 30, 65, 30, 25, 30, 35, 32]
             judul = "LAPORAN STOK GUDANG (REAL-TIME)"
             
         # Ambil Profil

@@ -320,26 +320,16 @@ def export_stok_inventory_pdf(judul, periode, df, col_widths, config=None, nama_
             pdf.set_font('Arial', 'B', 8)
             pdf.set_fill_color(245, 245, 245)
             
-            # Label Halaman
-            label_w = sum(actual_widths[:nilai_col_idx])
+            # Label Halaman (Semua kolom kecuali kolom terakhir)
+            label_w = sum(actual_widths[:-1])
             pdf.cell(label_w, 8, f" TOTAL NILAI HALAMAN {pdf.page_no()}", 1, 0, 'R', 1)
             
-            # Nilai Halaman
-            pdf.cell(actual_widths[nilai_col_idx], 8, format_rp_pdf(page_total), 1, 0, 'R', 1)
-            
-            # Sisa kolom kosong
-            if nilai_col_idx < len(cols) - 1:
-                pdf.cell(sum(actual_widths[nilai_col_idx+1:]), 8, "", 1, 1, 'C', 1)
-            else:
-                pdf.ln()
+            # Nilai Halaman (Kolom terakhir)
+            pdf.cell(actual_widths[-1], 8, format_rp_pdf(page_total), 1, 1, 'R', 1)
                 
             # Cetak Akumulasi
             pdf.cell(label_w, 8, f" TOTAL AKUMULASI (S.D HALAMAN {pdf.page_no()})", 1, 0, 'R', 1)
-            pdf.cell(actual_widths[nilai_col_idx], 8, format_rp_pdf(cumulative_total), 1, 0, 'R', 1)
-            if nilai_col_idx < len(cols) - 1:
-                pdf.cell(sum(actual_widths[nilai_col_idx+1:]), 8, "", 1, 1, 'C', 1)
-            else:
-                pdf.ln()
+            pdf.cell(actual_widths[-1], 8, format_rp_pdf(cumulative_total), 1, 1, 'R', 1)
                 
             page_total = 0 # Reset page total
             pdf.add_page()
@@ -349,8 +339,8 @@ def export_stok_inventory_pdf(judul, periode, df, col_widths, config=None, nama_
         for i, col in enumerate(cols):
             val = row[col]
             
-            # Jika ini kolom Total Nilai, format jadi Rupiah
-            if i == nilai_col_idx:
+            # Jika ini kolom Total Nilai (kolom terakhir), format jadi Rupiah
+            if i == len(cols) - 1:
                 num_val = float(val) if val else 0
                 page_total += num_val
                 cumulative_total += num_val
@@ -371,14 +361,9 @@ def export_stok_inventory_pdf(judul, periode, df, col_widths, config=None, nama_
     pdf.set_fill_color(6, 78, 59)
     pdf.set_text_color(255, 255, 255)
     
-    label_w = sum(actual_widths[:nilai_col_idx])
+    label_w = sum(actual_widths[:-1])
     pdf.cell(label_w, 12, " GRAND TOTAL NILAI PERSEDIAAN GUDANG", 1, 0, 'R', 1)
-    pdf.cell(actual_widths[nilai_col_idx], 12, format_rp_pdf(cumulative_total), 1, 0, 'R', 1)
-    
-    if nilai_col_idx < len(cols) - 1:
-        pdf.cell(sum(actual_widths[nilai_col_idx+1:]), 12, "", 1, 1, 'C', 1)
-    else:
-        pdf.ln()
+    pdf.cell(actual_widths[-1], 12, format_rp_pdf(cumulative_total), 1, 1, 'R', 1)
 
     pdf.set_text_color(0, 0, 0)
     pdf.add_ttd(config, nama=nama_ttd, jabatan=jabatan_ttd, nama_admin=nama_admin, jabatan_admin=jabatan_admin)
