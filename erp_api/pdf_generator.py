@@ -314,8 +314,8 @@ def export_stok_inventory_pdf(judul, periode, df, col_widths, config=None, nama_
             
     for idx, row in df.iterrows():
         # Cek Ganti Halaman
-        # Kita butuh ruang untuk: Baris Data (7mm) + 2 Baris Total (16mm)
-        if pdf.get_y() > 175: 
+        # Kita butuh ruang lega untuk: 2 Baris Total (16mm) agar tidak terpisah
+        if pdf.get_y() > 165: 
             # Cetak Footer Halaman (Subtotal)
             pdf.set_font('Arial', 'B', 8)
             pdf.set_fill_color(245, 245, 245)
