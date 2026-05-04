@@ -416,8 +416,18 @@ export default function MasterData() {
         {/* MITRA BISNIS */}
         {activeTab === 'Mitra Bisnis' && (
           <div>
-            <div className="flex justify-end mb-4">
-              <button onClick={() => openModal('add_mitra')} className="bg-[#10B981] text-white px-4 py-2 text-sm font-medium rounded-lg hover:bg-emerald-600 transition-all">Tambah Mitra Baru</button>
+            <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4 mb-4">
+               <div className="relative w-full md:w-64">
+                 <span className="material-symbols-rounded absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 text-sm">search</span>
+                 <input 
+                   type="text" 
+                   placeholder="Cari Nama / Alamat..." 
+                   value={searchTerm}
+                   onChange={(e) => setSearchTerm(e.target.value)}
+                   className="w-full pl-9 pr-4 py-2 bg-slate-50 border border-slate-200 rounded-lg text-xs font-medium focus:ring-2 focus:ring-emerald-500/20 focus:border-emerald-500 outline-none transition-all"
+                 />
+               </div>
+               <button onClick={() => openModal('add_mitra')} className="bg-[#10B981] text-white px-4 py-2 text-sm font-medium rounded-lg hover:bg-emerald-600 transition-all shadow-sm">Tambah Mitra Baru</button>
             </div>
             <div className="overflow-x-auto border border-slate-100 rounded-xl">
               <table className="w-full text-left border-collapse text-sm">
@@ -432,7 +442,11 @@ export default function MasterData() {
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-slate-50">
-                  {data.mitra.map(m => (
+                  {data.mitra.filter(m => {
+                    return !searchTerm || 
+                      m.nama_mitra.toLowerCase().includes(searchTerm.toLowerCase()) ||
+                      (m.alamat && m.alamat.toLowerCase().includes(searchTerm.toLowerCase()));
+                  }).map(m => (
                     <tr key={m.id} className="hover:bg-slate-50/50 transition-colors">
                       <td className="py-3 px-4"><div className="font-bold text-slate-800">{m.nama_mitra}</div></td>
                       <td className="py-3 px-4">
@@ -459,7 +473,11 @@ export default function MasterData() {
                   ))}
                 </tbody>
               </table>
-              {data.mitra.length === 0 && <div className="text-center py-20 text-slate-400 font-medium">Belum ada data pelanggan atau supplier.</div>}
+              {data.mitra.filter(m => {
+                return !searchTerm || 
+                  m.nama_mitra.toLowerCase().includes(searchTerm.toLowerCase()) ||
+                  (m.alamat && m.alamat.toLowerCase().includes(searchTerm.toLowerCase()));
+              }).length === 0 && <div className="text-center py-20 text-slate-400 font-medium">Data mitra bisnis tidak ditemukan.</div>}
             </div>
           </div>
         )}
