@@ -14,3 +14,4 @@ PyJWT
 requests
 psycopg2-binary
 google-generativeai
+websockets
