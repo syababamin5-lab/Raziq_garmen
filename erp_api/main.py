@@ -259,11 +259,49 @@ async def startup_event():
                 {"kode_akun": "62191", "nama_akun": "Beban Piutang Tak Tertagih", "kategori": "Beban"},
                 {"kode_akun": "62220", "nama_akun": "Biaya Hosting", "kategori": "Beban"},
             ]
-            existing_coas = [c[0] for c in db.query(models.AkunBukuBesar.kode_akun).all()]
+            existing_map = {c.kode_akun: c for c in db.query(models.AkunBukuBesar).all()}
             for c in coa_data:
-                if c["kode_akun"] not in existing_coas:
+                if c["kode_akun"] in existing_map:
+                    # Update nama jika berbeda (untuk pemisahan akun)
+                    acc = existing_map[c["kode_akun"]]
+                    if acc.nama_akun != c["nama_akun"]:
+                        acc.nama_akun = c["nama_akun"]
+                        print(f"✅ Updated COA Name: {c['kode_akun']} -> {c['nama_akun']}")
+                else:
                     db.add(models.AkunBukuBesar(**c))
+                    print(f"✅ Added NEW COA: {c['kode_akun']} - {c['nama_akun']}")
             db.commit()
+
+            # 2b. ONE-TIME JOURNAL RECLASSIFICATION (SPLIT ACCOUNT DATA)
+            # Memindahkan data jurnal lama ke akun baru yang lebih spesifik berdasarkan keyword
+            reclass_rules = [
+                # BOP Pabrik (51330 -> 51331, 51332, 51333)
+                {"from": "51330", "to": "51331", "keywords": ["air", "pdam"]},
+                {"from": "51330", "to": "51332", "keywords": ["gas", "elpiji", "lpg"]},
+                {"from": "51330", "to": "51333", "keywords": ["bbm", "solar", "pertalite", "bensin"]},
+                # Beban Utilitas Kantor (62150 -> 62151, 62152)
+                {"from": "62150", "to": "62151", "keywords": ["air", "pdam"]},
+                {"from": "62150", "to": "62152", "keywords": ["aman", "security", "keamanan"]},
+                # Beban ATK & Konsumsi (62120 -> 62121)
+                {"from": "62120", "to": "62121", "keywords": ["makan", "minum", "konsumsi", "snack", "beras", "galon", "kopi"]}
+            ]
+            
+            reclass_count = 0
+            for rule in reclass_rules:
+                for kw in rule["keywords"]:
+                    # Cari jurnal di akun 'from' yang keterangannya mengandung keyword
+                    jurnals = db.query(models.JurnalUmum).filter(
+                        models.JurnalUmum.kode_akun == rule["from"],
+                        models.JurnalUmum.keterangan.ilike(f"%{kw}%")
+                    ).all()
+                    
+                    for j in jurnals:
+                        j.kode_akun = rule["to"]
+                        reclass_count += 1
+            
+            if reclass_count > 0:
+                db.commit()
+                print(f"🚀 Reclassified {reclass_count} journals for account splitting.")
 
         # 3. AUTO-SEED MENU REGISTRY (Penting untuk Navigasi Dinamis)
         existing_menus = [m[0] for m in db.query(models.MenuRegistry.id_menu).all()]
