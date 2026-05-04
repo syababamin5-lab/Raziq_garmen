@@ -203,105 +203,105 @@ async def startup_event():
             db.commit()
 
         # 2. AUTO-SEED CHART OF ACCOUNTS (COA) - PERMANENSI MASTER DATA
-            coa_data = [
-                {"kode_akun": "11110", "nama_akun": "Kas Tunai", "kategori": "Aset"},
-                {"kode_akun": "11120", "nama_akun": "BCA", "kategori": "Aset"},
-                {"kode_akun": "11210", "nama_akun": "Piutang Usaha", "kategori": "Aset"},
-                {"kode_akun": "11220", "nama_akun": "Piutang Karyawan", "kategori": "Aset"},
-                {"kode_akun": "12110", "nama_akun": "Persediaan Bahan Baku (Kain)", "kategori": "Aset"},
-                {"kode_akun": "12120", "nama_akun": "Persediaan Bahan Penolong", "kategori": "Aset"},
-                {"kode_akun": "12130", "nama_akun": "Persediaan Barang Dalam Proses (WIP)", "kategori": "Aset"},
-                {"kode_akun": "12150", "nama_akun": "Persediaan Barang Jadi", "kategori": "Aset"},
-                {"kode_akun": "13110", "nama_akun": "Tanah & Bangunan", "kategori": "Aset"},
-                {"kode_akun": "13120", "nama_akun": "Akumulasi Penyusutan Bangunan", "kategori": "Aset"},
-                {"kode_akun": "13210", "nama_akun": "Mesin Produksi & Peralatan", "kategori": "Aset"},
-                {"kode_akun": "13220", "nama_akun": "Akumulasi Penyusutan Mesin", "kategori": "Aset"},
-                {"kode_akun": "13310", "nama_akun": "Kendaraan Operasional", "kategori": "Aset"},
-                {"kode_akun": "13320", "nama_akun": "Akumulasi Penyusutan Kendaraan", "kategori": "Aset"},
-                {"kode_akun": "13410", "nama_akun": "Furniture & Inventaris Kantor", "kategori": "Aset"},
-                {"kode_akun": "13420", "nama_akun": "Akumulasi Penyusutan Furniture", "kategori": "Aset"},
-                {"kode_akun": "21110", "nama_akun": "Utang Usaha", "kategori": "Kewajiban"},
-                {"kode_akun": "21210", "nama_akun": "Utang Gaji & Upah", "kategori": "Kewajiban"},
-                {"kode_akun": "31110", "nama_akun": "Modal Disetor", "kategori": "Ekuitas"},
-                {"kode_akun": "31120", "nama_akun": "Ekuitas - Saldo Awal Setup", "kategori": "Ekuitas"},
-                {"kode_akun": "41110", "nama_akun": "Pendapatan Penjualan", "kategori": "Pendapatan"},
-                {"kode_akun": "41120", "nama_akun": "Retur Penjualan", "kategori": "Pendapatan"},
-                {"kode_akun": "41130", "nama_akun": "Potongan Penjualan (Diskon)", "kategori": "Pendapatan"},
-                {"kode_akun": "51110", "nama_akun": "Pemakaian Bahan Baku", "kategori": "Beban"},
-                {"kode_akun": "51120", "nama_akun": "Harga Pokok Penjualan (HPP)", "kategori": "Beban"},
-                {"kode_akun": "51199", "nama_akun": "Ikhtisar Produksi", "kategori": "Beban"},
-                {"kode_akun": "51210", "nama_akun": "BTKL - Upah Cutting", "kategori": "Beban"},
-                {"kode_akun": "51220", "nama_akun": "BTKL - Upah Jahit / Makloon", "kategori": "Beban"},
-                {"kode_akun": "51230", "nama_akun": "BTKL - Upah QC & Finishing", "kategori": "Beban"},
-                {"kode_akun": "51310", "nama_akun": "BOP - Jasa Sablon / Makloon Luar", "kategori": "Beban"},
-                {"kode_akun": "51320", "nama_akun": "BOP - Pemakaian Bahan Penolong & Packing", "kategori": "Beban"},
-                {"kode_akun": "51330", "nama_akun": "BOP - Listrik Pabrik / Produksi", "kategori": "Beban"},
-                {"kode_akun": "51331", "nama_akun": "BOP - Air Pabrik / Produksi", "kategori": "Beban"},
-                {"kode_akun": "51332", "nama_akun": "BOP - Gas Pabrik / Produksi", "kategori": "Beban"},
-                {"kode_akun": "51333", "nama_akun": "BOP - BBM Pabrik / Produksi", "kategori": "Beban"},
-                {"kode_akun": "51340", "nama_akun": "BOP - Pemeliharaan & Sparepart Mesin Pabrik", "kategori": "Beban"},
-                {"kode_akun": "51350", "nama_akun": "BOP - Beban Penyusutan Pabrik", "kategori": "Beban"},
-                {"kode_akun": "51390", "nama_akun": "BOP - Asuransi & Biaya Pabrik Lainnya", "kategori": "Beban"},
-                {"kode_akun": "61110", "nama_akun": "Beban Gaji Pemasaran & Komisi", "kategori": "Beban"},
-                {"kode_akun": "61120", "nama_akun": "Beban Iklan & Promosi", "kategori": "Beban"},
-                {"kode_akun": "61130", "nama_akun": "Beban Ongkos Kirim / Ekspedisi ke Customer", "kategori": "Beban"},
-                {"kode_akun": "62110", "nama_akun": "Beban Gaji Admin & Umum", "kategori": "Beban"},
-                {"kode_akun": "62120", "nama_akun": "Beban ATK", "kategori": "Beban"},
-                {"kode_akun": "62121", "nama_akun": "Beban Konsumsi Kantor", "kategori": "Beban"},
-                {"kode_akun": "62130", "nama_akun": "Beban Komunikasi & Internet", "kategori": "Beban"},
-                {"kode_akun": "62140", "nama_akun": "Beban Perjalanan Dinas & Transport Kantor", "kategori": "Beban"},
-                {"kode_akun": "62150", "nama_akun": "Beban Listrik Kantor", "kategori": "Beban"},
-                {"kode_akun": "62151", "nama_akun": "Beban Air Kantor", "kategori": "Beban"},
-                {"kode_akun": "62152", "nama_akun": "Beban Keamanan Kantor", "kategori": "Beban"},
-                {"kode_akun": "62160", "nama_akun": "Beban Sewa, Pajak & Retribusi", "kategori": "Beban"},
-                {"kode_akun": "62170", "nama_akun": "Beban Penyusutan Aset Kantor", "kategori": "Beban"},
-                {"kode_akun": "62180", "nama_akun": "Beban Subscription Digital", "kategori": "Beban"},
-                {"kode_akun": "62191", "nama_akun": "Beban Piutang Tak Tertagih", "kategori": "Beban"},
-                {"kode_akun": "62220", "nama_akun": "Biaya Hosting", "kategori": "Beban"},
-            ]
-            existing_map = {c.kode_akun: c for c in db.query(models.AkunBukuBesar).all()}
-            for c in coa_data:
-                if c["kode_akun"] in existing_map:
-                    # Update nama jika berbeda (untuk pemisahan akun)
-                    acc = existing_map[c["kode_akun"]]
-                    if acc.nama_akun != c["nama_akun"]:
-                        acc.nama_akun = c["nama_akun"]
-                        print(f"✅ Updated COA Name: {c['kode_akun']} -> {c['nama_akun']}")
-                else:
-                    db.add(models.AkunBukuBesar(**c))
-                    print(f"✅ Added NEW COA: {c['kode_akun']} - {c['nama_akun']}")
-            db.commit()
+        coa_data = [
+            {"kode_akun": "11110", "nama_akun": "Kas Tunai", "kategori": "Aset"},
+            {"kode_akun": "11120", "nama_akun": "BCA", "kategori": "Aset"},
+            {"kode_akun": "11210", "nama_akun": "Piutang Usaha", "kategori": "Aset"},
+            {"kode_akun": "11220", "nama_akun": "Piutang Karyawan", "kategori": "Aset"},
+            {"kode_akun": "12110", "nama_akun": "Persediaan Bahan Baku (Kain)", "kategori": "Aset"},
+            {"kode_akun": "12120", "nama_akun": "Persediaan Bahan Penolong", "kategori": "Aset"},
+            {"kode_akun": "12130", "nama_akun": "Persediaan Barang Dalam Proses (WIP)", "kategori": "Aset"},
+            {"kode_akun": "12150", "nama_akun": "Persediaan Barang Jadi", "kategori": "Aset"},
+            {"kode_akun": "13110", "nama_akun": "Tanah & Bangunan", "kategori": "Aset"},
+            {"kode_akun": "13120", "nama_akun": "Akumulasi Penyusutan Bangunan", "kategori": "Aset"},
+            {"kode_akun": "13210", "nama_akun": "Mesin Produksi & Peralatan", "kategori": "Aset"},
+            {"kode_akun": "13220", "nama_akun": "Akumulasi Penyusutan Mesin", "kategori": "Aset"},
+            {"kode_akun": "13310", "nama_akun": "Kendaraan Operasional", "kategori": "Aset"},
+            {"kode_akun": "13320", "nama_akun": "Akumulasi Penyusutan Kendaraan", "kategori": "Aset"},
+            {"kode_akun": "13410", "nama_akun": "Furniture & Inventaris Kantor", "kategori": "Aset"},
+            {"kode_akun": "13420", "nama_akun": "Akumulasi Penyusutan Furniture", "kategori": "Aset"},
+            {"kode_akun": "21110", "nama_akun": "Utang Usaha", "kategori": "Kewajiban"},
+            {"kode_akun": "21210", "nama_akun": "Utang Gaji & Upah", "kategori": "Kewajiban"},
+            {"kode_akun": "31110", "nama_akun": "Modal Disetor", "kategori": "Ekuitas"},
+            {"kode_akun": "31120", "nama_akun": "Ekuitas - Saldo Awal Setup", "kategori": "Ekuitas"},
+            {"kode_akun": "41110", "nama_akun": "Pendapatan Penjualan", "kategori": "Pendapatan"},
+            {"kode_akun": "41120", "nama_akun": "Retur Penjualan", "kategori": "Pendapatan"},
+            {"kode_akun": "41130", "nama_akun": "Potongan Penjualan (Diskon)", "kategori": "Pendapatan"},
+            {"kode_akun": "51110", "nama_akun": "Pemakaian Bahan Baku", "kategori": "Beban"},
+            {"kode_akun": "51120", "nama_akun": "Harga Pokok Penjualan (HPP)", "kategori": "Beban"},
+            {"kode_akun": "51199", "nama_akun": "Ikhtisar Produksi", "kategori": "Beban"},
+            {"kode_akun": "51210", "nama_akun": "BTKL - Upah Cutting", "kategori": "Beban"},
+            {"kode_akun": "51220", "nama_akun": "BTKL - Upah Jahit / Makloon", "kategori": "Beban"},
+            {"kode_akun": "51230", "nama_akun": "BTKL - Upah QC & Finishing", "kategori": "Beban"},
+            {"kode_akun": "51310", "nama_akun": "BOP - Jasa Sablon / Makloon Luar", "kategori": "Beban"},
+            {"kode_akun": "51320", "nama_akun": "BOP - Pemakaian Bahan Penolong & Packing", "kategori": "Beban"},
+            {"kode_akun": "51330", "nama_akun": "BOP - Listrik Pabrik / Produksi", "kategori": "Beban"},
+            {"kode_akun": "51331", "nama_akun": "BOP - Air Pabrik / Produksi", "kategori": "Beban"},
+            {"kode_akun": "51332", "nama_akun": "BOP - Gas Pabrik / Produksi", "kategori": "Beban"},
+            {"kode_akun": "51333", "nama_akun": "BOP - BBM Pabrik / Produksi", "kategori": "Beban"},
+            {"kode_akun": "51340", "nama_akun": "BOP - Pemeliharaan & Sparepart Mesin Pabrik", "kategori": "Beban"},
+            {"kode_akun": "51350", "nama_akun": "BOP - Beban Penyusutan Pabrik", "kategori": "Beban"},
+            {"kode_akun": "51390", "nama_akun": "BOP - Asuransi & Biaya Pabrik Lainnya", "kategori": "Beban"},
+            {"kode_akun": "61110", "nama_akun": "Beban Gaji Pemasaran & Komisi", "kategori": "Beban"},
+            {"kode_akun": "61120", "nama_akun": "Beban Iklan & Promosi", "kategori": "Beban"},
+            {"kode_akun": "61130", "nama_akun": "Beban Ongkos Kirim / Ekspedisi ke Customer", "kategori": "Beban"},
+            {"kode_akun": "62110", "nama_akun": "Beban Gaji Admin & Umum", "kategori": "Beban"},
+            {"kode_akun": "62120", "nama_akun": "Beban ATK", "kategori": "Beban"},
+            {"kode_akun": "62121", "nama_akun": "Beban Konsumsi Kantor", "kategori": "Beban"},
+            {"kode_akun": "62130", "nama_akun": "Beban Komunikasi & Internet", "kategori": "Beban"},
+            {"kode_akun": "62140", "nama_akun": "Beban Perjalanan Dinas & Transport Kantor", "kategori": "Beban"},
+            {"kode_akun": "62150", "nama_akun": "Beban Listrik Kantor", "kategori": "Beban"},
+            {"kode_akun": "62151", "nama_akun": "Beban Air Kantor", "kategori": "Beban"},
+            {"kode_akun": "62152", "nama_akun": "Beban Keamanan Kantor", "kategori": "Beban"},
+            {"kode_akun": "62160", "nama_akun": "Beban Sewa, Pajak & Retribusi", "kategori": "Beban"},
+            {"kode_akun": "62170", "nama_akun": "Beban Penyusutan Aset Kantor", "kategori": "Beban"},
+            {"kode_akun": "62180", "nama_akun": "Beban Subscription Digital", "kategori": "Beban"},
+            {"kode_akun": "62191", "nama_akun": "Beban Piutang Tak Tertagih", "kategori": "Beban"},
+            {"kode_akun": "62220", "nama_akun": "Biaya Hosting", "kategori": "Beban"},
+        ]
+        existing_map = {c.kode_akun: c for c in db.query(models.AkunBukuBesar).all()}
+        for c in coa_data:
+            if c["kode_akun"] in existing_map:
+                # Update nama jika berbeda (untuk pemisahan akun)
+                acc = existing_map[c["kode_akun"]]
+                if acc.nama_akun != c["nama_akun"]:
+                    acc.nama_akun = c["nama_akun"]
+                    print(f"✅ Updated COA Name: {c['kode_akun']} -> {c['nama_akun']}")
+            else:
+                db.add(models.AkunBukuBesar(**c))
+                print(f"✅ Added NEW COA: {c['kode_akun']} - {c['nama_akun']}")
+        db.commit()
 
-            # 2b. ONE-TIME JOURNAL RECLASSIFICATION (SPLIT ACCOUNT DATA)
-            # Memindahkan data jurnal lama ke akun baru yang lebih spesifik berdasarkan keyword
-            reclass_rules = [
-                # BOP Pabrik (51330 -> 51331, 51332, 51333)
-                {"from": "51330", "to": "51331", "keywords": ["air", "pdam"]},
-                {"from": "51330", "to": "51332", "keywords": ["gas", "elpiji", "lpg"]},
-                {"from": "51330", "to": "51333", "keywords": ["bbm", "solar", "pertalite", "bensin"]},
-                # Beban Utilitas Kantor (62150 -> 62151, 62152)
-                {"from": "62150", "to": "62151", "keywords": ["air", "pdam"]},
-                {"from": "62150", "to": "62152", "keywords": ["aman", "security", "keamanan"]},
-                # Beban ATK & Konsumsi (62120 -> 62121)
-                {"from": "62120", "to": "62121", "keywords": ["makan", "minum", "konsumsi", "snack", "beras", "galon", "kopi"]}
-            ]
-            
-            reclass_count = 0
-            for rule in reclass_rules:
-                for kw in rule["keywords"]:
-                    # Cari jurnal di akun 'from' yang keterangannya mengandung keyword
-                    jurnals = db.query(models.JurnalUmum).filter(
-                        models.JurnalUmum.kode_akun == rule["from"],
-                        models.JurnalUmum.keterangan.ilike(f"%{kw}%")
-                    ).all()
-                    
-                    for j in jurnals:
-                        j.kode_akun = rule["to"]
-                        reclass_count += 1
-            
-            if reclass_count > 0:
-                db.commit()
-                print(f"🚀 Reclassified {reclass_count} journals for account splitting.")
+        # 2b. ONE-TIME JOURNAL RECLASSIFICATION (SPLIT ACCOUNT DATA)
+        # Memindahkan data jurnal lama ke akun baru yang lebih spesifik berdasarkan keyword
+        reclass_rules = [
+            # BOP Pabrik (51330 -> 51331, 51332, 51333)
+            {"from": "51330", "to": "51331", "keywords": ["air", "pdam"]},
+            {"from": "51330", "to": "51332", "keywords": ["gas", "elpiji", "lpg"]},
+            {"from": "51330", "to": "51333", "keywords": ["bbm", "solar", "pertalite", "bensin"]},
+            # Beban Utilitas Kantor (62150 -> 62151, 62152)
+            {"from": "62150", "to": "62151", "keywords": ["air", "pdam"]},
+            {"from": "62150", "to": "62152", "keywords": ["aman", "security", "keamanan"]},
+            # Beban ATK & Konsumsi (62120 -> 62121)
+            {"from": "62120", "to": "62121", "keywords": ["makan", "minum", "konsumsi", "snack", "beras", "galon", "kopi"]}
+        ]
+        
+        reclass_count = 0
+        for rule in reclass_rules:
+            for kw in rule["keywords"]:
+                # Cari jurnal di akun 'from' yang keterangannya mengandung keyword
+                jurnals = db.query(models.JurnalUmum).filter(
+                    models.JurnalUmum.kode_akun == rule["from"],
+                    models.JurnalUmum.keterangan.ilike(f"%{kw}%")
+                ).all()
+                
+                for j in jurnals:
+                    j.kode_akun = rule["to"]
+                    reclass_count += 1
+        
+        if reclass_count > 0:
+            db.commit()
+            print(f"🚀 Reclassified {reclass_count} journals for account splitting.")
 
         # 3. AUTO-SEED MENU REGISTRY (Penting untuk Navigasi Dinamis)
         existing_menus = [m[0] for m in db.query(models.MenuRegistry.id_menu).all()]
