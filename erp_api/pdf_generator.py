@@ -285,6 +285,105 @@ def export_dataframe_pdf(judul, periode, df, col_widths, config=None, nama_ttd=N
     pdf.add_ttd(config, nama=nama_ttd, jabatan=jabatan_ttd, nama_admin=nama_admin, jabatan_admin=jabatan_admin)
     return pdf.output(dest='S').encode('latin-1')
 
+def export_stok_inventory_pdf(judul, periode, df, col_widths, config=None, nama_ttd=None, jabatan_ttd=None, nama_admin=None, jabatan_admin=None):
+    # Inventaris stok selalu Landscape agar lega
+    pdf = PDF(judul, periode, orientation='L', config=config)
+    
+    total_w = sum(col_widths)
+    usable_width = 277 
+    actual_widths = [(w / total_w) * usable_width for w in col_widths]
+    cols = df.columns.tolist()
+    
+    pdf.headers_data = []
+    for i, col in enumerate(cols):
+        pdf.headers_data.append((actual_widths[i], col, 'C'))
+    
+    pdf.add_page()
+    pdf.set_font('Arial', '', 9)
+    
+    cumulative_total = 0
+    page_total = 0
+    
+    # Cari indeks kolom "Total Nilai" (biasanya kolom ke-7 atau terakhir)
+    # Kita asumsikan kolom yang berisi numerik murni adalah target total
+    nilai_col_idx = -1
+    for i, col in enumerate(cols):
+        if col == "Total Nilai":
+            nilai_col_idx = i
+            break
+            
+    for idx, row in df.iterrows():
+        # Cek Ganti Halaman
+        # Jika posisi Y sudah di bawah, cetak summary halaman dulu
+        if pdf.get_y() > 180: # Margin bawah Landscape
+            # Cetak Footer Halaman (Subtotal)
+            pdf.set_font('Arial', 'B', 8)
+            pdf.set_fill_color(245, 245, 245)
+            
+            # Label Halaman
+            label_w = sum(actual_widths[:nilai_col_idx])
+            pdf.cell(label_w, 8, f" TOTAL NILAI HALAMAN {pdf.page_no()}", 1, 0, 'R', 1)
+            
+            # Nilai Halaman
+            pdf.cell(actual_widths[nilai_col_idx], 8, format_rp_pdf(page_total), 1, 0, 'R', 1)
+            
+            # Sisa kolom kosong
+            if nilai_col_idx < len(cols) - 1:
+                pdf.cell(sum(actual_widths[nilai_col_idx+1:]), 8, "", 1, 1, 'C', 1)
+            else:
+                pdf.ln()
+                
+            # Cetak Akumulasi
+            pdf.cell(label_w, 8, f" TOTAL AKUMULASI (S.D HALAMAN {pdf.page_no()})", 1, 0, 'R', 1)
+            pdf.cell(actual_widths[nilai_col_idx], 8, format_rp_pdf(cumulative_total), 1, 0, 'R', 1)
+            if nilai_col_idx < len(cols) - 1:
+                pdf.cell(sum(actual_widths[nilai_col_idx+1:]), 8, "", 1, 1, 'C', 1)
+            else:
+                pdf.ln()
+                
+            page_total = 0 # Reset page total
+            pdf.add_page()
+            pdf.set_font('Arial', '', 9)
+
+        # Cetak Baris Data
+        for i, col in enumerate(cols):
+            val = row[col]
+            
+            # Jika ini kolom Total Nilai, format jadi Rupiah
+            if i == nilai_col_idx:
+                num_val = float(val) if val else 0
+                page_total += num_val
+                cumulative_total += num_val
+                text = format_rp_pdf(num_val)
+                align = 'R'
+            else:
+                text = str(val)
+                align = 'L'
+                if any(x in text for x in ['Rp', 'Pcs', 'LS']) or isinstance(val, (int, float)):
+                    align = 'R'
+            
+            pdf.cell(actual_widths[i], 7, text, 1, 0, align)
+        pdf.ln()
+
+    # Final Summary di Akhir Tabel
+    pdf.ln(2)
+    pdf.set_font('Arial', 'B', 10)
+    pdf.set_fill_color(6, 78, 59)
+    pdf.set_text_color(255, 255, 255)
+    
+    label_w = sum(actual_widths[:nilai_col_idx])
+    pdf.cell(label_w, 12, " GRAND TOTAL NILAI PERSEDIAAN GUDANG", 1, 0, 'R', 1)
+    pdf.cell(actual_widths[nilai_col_idx], 12, format_rp_pdf(cumulative_total), 1, 0, 'R', 1)
+    
+    if nilai_col_idx < len(cols) - 1:
+        pdf.cell(sum(actual_widths[nilai_col_idx+1:]), 12, "", 1, 1, 'C', 1)
+    else:
+        pdf.ln()
+
+    pdf.set_text_color(0, 0, 0)
+    pdf.add_ttd(config, nama=nama_ttd, jabatan=jabatan_ttd, nama_admin=nama_admin, jabatan_admin=jabatan_admin)
+    return pdf.output(dest='S').encode('latin-1')
+
 # ====================================================================
 # 4. ENGINE INVOICE PROFESIONAL (PORTRAIT)
 # ====================================================================

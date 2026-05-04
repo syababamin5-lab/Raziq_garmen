@@ -570,13 +570,15 @@ def print_master_barang(tipe: str = "all", db: Session = Depends(get_db)):
         # Susun Data untuk PDF
         data = []
         for b in items:
+            total_nilai = b.stok_saat_ini * b.harga_modal
             row = {
                 "Kategori": b.kategori,
                 "Model Code": b.model_code,
                 "Nama Barang": b.nama_barang,
                 "SKU": b.kode_sku,
                 "Stok": f"{b.stok_saat_ini:g} {b.satuan}",
-                "Harga Modal": f"Rp {b.harga_modal:,.0f}/{b.satuan}".replace(',', '.')
+                "Harga Modal": f"Rp {b.harga_modal:,.0f}/{b.satuan}".replace(',', '.'),
+                "Total Nilai": total_nilai # Simpan numerik untuk PDF engine
             }
             if tipe != "bahan":
                 row["Harga Jual/LS"] = f"Rp {b.harga_jual:,.0f}".replace(',', '.') if "Barang Jadi" in b.kategori else "-"
@@ -589,13 +591,13 @@ def print_master_barang(tipe: str = "all", db: Session = Depends(get_db)):
         
         # Lebar kolom dinamis
         if tipe == "bahan":
-            col_widths = [55, 45, 85, 40, 35, 42]
+            col_widths = [45, 35, 75, 30, 25, 32, 40]
             judul = "LAPORAN STOK GUDANG BAHAN BAKU"
         elif tipe == "baju":
-            col_widths = [45, 35, 75, 30, 25, 32, 35]
+            col_widths = [40, 30, 65, 30, 25, 30, 32, 35]
             judul = "LAPORAN STOK GUDANG BARANG JADI"
         else:
-            col_widths = [45, 35, 75, 30, 25, 32, 35]
+            col_widths = [40, 30, 65, 30, 25, 30, 32, 35]
             judul = "LAPORAN STOK GUDANG (REAL-TIME)"
             
         # Ambil Profil
@@ -605,7 +607,7 @@ def print_master_barang(tipe: str = "all", db: Session = Depends(get_db)):
         n_ttd = config.ttd_laporan_nama if (config and config.ttd_laporan_nama) else (config.nama_pemilik if config else "Yana Taryana")
         j_ttd = config.ttd_laporan_jabatan if (config and config.ttd_laporan_jabatan) else (config.jabatan_pemilik if config else "Direktur Operasional")
         
-        pdf_bytes = pdf_generator.export_dataframe_pdf(judul, "", df, col_widths, config, n_ttd, j_ttd)
+        pdf_bytes = pdf_generator.export_stok_inventory_pdf(judul, "", df, col_widths, config, n_ttd, j_ttd)
         
         return StreamingResponse(
             io.BytesIO(pdf_bytes),
