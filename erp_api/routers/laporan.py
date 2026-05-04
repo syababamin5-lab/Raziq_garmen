@@ -703,6 +703,8 @@ def get_kartu_stok(kode_sku: str, db: Session = Depends(get_db)):
             # Cari tanggal dari header
             header = db.query(models.HeaderPenjualan).filter(models.HeaderPenjualan.no_invoice == s.no_invoice).first()
             tgl = header.tanggal if header else datetime.datetime.now()
+            
+            # Penjualan Normal (Keluar)
             mutasi.append({
                 "tanggal": tgl,
                 "keterangan": f"Penjualan: {s.no_invoice} ({s.nama_customer or 'Umum'})",
@@ -710,6 +712,16 @@ def get_kartu_stok(kode_sku: str, db: Session = Depends(get_db)):
                 "keluar": s.qty_lusin * 12, # Konversi ke Pcs jika barang jadi
                 "tipe": "PENJUALAN"
             })
+            
+            # Retur Penjualan (Masuk kembali)
+            if s.qty_retur and s.qty_retur > 0:
+                mutasi.append({
+                    "tanggal": tgl, # Idealnya tanggal retur, tapi saat ini tersimpan di detail invoice
+                    "keterangan": f"Retur Penjualan: {s.no_invoice} ({s.nama_customer or 'Umum'})",
+                    "masuk": s.qty_retur * 12,
+                    "keluar": 0,
+                    "tipe": "RETUR"
+                })
 
         # 4. Ambil dari Pembelian (Menambah Bahan Baku)
         purchases = db.query(models.DetailPembelian).filter(models.DetailPembelian.kode_sku == kode_sku).all()
