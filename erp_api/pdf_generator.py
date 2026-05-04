@@ -353,7 +353,17 @@ def export_stok_inventory_pdf(judul, periode, df, col_widths, config=None, nama_
             pdf.cell(actual_widths[i], 7, text, 1, 0, align)
         pdf.ln()
 
-    # Final Summary di Akhir Tabel
+    # Cetak Footer untuk Halaman Terakhir (jika belum tercetak di dalam loop)
+    if page_total > 0:
+        pdf.set_font('Arial', 'B', 8)
+        pdf.set_fill_color(245, 245, 245)
+        label_w = sum(actual_widths[:-1])
+        pdf.cell(label_w, 8, f" TOTAL NILAI HALAMAN {pdf.page_no()}", 1, 0, 'R', 1)
+        pdf.cell(actual_widths[-1], 8, format_rp_pdf(page_total), 1, 1, 'R', 1)
+        pdf.cell(label_w, 8, f" TOTAL AKUMULASI (S.D HALAMAN {pdf.page_no()})", 1, 0, 'R', 1)
+        pdf.cell(actual_widths[-1], 8, format_rp_pdf(cumulative_total), 1, 1, 'R', 1)
+
+    # Final Summary (Grand Total)
     pdf.ln(2)
     pdf.set_font('Arial', 'B', 10)
     pdf.set_fill_color(6, 78, 59)
