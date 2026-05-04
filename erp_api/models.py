@@ -86,6 +86,7 @@ class Barang(Base):
     stok_saat_ini = Column(Float, default=0.0)
     harga_jual = Column(Float, default=0.0)
     harga_modal = Column(Float, default=0.0)
+    is_active = Column(Integer, default=1)
 
 
 class Mitra(Base):
@@ -98,6 +99,7 @@ class Mitra(Base):
     alamat = Column(String, default="-")
     saldo_piutang = Column(Float, default=0.0)
     saldo_utang = Column(Float, default=0.0)
+    is_active = Column(Integer, default=1)
 
 
 class Karyawan(Base):

@@ -274,12 +274,12 @@ export default function MasterData() {
                         <td className="py-3 px-4 font-mono text-emerald-700">{item.kode_sku}</td>
                         <td className="py-3 px-4 text-right font-black text-slate-700">{stokTampil}</td>
                         <td className="py-3 px-4 text-right font-bold text-slate-500">
-                          <div>Rp {item.harga_modal?.toLocaleString('id-ID')} <span className="text-[10px] font-normal text-slate-400">/ Pcs</span></div>
-                          <div className="text-[10px] font-medium text-emerald-600">Rp {(item.harga_modal * 12).toLocaleString('id-ID')} <span className="font-normal text-slate-400">/ Lusin</span></div>
+                          <div>Rp {Math.round(item.harga_modal || 0).toLocaleString('id-ID')} <span className="text-[10px] font-normal text-slate-400">/ Pcs</span></div>
+                          <div className="text-[10px] font-medium text-emerald-600">Rp {Math.round((item.harga_modal || 0) * 12).toLocaleString('id-ID')} <span className="font-normal text-slate-400">/ Lusin</span></div>
                         </td>
                         <td className="py-3 px-4 text-right font-bold text-emerald-600">
-                          <div className="text-[10px] font-medium text-slate-400">Rp {(item.harga_jual / 12).toLocaleString('id-ID')} <span className="font-normal">/ Pcs</span></div>
-                          <div>Rp {item.harga_jual?.toLocaleString('id-ID')} <span className="text-[10px] font-normal text-slate-400">/ Lusin</span></div>
+                          <div className="text-[10px] font-medium text-slate-400">Rp {Math.round((item.harga_jual || 0) / 12).toLocaleString('id-ID')} <span className="font-normal">/ Pcs</span></div>
+                          <div>Rp {Math.round(item.harga_jual || 0).toLocaleString('id-ID')} <span className="text-[10px] font-normal text-slate-400">/ Lusin</span></div>
                         </td>
                         <td className="py-3 px-4 text-right">
                           <button onClick={() => openKartuStok(item)} className="text-slate-400 hover:bg-slate-50 p-2 rounded-lg transition-all" title="Lihat Kartu Stok / History">
@@ -363,7 +363,7 @@ export default function MasterData() {
                         <td className="py-3 px-4 font-mono text-emerald-700">{item.kode_sku}</td>
                         <td className="py-3 px-4 text-right font-black text-slate-700">{stokTampil}</td>
                         <td className="py-3 px-4 text-right font-bold text-slate-500">
-                          <div>Rp {item.harga_modal?.toLocaleString('id-ID')} <span className="text-[10px] font-normal text-slate-400">/ {item.satuan || 'Kg'}</span></div>
+                          <div>Rp {Math.round(item.harga_modal || 0).toLocaleString('id-ID')} <span className="text-[10px] font-normal text-slate-400">/ {item.satuan || 'Kg'}</span></div>
                         </td>
                         <td className="py-3 px-4 text-right">
                           <button onClick={() => openKartuStok(item)} className="text-slate-400 hover:bg-slate-50 p-2 rounded-lg transition-all" title="Lihat Kartu Stok / History">

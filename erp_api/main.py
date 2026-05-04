@@ -167,9 +167,21 @@ async def startup_event():
             except:
                 db.rollback()
         
-        # Migrasi Karyawan (is_active)
+        # Migrasi is_active
         try:
             db.execute(text("ALTER TABLE karyawan ADD COLUMN is_active INTEGER DEFAULT 1"))
+            db.commit()
+        except:
+            db.rollback()
+            
+        try:
+            db.execute(text("ALTER TABLE barang ADD COLUMN is_active INTEGER DEFAULT 1"))
+            db.commit()
+        except:
+            db.rollback()
+            
+        try:
+            db.execute(text("ALTER TABLE mitra ADD COLUMN is_active INTEGER DEFAULT 1"))
             db.commit()
         except:
             db.rollback()
@@ -599,12 +611,12 @@ def delete_user(user_id: int, db: Session = Depends(get_db)):
 
 @app.get("/api/master/barang")
 def get_master_barang(db: Session = Depends(get_db)):
-    return db.query(models.Barang).all()
+    return db.query(models.Barang).filter(models.Barang.is_active == 1).all()
 
 @app.get("/api/master/barang/print")
 def print_master_barang(tipe: str = "all", db: Session = Depends(get_db)):
     try:
-        query = db.query(models.Barang)
+        query = db.query(models.Barang).filter(models.Barang.is_active == 1)
         if tipe == "baju":
             query = query.filter(models.Barang.kategori.in_(["Barang Jadi (Baju)", "BARANG_JADI"]))
         elif tipe == "bahan":
@@ -669,7 +681,7 @@ def get_master_karyawan(db: Session = Depends(get_db)):
 
 @app.get("/api/master/mitra")
 def get_master_mitra(db: Session = Depends(get_db)):
-    return db.query(models.Mitra).all()
+    return db.query(models.Mitra).filter(models.Mitra.is_active == 1).all()
 
 @app.get("/api/master/akun")
 def get_master_akun(db: Session = Depends(get_db)):
@@ -796,10 +808,22 @@ def add_master_akun(data: schemas.MasterAkunRequest, db: Session = Depends(get_d
 @app.post("/api/master/saldo_awal")
 def add_master_saldo(data: schemas.MasterSaldoAwalRequest, db: Session = Depends(get_db)):
     try:
-        db.add(models.JurnalUmum(kode_akun=data.akun_id, nama_akun=data.nama_akun, keterangan=data.keterangan, debit=data.nominal_saldo, kredit=0, tanggal=datetime.now()))
-        db.add(models.JurnalUmum(kode_akun="31110", nama_akun="Modal Disetor", keterangan=data.keterangan, debit=0, kredit=data.nominal_saldo, tanggal=datetime.now()))
+        # Tentukan posisi normal saldo berdasarkan awalan kode akun
+        # Aset (1) dan Beban (5, 6) bersaldo normal Debit
+        # Kewajiban (2), Ekuitas (3), dan Pendapatan (4) bersaldo normal Kredit
+        is_kredit = data.akun_id.startswith(("2", "3", "4"))
+        
+        if is_kredit:
+            # Akun Kredit: Saldo Awal menambah di Kredit, Lawannya Debit Modal Disetor
+            db.add(models.JurnalUmum(kode_akun=data.akun_id, nama_akun=data.nama_akun, keterangan=data.keterangan, debit=0, kredit=data.nominal_saldo, tanggal=datetime.now()))
+            db.add(models.JurnalUmum(kode_akun="31110", nama_akun="Modal Disetor", keterangan=data.keterangan, debit=data.nominal_saldo, kredit=0, tanggal=datetime.now()))
+        else:
+            # Akun Debit: Saldo Awal menambah di Debit, Lawannya Kredit Modal Disetor
+            db.add(models.JurnalUmum(kode_akun=data.akun_id, nama_akun=data.nama_akun, keterangan=data.keterangan, debit=data.nominal_saldo, kredit=0, tanggal=datetime.now()))
+            db.add(models.JurnalUmum(kode_akun="31110", nama_akun="Modal Disetor", keterangan=data.keterangan, debit=0, kredit=data.nominal_saldo, tanggal=datetime.now()))
+            
         db.commit()
-        return {"status": "success", "message": "Saldo Awal tersimpan"}
+        return {"status": "success", "message": "Saldo Awal tersimpan dengan format akuntansi yang benar"}
     except Exception as e:
         db.rollback()
         return {"status": "error", "message": str(e)}
@@ -874,9 +898,11 @@ def delete_master_barang(item_id: int, db: Session = Depends(get_db)):
     try:
         item = db.query(models.Barang).filter(models.Barang.id == item_id).first()
         if not item: return {"status": "error", "message": "Barang tidak ditemukan"}
-        db.delete(item)
+        
+        # Soft delete
+        item.is_active = 0
         db.commit()
-        return {"status": "success", "message": "Barang berhasil dihapus"}
+        return {"status": "success", "message": "Barang berhasil diarsipkan (dihapus dari daftar aktif)"}
     except Exception as e:
         db.rollback()
         return {"status": "error", "message": str(e)}
@@ -886,9 +912,11 @@ def delete_master_mitra(item_id: int, db: Session = Depends(get_db)):
     try:
         item = db.query(models.Mitra).filter(models.Mitra.id == item_id).first()
         if not item: return {"status": "error", "message": "Mitra tidak ditemukan"}
-        db.delete(item)
+        
+        # Soft delete
+        item.is_active = 0
         db.commit()
-        return {"status": "success", "message": "Mitra berhasil dihapus"}
+        return {"status": "success", "message": "Mitra berhasil diarsipkan (dihapus dari daftar aktif)"}
     except Exception as e:
         db.rollback()
         return {"status": "error", "message": str(e)}
