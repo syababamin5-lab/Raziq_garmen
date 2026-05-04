@@ -28,8 +28,20 @@ export default function PenjualanRetur() {
 
     // Invoice Detail Modal (icon mata)
     const [invoiceModal, setInvoiceModal] = useState({ open: false, invoice: null });
+
+    // REAL-TIME BALANCES
+    const [balances, setBalances] = useState({ tunai: 0, bank: 0 });
+
+    const fetchBalances = async () => {
+        try {
+            const res = await fetch('/api/dashboard/balances').then(r => r.json());
+            if (res.success) setBalances({ tunai: res.tunai, bank: res.bank });
+        } catch (err) { console.error("Balance Fetch Error:", err); }
+    };
+
     const fetchData = async () => {
         try {
+            fetchBalances(); // Initial fetch
             const [resCust, resProd, resHist] = await Promise.all([
                 fetch('/api/master/mitra').then(r => r.json()),
                 fetch('/api/master/barang').then(r => r.json()),
@@ -43,6 +55,8 @@ export default function PenjualanRetur() {
 
     useEffect(() => {
         fetchData();
+        const interval = setInterval(fetchBalances, 10000); // Poll balances every 10s
+        return () => clearInterval(interval);
     }, []);
 
     const addToCart = () => {
@@ -169,6 +183,24 @@ export default function PenjualanRetur() {
                 <div>
                     <h1 className="text-2xl font-black text-slate-800 font-outfit uppercase tracking-tighter">Penjualan & Retur</h1>
                     <p className="text-slate-500 text-sm font-medium">Kasir POS dan manajemen pengembalian barang jadi.</p>
+                </div>
+
+                {/* Real-time Balances UI */}
+                <div className="ml-auto flex gap-4">
+                    <div className="bg-emerald-50 border border-emerald-100 p-4 rounded-2xl flex flex-col items-center min-w-[140px] shadow-sm">
+                        <span className="text-[10px] font-black text-emerald-600 uppercase tracking-widest mb-1 flex items-center gap-1">
+                            <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse"></span>
+                            Saldo Kas Tunai
+                        </span>
+                        <h3 className="text-xl font-black text-emerald-900">{formatRp(balances.tunai)}</h3>
+                    </div>
+                    <div className="bg-blue-50 border border-blue-100 p-4 rounded-2xl flex flex-col items-center min-w-[140px] shadow-sm">
+                        <span className="text-[10px] font-black text-blue-600 uppercase tracking-widest mb-1 flex items-center gap-1">
+                            <span className="w-1.5 h-1.5 rounded-full bg-blue-500 animate-pulse"></span>
+                            Saldo BCA
+                        </span>
+                        <h3 className="text-xl font-black text-blue-900">{formatRp(balances.bank)}</h3>
+                    </div>
                 </div>
             </div>
 

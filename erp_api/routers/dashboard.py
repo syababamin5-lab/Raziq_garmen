@@ -8,6 +8,18 @@ from sqlalchemy import func
 
 router = APIRouter(prefix="/api/dashboard", tags=["Dashboard"])
 
+@router.get("/balances")
+def get_balances(db: Session = Depends(get_db)):
+    try:
+        # Menghitung saldo secara efisien hanya untuk akun Kas (11110) dan BCA (11120)
+        tunai = db.query(func.sum(models.JurnalUmum.debit - models.JurnalUmum.kredit))\
+            .filter(models.JurnalUmum.kode_akun == "11110").scalar() or 0
+        bank = db.query(func.sum(models.JurnalUmum.debit - models.JurnalUmum.kredit))\
+            .filter(models.JurnalUmum.kode_akun == "11120").scalar() or 0
+        return {"success": True, "tunai": tunai, "bank": bank}
+    except Exception as e:
+        return {"success": False, "message": str(e), "tunai": 0, "bank": 0}
+
 @router.get("/summary", response_model=schemas.DashboardResponse)
 def get_dashboard_summary(db: Session = Depends(get_db)):
     try:
