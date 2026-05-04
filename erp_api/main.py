@@ -832,10 +832,48 @@ def add_master_saldo(data: schemas.MasterSaldoAwalRequest, db: Session = Depends
 def update_master_barang(item_id: int, data: dict, db: Session = Depends(get_db)):
     item = db.query(models.Barang).filter(models.Barang.id == item_id).first()
     if not item: return {"status": "error", "message": "Barang tidak ditemukan"}
+    
+    # 1. Cek Selisih Stok untuk Stock Opname Otomatis
+    if "stok_saat_ini" in data and float(data["stok_saat_ini"]) != item.stok_saat_ini:
+        stok_baru = float(data["stok_saat_ini"])
+        selisih = stok_baru - item.stok_saat_ini
+        nilai_selisih = abs(selisih) * item.harga_modal
+        
+        if nilai_selisih > 0:
+            akun_persediaan = "12150" if "Barang Jadi" in item.kategori else "12110"
+            nama_persediaan = "Persediaan Barang Jadi" if "Barang Jadi" in item.kategori else "Persediaan Bahan Baku"
+            
+            if selisih > 0:
+                # Stock Plus (Ada kelebihan fisik) -> Aset Naik, HPP Berkurang (Kredit)
+                db.add(models.JurnalUmum(
+                    kode_akun=akun_persediaan, nama_akun=nama_persediaan,
+                    keterangan=f"Stock Opname (Selisih Lebih): {item.nama_barang}",
+                    debit=nilai_selisih, kredit=0, tanggal=datetime.now()
+                ))
+                db.add(models.JurnalUmum(
+                    kode_akun="51120", nama_akun="Harga Pokok Penjualan (HPP)",
+                    keterangan=f"Stock Opname (Selisih Lebih): {item.nama_barang}",
+                    debit=0, kredit=nilai_selisih, tanggal=datetime.now()
+                ))
+            else:
+                # Stock Minus (Barang Rusak/Hilang) -> Beban HPP Naik (Debit), Aset Turun (Kredit)
+                db.add(models.JurnalUmum(
+                    kode_akun="51120", nama_akun="Harga Pokok Penjualan (HPP)",
+                    keterangan=f"Stock Opname (Susut/Hilang): {item.nama_barang}",
+                    debit=nilai_selisih, kredit=0, tanggal=datetime.now()
+                ))
+                db.add(models.JurnalUmum(
+                    kode_akun=akun_persediaan, nama_akun=nama_persediaan,
+                    keterangan=f"Stock Opname (Susut/Hilang): {item.nama_barang}",
+                    debit=0, kredit=nilai_selisih, tanggal=datetime.now()
+                ))
+
+    # 2. Update nilai ke database
     for key, value in data.items():
         if hasattr(item, key): setattr(item, key, value)
+        
     db.commit()
-    return {"status": "success", "message": "Barang diperbarui"}
+    return {"status": "success", "message": "Barang & Stock Opname diperbarui"}
 
 @app.put("/api/master/karyawan/{item_id}")
 def update_master_karyawan(item_id: int, data: dict, db: Session = Depends(get_db)):
