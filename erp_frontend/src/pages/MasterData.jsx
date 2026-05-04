@@ -158,6 +158,21 @@ export default function MasterData() {
   };
 
   const handlePrintStock = (tipe = 'all') => {
+    // Validasi apakah ada data sebelum membuka tab baru
+    let hasData = false;
+    if (tipe === 'all') {
+      hasData = data.barang.length > 0;
+    } else if (tipe === 'baju') {
+      hasData = data.barang.some(b => b.kategori?.includes('Barang Jadi') || b.kategori === 'BARANG_JADI');
+    } else if (tipe === 'bahan') {
+      hasData = data.barang.some(b => !b.kategori?.includes('Barang Jadi') && b.kategori !== 'BARANG_JADI');
+    }
+
+    if (!hasData) {
+      alert(`Maaf, tidak ada data ${tipe === 'all' ? 'barang' : (tipe === 'baju' ? 'Barang Jadi' : 'Bahan Baku')} yang tersedia untuk dicetak saat ini.`);
+      return;
+    }
+
     const url = `${api.defaults.baseURL}/master/barang/print?tipe=${tipe}`;
     window.open(url, '_blank');
   };
