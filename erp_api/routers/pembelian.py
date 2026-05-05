@@ -81,9 +81,9 @@ async def submit_pembelian_bahan(payload: schemas.PembelianBahanRequest, db: Ses
         # 4. Jurnal Accounting
         # Debit: Persediaan (Nilai Bruto)
         if total_baku > 0:
-            db.add(models.JurnalUmum(tanggal=tgl_transaksi, kode_akun="12110", nama_akun="Persediaan Bahan Baku (Kain)", keterangan=f"Beli {no_po}", debit=total_baku, kredit=0))
+            db.add(models.JurnalUmum(tanggal=tgl_transaksi, kode_akun="12110", nama_akun="Persediaan Bahan Baku (Kain)", keterangan=f"Beli {no_po} - {supp.nama_mitra}", debit=total_baku, kredit=0))
         if total_penolong > 0:
-            db.add(models.JurnalUmum(tanggal=tgl_transaksi, kode_akun="51320", nama_akun="BOP - Pemakaian Bahan Penolong & Packing", keterangan=f"Beli Penolong {no_po}", debit=total_penolong, kredit=0))
+            db.add(models.JurnalUmum(tanggal=tgl_transaksi, kode_akun="51320", nama_akun="BOP - Pemakaian Bahan Penolong & Packing", keterangan=f"Beli Penolong {no_po} - {supp.nama_mitra}", debit=total_penolong, kredit=0))
 
         # Kredit: Diskon (jika ada)
         if payload.diskon > 0:
@@ -95,18 +95,18 @@ async def submit_pembelian_bahan(payload: schemas.PembelianBahanRequest, db: Ses
             if payload.dp > 0:
                 akun_dp = "11110" if payload.dp_sumber == "Kas Tunai" else "11120"
                 nama_dp = payload.dp_sumber
-                db.add(models.JurnalUmum(tanggal=tgl_transaksi, kode_akun=akun_dp, nama_akun=nama_dp, keterangan=f"DP Beli {no_po}", debit=0, kredit=payload.dp))
+                db.add(models.JurnalUmum(tanggal=tgl_transaksi, kode_akun=akun_dp, nama_akun=nama_dp, keterangan=f"DP Beli {no_po} - {supp.nama_mitra}", debit=0, kredit=payload.dp))
             
             # Sisa Utang
             sisa_utang = total_netto - (payload.dp or 0)
             if sisa_utang > 0:
-                db.add(models.JurnalUmum(tanggal=tgl_transaksi, kode_akun="21110", nama_akun="Utang Usaha", keterangan=f"Utang PO {no_po}", debit=0, kredit=sisa_utang))
+                db.add(models.JurnalUmum(tanggal=tgl_transaksi, kode_akun="21110", nama_akun="Utang Usaha", keterangan=f"Utang PO {no_po} - {supp.nama_mitra}", debit=0, kredit=sisa_utang))
                 supp.saldo_utang = (supp.saldo_utang or 0) + sisa_utang
         else:
             # Cash / Transfer (Lunas)
             akun_kredit = "11110" if payload.metode_pembayaran == "Kas Tunai" else "11120"
             nama_kredit = "Kas Tunai" if akun_kredit == "11110" else "Kas di Bank"
-            db.add(models.JurnalUmum(tanggal=tgl_transaksi, kode_akun=akun_kredit, nama_akun=nama_kredit, keterangan=f"Beli {no_po} (Lunas)", debit=0, kredit=total_netto))
+            db.add(models.JurnalUmum(tanggal=tgl_transaksi, kode_akun=akun_kredit, nama_akun=nama_kredit, keterangan=f"Beli {no_po} (Lunas) - {supp.nama_mitra}", debit=0, kredit=total_netto))
 
         db.commit()
         return schemas.APIResponse(success=True, message=f"PO {no_po} tersimpan di Database.")

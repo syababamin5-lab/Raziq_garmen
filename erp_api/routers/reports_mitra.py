@@ -42,9 +42,24 @@ def cetak_kartu_mitra(
                 nama_mitra = mitra.nama_mitra if mitra else "Unknown"
             
             # Cari Jurnal yang mengandung nama mitra
+            # IMPROVEMENT: Juga cari berdasarkan No PO / Invoice yang terkait dengan mitra ini
+            from sqlalchemy import or_
+            filters = [JurnalUmum.keterangan.contains(nama_mitra)]
+            
+            if type == 'hutang':
+                # Cari semua No PO dari supplier ini
+                po_list = db.query(models.HeaderPembelian.no_po).filter(models.HeaderPembelian.nama_supplier == nama_mitra).all()
+                for p in po_list:
+                    filters.append(JurnalUmum.keterangan.contains(p.no_po))
+            elif type == 'piutang':
+                # Cari semua No Invoice dari customer ini
+                inv_list = db.query(models.HeaderPenjualan.no_invoice).filter(models.HeaderPenjualan.nama_customer == nama_mitra).all()
+                for i in inv_list:
+                    filters.append(JurnalUmum.keterangan.contains(i.no_invoice))
+
             jurnals = db.query(JurnalUmum).filter(
                 JurnalUmum.kode_akun == kode_akun,
-                JurnalUmum.keterangan.contains(nama_mitra)
+                or_(*filters)
             ).order_by(JurnalUmum.tanggal.asc()).all()
 
             # Kalkulasi Saldo Berjalan
