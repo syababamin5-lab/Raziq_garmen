@@ -46,8 +46,13 @@ def get_dashboard_summary(db: Session = Depends(get_db)):
                     
                     # Jika mutasi terjadi di akun Kas atau Bank (111xx)
                     if kode_s.startswith("111"):
-                        masuk_ini += d  # Uang masuk ke kas/bank
-                        keluar_ini += k # Uang keluar dari kas/bank
+                        # EXCLUDE INTERNAL TRANSFERS (Mutasi Kas <-> Bank)
+                        # Agar tidak terhitung masuk/keluar ganda di dashboard
+                        is_internal = any(x in (j.keterangan or "") for x in ["Penarikan Bank ke Kas", "Setoran Kas ke Bank", "Mutasi Internal"])
+                        
+                        if not is_internal:
+                            masuk_ini += d  # Uang masuk ke kas/bank (bukan mutasi)
+                            keluar_ini += k # Uang keluar dari kas/bank (bukan mutasi)
         except Exception as e:
             print(f"DEBUG Dashboard Keuangan Error: {e}")
             tunai, bank, masuk_ini, keluar_ini = 0, 0, 0, 0
