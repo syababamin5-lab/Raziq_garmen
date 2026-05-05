@@ -283,7 +283,7 @@ const ChatSystem = ({ isOpen, onClose, onUnreadUpdate }) => {
                                                 </div>
                                                 <div className="flex items-center gap-2 mt-1 px-1">
                                                     <span className="text-[9px] font-bold text-slate-500 uppercase bg-white/60 px-2 py-0.5 rounded-full backdrop-blur-sm shadow-sm">
-                                                        {new Date(m.created_at).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
+                                                        {new Date(m.created_at + (m.created_at.endsWith('Z') ? '' : 'Z')).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
                                                     </span>
                                                     {isMe && (
                                                         <div className="flex items-center gap-0.5 bg-white/60 px-1.5 py-0.5 rounded-full backdrop-blur-sm shadow-sm">
