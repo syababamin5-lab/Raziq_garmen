@@ -34,6 +34,8 @@ export default function KasPiutang() {
 
   useEffect(() => {
     fetchData();
+    const interval = setInterval(fetchData, 10000); // Polling saldo tiap 10 detik
+    return () => clearInterval(interval);
   }, []);
 
   const handleSubmit = async (type) => {
@@ -84,12 +86,18 @@ export default function KasPiutang() {
             </div>
 
             <div className="flex gap-4">
-                <div className="bg-emerald-50 px-5 py-3 rounded-2xl border border-emerald-100">
-                    <p className="text-[9px] font-black text-emerald-600 uppercase tracking-widest">Saldo Kas Tunai</p>
+                <div className="bg-emerald-50 px-5 py-3 rounded-2xl border border-emerald-100 flex flex-col items-center min-w-[120px]">
+                    <p className="text-[9px] font-black text-emerald-600 uppercase tracking-widest mb-1 flex items-center gap-1">
+                        <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse"></span>
+                        Saldo Kas Tunai
+                    </p>
                     <p className="text-lg font-black text-emerald-800">{formatRp(saldo.kas)}</p>
                 </div>
-                <div className="bg-blue-50 px-5 py-3 rounded-2xl border border-blue-100">
-                    <p className="text-[9px] font-black text-blue-600 uppercase tracking-widest">Saldo BCA</p>
+                <div className="bg-blue-50 px-5 py-3 rounded-2xl border border-blue-100 flex flex-col items-center min-w-[120px]">
+                    <p className="text-[9px] font-black text-blue-600 uppercase tracking-widest mb-1 flex items-center gap-1">
+                        <span className="w-1.5 h-1.5 rounded-full bg-blue-500 animate-pulse"></span>
+                        Saldo BCA
+                    </p>
                     <p className="text-lg font-black text-blue-800">{formatRp(saldo.bank)}</p>
                 </div>
             </div>

@@ -88,6 +88,8 @@ export default function PembelianBiaya() {
   useEffect(() => {
     fetchData();
     loadPoList();
+    const interval = setInterval(fetchData, 10000); // Polling saldo tiap 10 detik
+    return () => clearInterval(interval);
   }, []);
 
   const addToCart = () => {
@@ -119,6 +121,7 @@ export default function PembelianBiaya() {
         setCart([]);
         setBahanMeta({ ...bahanMeta, dp: 0, diskon: 0 });
         loadPoList();
+        fetchData(); // Refresh balances
       } else {
         setMsg({ text: res.message, type: 'error' });
       }
@@ -143,6 +146,7 @@ export default function PembelianBiaya() {
         if (res.success) {
             setMsg({ text: res.message, type: 'success' });
             setOpexForm({ ...opexForm, nominal: 0, ket: '' });
+            fetchData(); // Refresh balances
         } else setMsg({ text: res.message, type: 'error' });
     } catch (err) { setMsg({ text: err.message, type: 'error' }); }
     setLoading(false);
@@ -284,12 +288,18 @@ export default function PembelianBiaya() {
         <div className="flex-1"></div>
 
         <div className="flex gap-4">
-            <div className="bg-emerald-50 border border-emerald-100 px-5 py-3 rounded-2xl">
-                <p className="text-[10px] font-black text-emerald-700 uppercase tracking-widest mb-1">Saldo Tunai</p>
+            <div className="bg-emerald-50 border border-emerald-100 px-5 py-3 rounded-2xl flex flex-col items-center min-w-[140px] shadow-sm">
+                <p className="text-[10px] font-black text-emerald-700 uppercase tracking-widest mb-1 flex items-center gap-1">
+                    <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse"></span>
+                    Saldo Tunai
+                </p>
                 <p className="text-xl font-black text-emerald-900 leading-none">{formatRp(balance.tunai)}</p>
             </div>
-            <div className="bg-blue-50 border border-blue-100 px-5 py-3 rounded-2xl">
-                <p className="text-[10px] font-black text-blue-700 uppercase tracking-widest mb-1">Saldo Bank BCA</p>
+            <div className="bg-blue-50 border border-blue-100 px-5 py-3 rounded-2xl flex flex-col items-center min-w-[140px] shadow-sm">
+                <p className="text-[10px] font-black text-blue-700 uppercase tracking-widest mb-1 flex items-center gap-1">
+                    <span className="w-1.5 h-1.5 rounded-full bg-blue-500 animate-pulse"></span>
+                    Saldo Bank BCA
+                </p>
                 <p className="text-xl font-black text-blue-900 leading-none">{formatRp(balance.bca)}</p>
             </div>
         </div>
