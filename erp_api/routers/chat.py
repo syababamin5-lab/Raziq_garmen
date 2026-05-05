@@ -141,6 +141,7 @@ def get_chat_users(current_user_id: int, db: Session = Depends(get_db)):
             "nama_lengkap": u.nama_lengkap,
             "role": u.role,
             "foto_url": u.foto_url,
+            "foto_base64": u.foto_base64,
             "is_online": u.id in online_users,
             "unread_count": unread
         })

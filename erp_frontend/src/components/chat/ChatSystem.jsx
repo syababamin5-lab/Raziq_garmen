@@ -191,8 +191,18 @@ const ChatSystem = ({ isOpen, onClose, onUnreadUpdate }) => {
                                 }`}
                             >
                                 <div className="relative">
-                                    <div className="w-10 h-10 rounded-xl bg-slate-200 border-2 border-white flex items-center justify-center font-bold text-sm overflow-hidden">
-                                        {u.foto_url ? <img src={getFileUrl(u.foto_url)} className="w-full h-full object-cover" alt="" /> : u.nama_lengkap.charAt(0)}
+                                    <div className="w-10 h-10 rounded-xl bg-slate-200 border-2 border-white flex items-center justify-center font-bold text-sm overflow-hidden text-slate-500">
+                                        {(u.foto_base64 || u.foto_url) ? (
+                                            <img 
+                                                src={u.foto_base64 || getFileUrl(u.foto_url)} 
+                                                className="w-full h-full object-cover" 
+                                                alt="" 
+                                                onError={(e) => { e.target.onerror = null; e.target.style.display = 'none'; e.target.nextSibling.style.display = 'flex'; }}
+                                            />
+                                        ) : null}
+                                        <span className="w-full h-full flex items-center justify-center" style={{ display: (u.foto_base64 || u.foto_url) ? 'none' : 'flex' }}>
+                                            {u.nama_lengkap.charAt(0)}
+                                        </span>
                                     </div>
                                     {u.is_online && (
                                         <div className="absolute -bottom-1 -right-1 w-3.5 h-3.5 bg-emerald-400 border-2 border-white rounded-full"></div>
@@ -223,7 +233,17 @@ const ChatSystem = ({ isOpen, onClose, onUnreadUpdate }) => {
                             <div className="p-4 border-b border-slate-100 flex items-center justify-between">
                                 <div className="flex items-center gap-3">
                                     <div className="w-10 h-10 rounded-xl bg-slate-100 flex items-center justify-center font-bold text-slate-400 overflow-hidden">
-                                        {selectedUser.foto_url ? <img src={getFileUrl(selectedUser.foto_url)} className="w-full h-full object-cover" alt="" /> : selectedUser.nama_lengkap.charAt(0)}
+                                        {(selectedUser.foto_base64 || selectedUser.foto_url) ? (
+                                            <img 
+                                                src={selectedUser.foto_base64 || getFileUrl(selectedUser.foto_url)} 
+                                                className="w-full h-full object-cover" 
+                                                alt="" 
+                                                onError={(e) => { e.target.onerror = null; e.target.style.display = 'none'; e.target.nextSibling.style.display = 'flex'; }}
+                                            />
+                                        ) : null}
+                                        <span className="w-full h-full flex items-center justify-center" style={{ display: (selectedUser.foto_base64 || selectedUser.foto_url) ? 'none' : 'flex' }}>
+                                            {selectedUser.nama_lengkap.charAt(0)}
+                                        </span>
                                     </div>
                                     <div>
                                         <p className="text-xs font-black text-slate-800 uppercase">{selectedUser.nama_lengkap}</p>
@@ -240,16 +260,16 @@ const ChatSystem = ({ isOpen, onClose, onUnreadUpdate }) => {
                                 </button>
                             </div>
 
-                            <div ref={scrollRef} className="flex-1 overflow-y-auto p-6 space-y-6 bg-slate-50/50 custom-scrollbar">
+                            <div ref={scrollRef} className="flex-1 overflow-y-auto p-6 space-y-6 bg-[#E5DDD5] custom-scrollbar bg-opacity-40" style={{ backgroundImage: "url('https://www.transparenttextures.com/patterns/cubes.png')" }}>
                                 {messages.map((m, i) => {
                                     const isMe = m.sender_id === user.id;
                                     return (
                                         <div key={m.id || i} className={`flex ${isMe ? 'justify-end' : 'justify-start'}`}>
                                             <div className={`group relative max-w-[70%] flex flex-col ${isMe ? 'items-end' : 'items-start'}`}>
-                                                <div className={`p-4 rounded-[1.5rem] shadow-sm text-sm leading-relaxed ${
+                                                <div className={`p-4 rounded-[1.5rem] shadow-md text-sm leading-relaxed whitespace-pre-wrap ${
                                                     isMe 
-                                                    ? 'bg-slate-900 text-white rounded-tr-none' 
-                                                    : 'bg-white text-slate-700 border border-slate-100 rounded-tl-none'
+                                                    ? 'bg-emerald-600 text-white rounded-tr-none' 
+                                                    : 'bg-white text-slate-800 border border-slate-100 rounded-tl-none'
                                                 }`}>
                                                     {m.image_url && (
                                                         <img 
@@ -262,26 +282,50 @@ const ChatSystem = ({ isOpen, onClose, onUnreadUpdate }) => {
                                                     {m.message}
                                                 </div>
                                                 <div className="flex items-center gap-2 mt-1 px-1">
-                                                    <span className="text-[9px] font-bold text-slate-400 uppercase">
+                                                    <span className="text-[9px] font-bold text-slate-500 uppercase bg-white/60 px-2 py-0.5 rounded-full backdrop-blur-sm shadow-sm">
                                                         {new Date(m.created_at).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
                                                     </span>
                                                     {isMe && (
-                                                        <div className="flex items-center gap-0.5">
-                                                            <span className={`material-symbols-rounded text-[14px] ${m.is_read ? 'text-blue-500' : 'text-slate-300'}`}>
+                                                        <div className="flex items-center gap-0.5 bg-white/60 px-1.5 py-0.5 rounded-full backdrop-blur-sm shadow-sm">
+                                                            <span className={`material-symbols-rounded text-[14px] ${m.is_read ? 'text-blue-500' : 'text-slate-400'}`}>
                                                                 {m.is_read ? 'done_all' : 'done'}
                                                             </span>
                                                         </div>
                                                     )}
                                                 </div>
-                                                {isMe && (
+                                                
+                                                {/* Action Buttons (Hover) */}
+                                                <div className={`absolute top-2 flex gap-1 opacity-0 group-hover:opacity-100 transition-all ${isMe ? '-left-24' : '-right-24'}`}>
                                                     <button 
-                                                        onClick={() => handleDelete(m.id)}
-                                                        className="absolute -left-10 top-2 p-1.5 rounded-lg bg-red-50 text-red-500 opacity-0 group-hover:opacity-100 transition-all hover:bg-red-500 hover:text-white"
-                                                        title="Hapus Pesan"
+                                                        onClick={() => {
+                                                            setInput(`[Balas: "${m.message?.substring(0, 30)}${m.message?.length > 30 ? '...' : ''}"]\n\n`);
+                                                            document.getElementById('chat-input-field')?.focus();
+                                                        }}
+                                                        className="p-1.5 rounded-lg bg-white text-slate-400 shadow-sm hover:bg-emerald-50 hover:text-emerald-600 transition-all"
+                                                        title="Balas (Reply)"
                                                     >
-                                                        <span className="material-symbols-rounded text-sm">delete</span>
+                                                        <span className="material-symbols-rounded text-[16px]">reply</span>
                                                     </button>
-                                                )}
+                                                    <button 
+                                                        onClick={() => {
+                                                            setInput(`[Diteruskan]:\n${m.message}`);
+                                                            document.getElementById('chat-input-field')?.focus();
+                                                        }}
+                                                        className="p-1.5 rounded-lg bg-white text-slate-400 shadow-sm hover:bg-blue-50 hover:text-blue-600 transition-all"
+                                                        title="Teruskan (Forward)"
+                                                    >
+                                                        <span className="material-symbols-rounded text-[16px]">forward</span>
+                                                    </button>
+                                                    {isMe && (
+                                                        <button 
+                                                            onClick={() => handleDelete(m.id)}
+                                                            className="p-1.5 rounded-lg bg-white text-red-400 shadow-sm hover:bg-red-50 hover:text-red-600 transition-all"
+                                                            title="Hapus Pesan"
+                                                        >
+                                                            <span className="material-symbols-rounded text-[16px]">delete</span>
+                                                        </button>
+                                                    )}
+                                                </div>
                                             </div>
                                         </div>
                                     )
@@ -295,6 +339,7 @@ const ChatSystem = ({ isOpen, onClose, onUnreadUpdate }) => {
                                         <input type="file" className="hidden" accept="image/*" onChange={handleImageUpload} />
                                     </label>
                                     <input 
+                                        id="chat-input-field"
                                         type="text"
                                         value={input}
                                         onChange={(e) => setInput(e.target.value)}
