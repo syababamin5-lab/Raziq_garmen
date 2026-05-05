@@ -813,5 +813,84 @@ def fix_hapus_jurnal_masal(ids: list[int], db: Session = Depends(get_db)):
         db.rollback()
         return {"status": "error", "message": str(e)}
 
+@router.get("/notifikasi-transaksi")
+def get_transaction_notifications(limit: int = 15, db: Session = Depends(get_db)):
+    """Ambil transaksi terbaru untuk notifikasi Owner/GM/SuperAdmin"""
+    try:
+        # Kita ambil jurnal terbaru, fokus pada akun Kas, Pendapatan, dan Biaya
+        jurnals = db.query(models.JurnalUmum).order_by(models.JurnalUmum.id.desc()).limit(limit * 4).all()
+        
+        notifications = []
+        seen_keys = set() # Untuk de-duplikasi pasangan debit/kredit
+        
+        for j in jurnals:
+            # Key de-duplikasi: tanggal + keterangan + nominal
+            nominal = abs((j.debit or 0) - (j.kredit or 0))
+            if nominal == 0: continue
+            
+            key = f"{j.tanggal}_{j.keterangan}_{nominal}"
+            if key in seen_keys: continue
+            
+            msg = ""
+            icon = "notifications"
+            color = "blue"
+            
+            # 1. Deteksi Penjualan (Akun 411)
+            if j.kode_akun.startswith("411"):
+                # Cari pasangannya apakah Kas atau Piutang
+                is_cash = db.query(models.JurnalUmum).filter(
+                    models.JurnalUmum.tanggal == j.tanggal,
+                    models.JurnalUmum.keterangan == j.keterangan,
+                    models.JurnalUmum.kode_akun.startswith(("11110", "11120"))
+                ).first()
+                tipe = "TUNAI" if is_cash else "KREDIT"
+                
+                # Ekstrak nama customer dari keterangan "Penjualan: ... (Nama)"
+                import re
+                cust_match = re.search(r'\((.*?)\)', j.keterangan)
+                customer = cust_match.group(1) if cust_match else "Umum"
+                
+                msg = f"Ada transaksi penjualan sebesar Rp {nominal:,.0f} kepada {customer} dengan {tipe}"
+                icon = "shopping_cart"
+                color = "emerald"
+                seen_keys.add(key)
+            
+            # 2. Deteksi Pembelian Barang (Bahan Baku / Jadi) - Akun 121 (Persediaan) yang didebit
+            elif j.kode_akun.startswith("121") and (j.debit or 0) > 0:
+                msg = f"Ada transaksi pengeluaran uang sebesar Rp {nominal:,.0f} untuk pembelian {j.nama_akun}"
+                icon = "inventory_2"
+                color = "orange"
+                seen_keys.add(key)
+                
+            # 3. Deteksi Biaya Operasional (Akun 5xxx atau 6xxx)
+            elif j.kode_akun.startswith(("5", "6")):
+                msg = f"Ada transaksi pengeluaran uang hari ini untuk membayar {j.nama_akun} sebesar Rp {nominal:,.0f}"
+                icon = "receipt_long"
+                color = "rose"
+                seen_keys.add(key)
+            
+            # 4. Transaksi Kas Lainnya (Mutasi / Setoran / Prive)
+            elif j.kode_akun.startswith(("11110", "11120")):
+                direction = "MASUK" if (j.debit or 0) > 0 else "KELUAR"
+                msg = f"Ada transaksi uang kas {direction} sebesar Rp {nominal:,.0f} - {j.keterangan}"
+                icon = "account_balance_wallet"
+                color = "sky"
+                seen_keys.add(key)
+
+            if msg and len(notifications) < limit:
+                notifications.append({
+                    "id": j.id,
+                    "message": msg,
+                    "tanggal": j.tanggal.isoformat() + "Z",
+                    "icon": icon,
+                    "color": color
+                })
+        
+        return {"success": True, "data": notifications}
+    except Exception as e:
+        import traceback
+        print(traceback.format_exc())
+        return {"success": False, "message": str(e)}
+
 def new_date(y, m, d):
     return datetime.datetime(y, m, d)

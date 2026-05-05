@@ -6,6 +6,7 @@ import React from 'react'
 import { getCurrentUser, logout } from '../../api/authApi'
 import api, { getFileUrl } from '../../api/api'
 import PrayerTimesCompact from './PrayerTimesCompact'
+import TransactionNotifications from './TransactionNotifications'
 
 export default function Topbar({ title, onToggleSidebar, isSidebarOpen, onOpenChat, unreadCount }) {
   const user = getCurrentUser();
@@ -53,6 +54,9 @@ export default function Topbar({ title, onToggleSidebar, isSidebarOpen, onOpenCh
             <p className="text-emerald-600 font-black text-[9px] uppercase tracking-widest">{user?.role?.replace('_', ' ') || 'Administrator'}</p>
           </div>
         </div>
+
+        {/* Notification Bell */}
+        <TransactionNotifications userRole={user?.role} />
 
         {/* Chat Toggle Icon */}
         <div 
