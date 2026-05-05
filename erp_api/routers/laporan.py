@@ -707,7 +707,7 @@ def get_kartu_stok(kode_sku: str, db: Session = Depends(get_db)):
             # Penjualan Normal (Keluar)
             mutasi.append({
                 "tanggal": tgl,
-                "keterangan": f"Penjualan: {s.no_invoice} ({s.nama_customer or 'Umum'})",
+                "keterangan": f"Penjualan: {s.no_invoice} ({(header.nama_customer if header else 'Umum')})",
                 "masuk": 0,
                 "keluar": s.qty_lusin * 12, # Konversi ke Pcs jika barang jadi
                 "tipe": "PENJUALAN"
@@ -717,7 +717,7 @@ def get_kartu_stok(kode_sku: str, db: Session = Depends(get_db)):
             if s.qty_retur and s.qty_retur > 0:
                 mutasi.append({
                     "tanggal": tgl, # Idealnya tanggal retur, tapi saat ini tersimpan di detail invoice
-                    "keterangan": f"Retur Penjualan: {s.no_invoice} ({s.nama_customer or 'Umum'})",
+                    "keterangan": f"Retur Penjualan: {s.no_invoice} ({(header.nama_customer if header else 'Umum')})",
                     "masuk": s.qty_retur * 12,
                     "keluar": 0,
                     "tipe": "RETUR"
@@ -730,7 +730,7 @@ def get_kartu_stok(kode_sku: str, db: Session = Depends(get_db)):
             tgl = header.tanggal if header else datetime.datetime.now()
             mutasi.append({
                 "tanggal": tgl,
-                "keterangan": f"Pembelian: {p.no_po} ({p.nama_supplier or 'Umum'})",
+                "keterangan": f"Pembelian: {p.no_po} ({(header.nama_supplier if header else 'Umum')})",
                 "masuk": p.qty_kg,
                 "keluar": 0,
                 "tipe": "PEMBELIAN"

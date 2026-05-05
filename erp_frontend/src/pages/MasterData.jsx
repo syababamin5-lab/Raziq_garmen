@@ -638,7 +638,7 @@ export default function MasterData() {
                             stokHistory.list.map((h, i) => (
                               <tr key={i} className="hover:bg-slate-50/50">
                                 <td className="py-2.5 px-4 text-slate-400 font-mono">
-                                  {new Date(h.tanggal).toLocaleDateString('id-ID', { day: '2-digit', month: '2-digit', year: '2-digit', hour: '2-digit', minute: '2-digit' })}
+                                  {new Date(h.tanggal + (h.tanggal.endsWith('Z') ? '' : 'Z')).toLocaleDateString('id-ID', { day: '2-digit', month: '2-digit', year: '2-digit', hour: '2-digit', minute: '2-digit' })}
                                 </td>
                                 <td className="py-2.5 px-4 font-medium text-slate-600">
                                   <div className="flex items-center gap-2">
