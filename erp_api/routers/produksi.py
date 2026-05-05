@@ -70,7 +70,7 @@ def submit_cutting(payload: CuttingRequest, db: Session = Depends(get_db)):
         db.add(models.JurnalUmum(
             tanggal=waktu_transaksi, 
             kode_akun="12110", nama_akun="Persediaan Bahan Baku (Kain)", 
-            keterangan=f"Pemakaian Kain {kain.nama_barang}", debit=0, kredit=nilai_kain_terpakai
+            keterangan=f"Pemakaian Kain {kain.nama_barang} [{kain.kode_sku}] [Qty: {payload.kg_pakai}]", debit=0, kredit=nilai_kain_terpakai
         ))
 
         # Jurnal Pengakuan Utang Upah (BTKL) - IFRS Compliance
