@@ -746,8 +746,9 @@ def get_kartu_stok(kode_sku: str, db: Session = Depends(get_db)):
         
         for j in jurnals:
             # Cek apakah sudah ada di mutasi (hindari double count dari jahit/penjualan yang juga menjurnal)
-            # Biasanya keterangan jurnal jahit: "Masuk ... (Jahit)"
-            if "(Jahit)" in j.keterangan or "Penjualan" in j.keterangan or "PO-" in j.keterangan:
+            # Biasanya keterangan jurnal otomatis mengandung tag (Jahit), (Jual), INV-, PO-, dll.
+            skip_keywords = ["(Jahit)", "(Cutting)", "Penjualan", "PO-", "INV-", "(Jual)", "Retur"]
+            if any(keyword in j.keterangan for keyword in skip_keywords):
                 continue
                 
             qty_adj = 0
