@@ -187,8 +187,8 @@ export default function SettingsUsers() {
                 </div>
 
                 <div>
-                  <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest pl-2 mb-2 block">Username</label>
-                  <input type="text" required disabled={editingUser} className="w-full bg-slate-50 border-none rounded-xl p-4 font-bold text-slate-800 outline-none focus:ring-2 focus:ring-emerald-500/20 disabled:opacity-50" value={formData.username} onChange={e => setFormData({...formData, username: e.target.value})} />
+                  <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest pl-2 mb-2 block">Username Login</label>
+                  <input type="text" required className="w-full bg-slate-50 border-none rounded-xl p-4 font-bold text-slate-800 outline-none focus:ring-2 focus:ring-emerald-500/20 disabled:opacity-50" value={formData.username} onChange={e => setFormData({...formData, username: e.target.value})} />
                 </div>
                 <div>
                   <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest pl-2 mb-2 block">{editingUser ? 'Password Baru (Kosongkan jika tetap)' : 'Password'}</label>

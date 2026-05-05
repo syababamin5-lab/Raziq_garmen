@@ -7,7 +7,9 @@ export default function Profile() {
   const [photoLoading, setPhotoLoading] = useState(false);
   
   const [formData, setFormData] = useState({
+    id: user.id,
     username: user.username,
+    new_username: user.username,
     nama_lengkap: user.nama_lengkap || '',
     email: user.email || '',
     no_hp: user.no_hp || '',
@@ -42,11 +44,17 @@ export default function Profile() {
       const { data } = await api.put('/auth/profile', formData);
       if (data.status === 'success') {
         alert('Profil berhasil diperbarui!');
-        // Update local storage
+        
+        // Jika ada token baru (karena ganti username), simpan ke localStorage
+        if (data.access_token) {
+          localStorage.setItem('token', data.access_token);
+        }
+
+        // Update local storage user data
         const updatedUser = { ...user, ...data.user };
         localStorage.setItem('user', JSON.stringify(updatedUser));
         setUser(updatedUser);
-        setFormData(prev => ({ ...prev, password: '' }));
+        setFormData(prev => ({ ...prev, username: updatedUser.username, new_username: updatedUser.username, password: '' }));
       } else {
         alert(data.message);
       }
@@ -96,8 +104,14 @@ export default function Profile() {
           {/* Kanan: Form Data */}
           <div className="space-y-6">
             <div>
-              <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest pl-2 mb-2 block">Username</label>
-              <input type="text" disabled className="w-full bg-slate-50 border-none rounded-xl p-4 font-bold text-slate-400 outline-none" value={formData.username} />
+              <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest pl-2 mb-2 block">Username Login</label>
+              <input 
+                type="text" 
+                className="w-full bg-slate-50 border-none rounded-xl p-4 font-bold text-slate-800 outline-none focus:ring-2 focus:ring-emerald-500/20" 
+                value={formData.new_username} 
+                onChange={e => setFormData({...formData, new_username: e.target.value})} 
+              />
+              <p className="text-[9px] text-slate-400 mt-1 pl-2 italic">Ganti username ini jika ingin mengubah ID untuk login.</p>
             </div>
             <div>
               <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest pl-2 mb-2 block">Nama Lengkap</label>

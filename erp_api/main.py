@@ -438,11 +438,28 @@ def login(request: schemas.LoginRequest, db: Session = Depends(get_db)):
 
 @app.put("/api/auth/profile")
 def update_my_profile(data: dict, db: Session = Depends(get_db)):
-    username = data.get("username")
-    if not username: return {"status": "error", "message": "Username required"}
+    # Gunakan ID jika ada, jika tidak fallback ke username saat ini
+    user_id = data.get("id")
+    current_username = data.get("username")
     
-    user = db.query(models.User).filter(models.User.username == username).first()
+    if user_id:
+        user = db.query(models.User).filter(models.User.id == user_id).first()
+    else:
+        user = db.query(models.User).filter(models.User.username == current_username).first()
+        
     if not user: return {"status": "error", "message": "User tidak ditemukan"}
+
+    # LOGIKA PERUBAHAN USERNAME (LOGIN ID)
+    new_username = data.get("new_username") or data.get("username")
+    username_changed = False
+    
+    if new_username and new_username != user.username:
+        # Cek keunikan
+        exists = db.query(models.User).filter(models.User.username == new_username, models.User.id != user.id).first()
+        if exists:
+            return {"status": "error", "message": f"Username '{new_username}' sudah digunakan orang lain!"}
+        user.username = new_username
+        username_changed = True
     
     if "nama_lengkap" in data: user.nama_lengkap = data["nama_lengkap"]
     if "email" in data: user.email = data["email"]
@@ -453,15 +470,23 @@ def update_my_profile(data: dict, db: Session = Depends(get_db)):
         user.password_hash = get_password_hash(data["password"])
         
     db.commit()
+    
+    # Jika username berubah, generate token baru agar session tidak putus
+    new_token = None
+    if username_changed:
+        new_token = create_access_token(data={"sub": user.username, "role": user.role})
+
     return {
         "status": "success", 
-        "message": "Profil diperbarui",
+        "message": "Profil diperbarui" + (" & Username diganti" if username_changed else ""),
+        "access_token": new_token,
         "user": {
             "id": user.id,
             "username": user.username,
             "nama_lengkap": user.nama_lengkap,
             "role": user.role,
             "foto_url": user.foto_url,
+            "foto_base64": user.foto_base64,
             "email": user.email,
             "no_hp": user.no_hp
         }
@@ -574,6 +599,14 @@ def update_user(user_id: int, data: dict, db: Session = Depends(get_db)):
     if "email" in data: user.email = data["email"]
     if "no_hp" in data: user.no_hp = data["no_hp"]
     if "is_active" in data: user.is_active = 1 if data["is_active"] else 0
+    
+    # SuperAdmin juga bisa ganti username anak buah
+    if "username" in data and data["username"] != user.username:
+        exists = db.query(models.User).filter(models.User.username == data["username"], models.User.id != user.id).first()
+        if exists:
+            return {"status": "error", "message": "Username sudah digunakan!"}
+        user.username = data["username"]
+
     if "password" in data and data["password"]:
         user.password_hash = get_password_hash(data["password"])
         
