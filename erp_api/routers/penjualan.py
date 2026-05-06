@@ -77,6 +77,8 @@ def submit_invoice(payload: schemas.SaleRequest, db: Session = Depends(get_db)):
             status_invoice = "Tempo"
 
         # Simpan Header Invoice (simpan uang_muka agar PDF bisa tampilkan DP)
+        # sisa_tagihan: jumlah yang belum dibayar, digunakan untuk FIFO matching
+        sisa_tagihan_awal = sisa_utang if payload.metode == "Piutang (Tempo)" and sisa_utang > 0 else 0.0
         db.add(models.HeaderPenjualan(
             no_invoice=inv_no, 
             tanggal=waktu_jual, 
@@ -85,7 +87,8 @@ def submit_invoice(payload: schemas.SaleRequest, db: Session = Depends(get_db)):
             total_tagihan=total_tagihan, 
             diskon=payload.diskon or 0.0,
             uang_muka=payload.dp or 0.0,
-            status=status_invoice
+            status=status_invoice,
+            sisa_tagihan=sisa_tagihan_awal
         ))
 
         # Jurnal Pendapatan Penjualan (Mencatat Nilai BRUTO agar laporan akurat)
@@ -163,6 +166,7 @@ def get_penjualan_history(db: Session = Depends(get_db)):
                 "metode_bayar": i.metode_bayar,
                 "uang_muka": i.uang_muka or 0.0,
                 "status": i.status,
+                "sisa_tagihan": i.sisa_tagihan or 0.0,  # Sisa per invoice (FIFO)
                 "sisa_piutang_customer": sisa_piutang_global,
                 "tanggal": i.tanggal.isoformat() if hasattr(i.tanggal, 'isoformat') else str(i.tanggal)
             })
@@ -293,12 +297,13 @@ def void_invoice(no_inv: str, db: Session = Depends(get_db)):
                 brg.stok_saat_ini += int(d.qty_lusin * 12)
         
         # 2. Kurangi Saldo Piutang Customer (Jika Ngutang)
+        # Gunakan sisa_tagihan (sisa yang belum terbayar), bukan nilai awal invoice.
+        # Karena pembayaran via terima_piutang mungkin sudah mengurangi sisa_tagihan.
         if pilih_histori.metode_bayar == "Piutang (Tempo)":
-            j_piutang = db.query(models.JurnalUmum).filter(models.JurnalUmum.keterangan.contains(pilih_histori.no_invoice), models.JurnalUmum.kode_akun == "11210").first()
-            if j_piutang:
-                cust = db.query(models.Mitra).filter(models.Mitra.nama_mitra == pilih_histori.nama_customer).first()
-                if cust:
-                    cust.saldo_piutang -= j_piutang.debit
+            cust = db.query(models.Mitra).filter(models.Mitra.nama_mitra == pilih_histori.nama_customer).first()
+            if cust:
+                sisa_restore = pilih_histori.sisa_tagihan or 0.0
+                cust.saldo_piutang -= sisa_restore
 
         # 3. Hapus Seluruh Jurnal Keuangan Terkait
         db.query(models.JurnalUmum).filter(models.JurnalUmum.keterangan.contains(pilih_histori.no_invoice)).delete(synchronize_session=False)
@@ -352,8 +357,9 @@ def bayar_invoice_cepat(payload: schemas.BayarInvoiceCepatRequest, db: Session =
         # =====================================================
         waktu_bayar = datetime.datetime.now()
 
-        # 1. Set status invoice ke Lunas (GEMBOK UTAMA - cegah race condition)
+        # 1. Set status invoice ke Lunas + nolkan sisa_tagihan
         invoice.status = "Lunas"
+        invoice.sisa_tagihan = 0.0
 
         # 2. Kurangi saldo piutang customer (pakai nominal aktual invoice jika ada toleransi)
         nominal_aktual = min(payload.nominal, customer.saldo_piutang)

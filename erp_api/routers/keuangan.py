@@ -33,10 +33,52 @@ def terima_piutang(payload: schemas.CollectionRequest, db: Session = Depends(get
             keterangan=f"Pelunasan: {cust.nama_mitra}", 
             debit=0, kredit=payload.nominal
         ))
-        
+
+        # ============================================================
+        # FIFO MATCHING: Distribusikan pembayaran ke invoice Tempo
+        # terlama terlebih dahulu (First In, First Out)
+        # ============================================================
+        sisa_bayar = float(payload.nominal)
+        invoices_tempo = (
+            db.query(models.HeaderPenjualan)
+            .filter(
+                models.HeaderPenjualan.nama_customer == cust.nama_mitra,
+                models.HeaderPenjualan.status == "Tempo"
+            )
+            .order_by(
+                models.HeaderPenjualan.tanggal.asc(),
+                models.HeaderPenjualan.id.asc()
+            )
+            .all()
+        )
+
+        invoices_lunas_baru = []
+        for inv in invoices_tempo:
+            if sisa_bayar <= 0:
+                break
+            sisa_inv = inv.sisa_tagihan if (inv.sisa_tagihan is not None and inv.sisa_tagihan > 0) \
+                       else max(0.0, inv.total_tagihan - (inv.uang_muka or 0.0))
+            
+            if sisa_bayar >= sisa_inv:
+                # Invoice ini terlunasi penuh
+                sisa_bayar -= sisa_inv
+                inv.sisa_tagihan = 0.0
+                inv.status = "Lunas"
+                invoices_lunas_baru.append(inv.no_invoice)
+            else:
+                # Invoice terlunasi sebagian
+                inv.sisa_tagihan = sisa_inv - sisa_bayar
+                sisa_bayar = 0.0
+        # ============================================================
+
         db.commit()
 
-        return schemas.APIResponse(success=True, message=f"Penerimaan piutang {cust.nama_mitra} berhasil.")
+        # Buat pesan informatif
+        msg = f"Penerimaan piutang {cust.nama_mitra} berhasil."
+        if invoices_lunas_baru:
+            msg += f" Invoice LUNAS: {', '.join(invoices_lunas_baru)}."
+
+        return schemas.APIResponse(success=True, message=msg)
     except Exception as e:
         db.rollback()
         return schemas.APIResponse(success=False, message=str(e))

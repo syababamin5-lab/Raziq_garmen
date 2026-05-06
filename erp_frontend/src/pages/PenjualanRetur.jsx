@@ -482,7 +482,12 @@ export default function PenjualanRetur() {
                                                     {h.status === 'Lunas' ? (
                                                         <span className="px-2 py-1 rounded-md text-[10px] font-black bg-emerald-100 text-emerald-700">✅ LUNAS</span>
                                                     ) : (
-                                                        <span className="px-2 py-1 rounded-md text-[10px] font-black bg-amber-100 text-amber-700">⏳ TEMPO</span>
+                                                        <>
+                                                            <span className="px-2 py-1 rounded-md text-[10px] font-black bg-amber-100 text-amber-700">⏳ TEMPO</span>
+                                                            <span className="text-[10px] font-black text-red-500">
+                                                                Sisa: {new Intl.NumberFormat('id-ID', {style: 'currency', currency: 'IDR', maximumFractionDigits: 0}).format(h.sisa_tagihan || 0)}
+                                                            </span>
+                                                        </>
                                                     )}
                                                     <span className="text-[10px] font-bold text-slate-400 uppercase">{h.metode_bayar}</span>
                                                 </div>
@@ -514,8 +519,8 @@ export default function PenjualanRetur() {
                                                     {h.status !== 'Lunas' && (
                                                         <button
                                                             onClick={() => {
-                                                                const sisaPiutang = h.total_tagihan - (h.uang_muka || 0);
-                                                                setPayModal({ open: true, no_invoice: h.no_invoice, nama_customer: h.nama_customer, total_tagihan: h.total_tagihan, uang_muka: h.uang_muka || 0, nominal: sisaPiutang, sumber_dana: 'Kas Tunai' });
+                                                                const sisaAktual = h.sisa_tagihan > 0 ? h.sisa_tagihan : (h.total_tagihan - (h.uang_muka || 0));
+                                                                setPayModal({ open: true, no_invoice: h.no_invoice, nama_customer: h.nama_customer, total_tagihan: h.total_tagihan, uang_muka: h.uang_muka || 0, nominal: sisaAktual, sumber_dana: 'Kas Tunai' });
                                                             }}
                                                             className="p-2 bg-emerald-50 text-emerald-600 rounded-xl hover:bg-emerald-500 hover:text-white transition-all flex items-center gap-1"
                                                             title="Terima Pelunasan Invoice"

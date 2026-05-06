@@ -132,6 +132,7 @@ class HeaderPenjualan(Base):
     uang_muka = Column(Float, default=0.0)  # DP yang dibayar saat penerbitan invoice
     total_tagihan = Column(Float, default=0.0)  # Total setelah diskon (sebelum DP)
     status = Column(String, default="Lunas")  # "Lunas" | "Tempo"
+    sisa_tagihan = Column(Float, default=0.0)  # Sisa yang belum dibayar (untuk FIFO matching)
 
 
 class DetailPenjualan(Base):
