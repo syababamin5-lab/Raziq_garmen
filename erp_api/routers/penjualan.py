@@ -273,6 +273,17 @@ def void_invoice(no_inv: str, db: Session = Depends(get_db)):
         if not pilih_histori:
             raise Exception("Invoice tidak ditemukan")
 
+        # ============================================================
+        # KEAMANAN: Invoice yang sudah LUNAS tidak bisa dihapus biasa.
+        # Uang sudah diterima → penghapusan hanya boleh via Super Admin.
+        # ============================================================
+        if pilih_histori.status == "Lunas":
+            raise Exception(
+                f"Invoice {no_inv} sudah berstatus LUNAS dan tidak dapat dihapus. "
+                f"Uang pelunasan sudah tercatat di sistem. "
+                f"Jika ada kesalahan data, hubungi Super Admin."
+            )
+
         items_inv = db.query(models.DetailPenjualan).filter(models.DetailPenjualan.no_invoice == no_inv).all()
 
         # 1. Kembalikan Stok Barang ke Gudang

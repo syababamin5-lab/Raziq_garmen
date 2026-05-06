@@ -536,10 +536,23 @@ export default function PenjualanRetur() {
                                                         <span className="material-symbols-rounded text-lg">print</span>
                                                     </a>
 
-                                                    {/* 🗑️ Void */}
-                                                    <button onClick={() => handleVoid(h.no_invoice)} className="p-2 bg-red-50 text-red-500 rounded-xl hover:bg-red-500 hover:text-white transition-all" title="Void Invoice (Hapus)">
-                                                        <span className="material-symbols-rounded text-lg">delete_sweep</span>
-                                                    </button>
+                                                    {/* 🗑️ Void - Hanya tampil jika belum Lunas */}
+                                                    {h.status !== 'Lunas' ? (
+                                                        <button
+                                                            onClick={() => handleVoid(h.no_invoice)}
+                                                            className="p-2 bg-red-50 text-red-500 rounded-xl hover:bg-red-500 hover:text-white transition-all"
+                                                            title="Hapus Invoice (Hanya untuk invoice belum lunas)"
+                                                        >
+                                                            <span className="material-symbols-rounded text-lg">delete_sweep</span>
+                                                        </button>
+                                                    ) : (
+                                                        <div
+                                                            className="p-2 bg-slate-100 text-slate-300 rounded-xl cursor-not-allowed"
+                                                            title="Invoice Lunas tidak dapat dihapus. Hubungi Super Admin jika ada kesalahan data."
+                                                        >
+                                                            <span className="material-symbols-rounded text-lg">lock</span>
+                                                        </div>
+                                                    )}
                                                 </div>
                                             </td>
                                         </tr>
