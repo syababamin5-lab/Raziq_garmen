@@ -62,5 +62,36 @@ def sync_db():
             except Exception as e:
                 print(f"ℹ️ Info on users.{col_name}: {e}")
 
+        # 3. DATA REPAIR: Restore SKU OVS-08-JB & Cleanup Bad Journals
+        try:
+            sku = "OVS-08-JB"
+            print(f"--- Running Data Repair for {sku} ---")
+            
+            # Check if SKU exists (case insensitive for safety)
+            res = conn.execute(text("SELECT id, is_active FROM barang WHERE UPPER(kode_sku) = :sku"), {"sku": sku.upper()}).first()
+            
+            if res:
+                if res.is_active == 0:
+                    conn.execute(text("UPDATE barang SET is_active = 1 WHERE id = :id"), {"id": res.id})
+                    conn.commit()
+                    print(f"✅ Reactivated SKU {sku}")
+            else:
+                # Re-create if missing
+                conn.execute(text("""
+                    INSERT INTO barang (model_code, nama_barang, kode_sku, kategori, satuan, stok_saat_ini, harga_jual, harga_modal, is_active) 
+                    VALUES ('OVS-08', 'Oversize 08 Jet black', :sku, 'Barang Jadi (Baju)', 'Pcs', 0, 520000, 39405, 1)
+                """), {"sku": sku})
+                conn.commit()
+                print(f"✅ Re-created missing SKU {sku}")
+                
+            # Cleanup problematic VOID journals that doubled the WIP minus
+            # This will allow the new get_wip logic to work with clean data
+            conn.execute(text("DELETE FROM jurnal_umum WHERE keterangan LIKE '%VOID%' AND keterangan LIKE :sku_p"), {"sku_p": f"%{sku}%"})
+            conn.commit()
+            print(f"✅ Cleaned up problematic VOID journals for {sku}")
+            
+        except Exception as e:
+            print(f"ℹ️ Data Repair Info: {e}")
+
 if __name__ == "__main__":
     sync_db()
