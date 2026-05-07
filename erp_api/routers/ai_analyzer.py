@@ -54,17 +54,31 @@ def get_ai_financial_analysis(db: Session = Depends(get_db)):
         selisih_neraca = abs(total_aktiva - total_pasiva)
         is_balance = selisih_neraca < 1.0
 
-        # 3. Profit & Loss (HPP, Pendapatan, Beban)
+        # 3. Profit & Loss (HPP, Pendapatan, Beban) - SYNC WITH laporan.py
+        # Logic: Omzet (411), HPP (5111, 512, 513, 51199, 51120), Beban (61, 62)
         pendapatan = db.query(func.sum(models.JurnalUmum.kredit - models.JurnalUmum.debit)).filter(
-            models.JurnalUmum.kode_akun.startswith('4')
+            models.JurnalUmum.kode_akun.startswith('411'),
+            models.JurnalUmum.tanggal >= first_day
         ).scalar() or 0
         
+        # HPP: Baku (5111), BTKL (512), BOP (513), Ikhtisar (51199), Terjual (51120)
         hpp = db.query(func.sum(models.JurnalUmum.debit - models.JurnalUmum.kredit)).filter(
-            models.JurnalUmum.kode_akun.startswith('5')
+            or_(
+                models.JurnalUmum.kode_akun.startswith('5111'),
+                models.JurnalUmum.kode_akun.startswith('512'),
+                models.JurnalUmum.kode_akun.startswith('513'),
+                models.JurnalUmum.kode_akun.startswith('51199'),
+                models.JurnalUmum.kode_akun.startswith('51120')
+            ),
+            models.JurnalUmum.tanggal >= first_day
         ).scalar() or 0
         
         beban_ops = db.query(func.sum(models.JurnalUmum.debit - models.JurnalUmum.kredit)).filter(
-            models.JurnalUmum.kode_akun.startswith('6')
+            or_(
+                models.JurnalUmum.kode_akun.startswith('61'),
+                models.JurnalUmum.kode_akun.startswith('62')
+            ),
+            models.JurnalUmum.tanggal >= first_day
         ).scalar() or 0
 
         # 4. Data Persediaan & WIP
@@ -159,32 +173,38 @@ SCHEMA_CONTEXT = """
 Database ini adalah sistem ERP Garmen. Gunakan SQLite syntax. 
 Berikut adalah tabel-tabel utama:
 
-1. barang (Master Barang/Stok):
-   - id, model_code, nama_barang, kode_sku, kategori, satuan, stok_saat_ini, harga_jual, harga_modal
-2. mitra (Customer/Supplier):
-   - id, nama_mitra, kategori, no_hp, email, alamat, saldo_piutang, saldo_utang
-3. karyawan (SDM):
-   - id, nama_karyawan, no_hp, alamat, divisi, tipe_gaji, nominal_gaji, target_produksi_mingguan, saldo_kasbon, is_active
-4. header_penjualan (Invoice Penjualan):
-   - id, no_invoice, tanggal, nama_customer, metode_bayar, total_tagihan, status (Lunas/Tempo)
-5. detail_penjualan (Item yang dijual):
-   - id, no_invoice, kode_sku, nama_barang, qty_lusin, harga_per_lusin, subtotal
-6. header_pembelian (PO Pembelian ke Supplier):
-   - id, no_po, tanggal, nama_supplier, metode_bayar, total_tagihan, status
-7. detail_pembelian (Item yang dibeli):
-   - id, no_po, kode_sku, nama_barang, qty_kg, harga_per_kg, subtotal
-8. production_logs (Catatan Produksi Harian):
-   - id, tanggal, divisi (Cutting/Jahit/Finishing), kode_sku, nama_barang, qty_hasil, karyawan_id
-9. jurnal_umum (Akuntansi Dasar):
+1. jurnal_umum (Akuntansi Dasar):
    - id, tanggal, kode_akun, nama_akun, keterangan, debit, kredit
-   - Akun 4xxxx: Pendapatan, Akun 5xxxx: HPP, Akun 6xxxx: Beban Operasional, Akun 111xx: Kas/Bank
-   - Kategori Barang: 'Bahan Baku (Kain)', 'Barang Jadi (Baju)', 'Bahan Pembantu', 'Bahan Penolong'
+   - RUMUS SALDO:
+     * Pendapatan: SUM(kredit - debit) WHERE kode_akun LIKE '411%'
+     * HPP: SUM(debit - kredit) WHERE kode_akun IN ('5111%', '512%', '513%', '51199%', '51120%')
+     * Beban Operasional: SUM(debit - kredit) WHERE kode_akun LIKE '6%'
+     * Kas/Bank: SUM(debit - kredit) WHERE kode_akun LIKE '111%'
+   - PENTING: Jangan hanya SUM(debit) agar reversal/VOID terhitung benar.
 
-INSTRUKSI: 
-- Hasilkan HANYA query SQL SELECT yang valid untuk SQLite/PostgreSQL.
+2. barang (Master Barang/Stok):
+   - id, model_code, nama_barang, kode_sku, kategori, satuan, stok_saat_ini, harga_jual, harga_modal
+3. mitra (Customer/Supplier):
+   - id, nama_mitra, kategori, no_hp, email, alamat, saldo_piutang, saldo_utang
+4. karyawan (SDM):
+   - id, nama_karyawan, no_hp, alamat, divisi, tipe_gaji, nominal_gaji, target_produksi_mingguan, saldo_kasbon, is_active
+5. header_penjualan (Invoice Penjualan):
+   - id, no_invoice, tanggal, nama_customer, metode_bayar, total_tagihan, status (Lunas/Tempo)
+6. detail_penjualan (Item yang dijual):
+   - id, no_invoice, kode_sku, nama_barang, qty_lusin, harga_per_lusin, subtotal
+7. header_pembelian (PO Pembelian ke Supplier):
+   - id, no_po, tanggal, nama_supplier, metode_bayar, total_tagihan, status
+8. detail_pembelian (Item yang dibeli):
+   - id, no_po, kode_sku, nama_barang, qty_kg, harga_per_kg, subtotal
+9. production_logs (Catatan Produksi Harian):
+   - id, tanggal, divisi (Cutting/Jahit/Finishing), kode_sku, nama_barang, qty_hasil, karyawan_id
+
+INSTRUKSI PENTING UNTUK QUERY: 
+- Selalu filter berdasarkan 'tanggal' jika ditanya 'bulan ini', 'hari ini', atau periode tertentu.
+- Waktu sekarang (sebagai referensi filter): {now_placeholder}
 - Jika mencari kode/ID (seperti no_invoice, kode_sku), gunakan pencocokan case-insensitive (ILIKE di Postgres, atau UPPER() di SQLite).
 - Jika pertanyaan terlalu ambigu, kembalikan HANYA kata: CLARIFY
-- Pastikan query aman (read-only).
+- Pastikan query aman (read-only SELECT).
 """
 
 @router.post("/tanya")
@@ -213,7 +233,7 @@ def ai_executive_assistant(req: AskRequest, db: Session = Depends(get_db)):
         
         # 3. GENERATE SQL QUERY
         sql_prompt = (
-            f"{SCHEMA_CONTEXT}\n\n"
+            f"{SCHEMA_CONTEXT.replace('{now_placeholder}', now.strftime('%Y-%m-%d %H:%M:%S'))}\n\n"
             f"DIALECT: {db_type}\n"
             f"Waktu Sekarang: {now.strftime('%Y-%m-%d %H:%M:%S')}\n"
             f"Pertanyaan Bos: {req.prompt}\n\n"
