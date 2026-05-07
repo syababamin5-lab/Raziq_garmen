@@ -24,7 +24,7 @@ def get_balances(db: Session = Depends(get_db)):
 def get_dashboard_summary(db: Session = Depends(get_db)):
     try:
         wib = datetime.timezone(datetime.timedelta(hours=7))
-        now = datetime.datetime.now(wib)
+        now = datetime.datetime.now(wib).replace(tzinfo=None)
         first_day = now.replace(day=1, hour=0, minute=0, second=0, microsecond=0)
         
         # Start of current week (Monday)
@@ -244,7 +244,7 @@ def get_dashboard_summary(db: Session = Depends(get_db)):
 def get_stats(db: Session = Depends(get_db)):
     # Biarkan endpoint ini ada untuk compatibility, tapi gunakan SQLite
     wib = datetime.timezone(datetime.timedelta(hours=7))
-    now = datetime.datetime.now(wib)
+    now = datetime.datetime.now(wib).replace(tzinfo=None)
     first_day = now.replace(day=1)
     
     omzet = db.query(func.sum(models.JurnalUmum.kredit - models.JurnalUmum.debit)).filter(models.JurnalUmum.kode_akun == "41110", models.JurnalUmum.tanggal >= first_day).scalar() or 0
