@@ -639,7 +639,8 @@ def export_produksi_rekap_pdf_endpoint(bulan: int, tahun: int, db: Session = Dep
 def audit_investigasi_kas(db: Session = Depends(get_db)):
     """Mencari sumber uang keluar 15 juta yang mencurigakan"""
     try:
-        now = datetime.datetime.now()
+        wib = datetime.timezone(datetime.timedelta(hours=7))
+        now = datetime.datetime.now(wib)
         first_day = now.replace(day=1, hour=0, minute=0, second=0)
         
         # Cari semua uang keluar (Kas/Bank) bulan ini
@@ -702,7 +703,8 @@ def get_kartu_stok(kode_sku: str, db: Session = Depends(get_db)):
         for s in sales:
             # Cari tanggal dari header
             header = db.query(models.HeaderPenjualan).filter(models.HeaderPenjualan.no_invoice == s.no_invoice).first()
-            tgl = header.tanggal if header else datetime.datetime.now()
+            wib = datetime.timezone(datetime.timedelta(hours=7))
+            tgl = header.tanggal if header else datetime.datetime.now(wib)
             
             # Penjualan Normal (Keluar)
             mutasi.append({
@@ -727,7 +729,8 @@ def get_kartu_stok(kode_sku: str, db: Session = Depends(get_db)):
         purchases = db.query(models.DetailPembelian).filter(models.DetailPembelian.kode_sku == kode_sku).all()
         for p in purchases:
             header = db.query(models.HeaderPembelian).filter(models.HeaderPembelian.no_po == p.no_po).first()
-            tgl = header.tanggal if header else datetime.datetime.now()
+            wib = datetime.timezone(datetime.timedelta(hours=7))
+            tgl = header.tanggal if header else datetime.datetime.now(wib)
             mutasi.append({
                 "tanggal": tgl,
                 "keterangan": f"Pembelian: {p.no_po} ({(header.nama_supplier if header else 'Umum')})",

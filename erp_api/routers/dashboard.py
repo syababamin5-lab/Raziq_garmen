@@ -23,7 +23,8 @@ def get_balances(db: Session = Depends(get_db)):
 @router.get("/summary", response_model=schemas.DashboardResponse)
 def get_dashboard_summary(db: Session = Depends(get_db)):
     try:
-        now = datetime.datetime.now()
+        wib = datetime.timezone(datetime.timedelta(hours=7))
+        now = datetime.datetime.now(wib)
         first_day = now.replace(day=1, hour=0, minute=0, second=0, microsecond=0)
         
         # Start of current week (Monday)
@@ -228,7 +229,7 @@ def get_dashboard_summary(db: Session = Depends(get_db)):
         )
     except Exception as e:
         print(f"Stats Error: {e}")
-        # Return empty data instead of failing
+        wib = datetime.timezone(datetime.timedelta(hours=7))
         return schemas.DashboardResponse(
             keuangan=schemas.DashboardKeuangan(sisa_saldo_tunai=0, sisa_saldo_bank=0, total_uang_masuk_bulan_ini=0, total_uang_keluar_bulan_ini=0, perubahan_kas_pct=0, perubahan_keluar_pct=0),
             penjualan_terkini=[],
@@ -236,13 +237,14 @@ def get_dashboard_summary(db: Session = Depends(get_db)):
             top_piutang=[],
             top_utang=[],
             top_kasbon=[],
-            tanggal_refresh=datetime.datetime.now().isoformat()
+            tanggal_refresh=datetime.datetime.now(wib).isoformat()
         )
 
 @router.get("/stats", response_model=schemas.DashboardStats)
 def get_stats(db: Session = Depends(get_db)):
     # Biarkan endpoint ini ada untuk compatibility, tapi gunakan SQLite
-    now = datetime.datetime.now()
+    wib = datetime.timezone(datetime.timedelta(hours=7))
+    now = datetime.datetime.now(wib)
     first_day = now.replace(day=1)
     
     omzet = db.query(func.sum(models.JurnalUmum.kredit - models.JurnalUmum.debit)).filter(models.JurnalUmum.kode_akun == "41110", models.JurnalUmum.tanggal >= first_day).scalar() or 0

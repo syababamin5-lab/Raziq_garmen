@@ -81,9 +81,10 @@ def cetak_kartu_mitra(
                     "saldo": running_saldo
                 })
 
+            wib = datetime.timezone(datetime.timedelta(hours=7))
             pdf_bytes = pdf_generator.export_kartu_mitra_pdf(
                 judul, 
-                f"S/D {datetime.datetime.now().strftime('%d %B %Y')}", 
+                f"S/D {datetime.datetime.now(wib).strftime('%d %B %Y')}", 
                 nama_mitra, 
                 mutasi, 
                 running_saldo, 
@@ -155,9 +156,10 @@ def cetak_semua_saldo(
         df = pd.DataFrame(rows, columns=["No", label, "Total Saldo"])
         
         # Kirim data yang sudah diformat ke PDF generator
+        wib = datetime.timezone(datetime.timedelta(hours=7))
         pdf_bytes = pdf_generator.export_dataframe_pdf(
             judul, 
-            f"Per Tanggal: {datetime.datetime.now().strftime('%d %B %Y')}", 
+            f"Per Tanggal: {datetime.datetime.now(wib).strftime('%d %B %Y')}", 
             df, 
             [15, 120, 55], 
             config, n_ttd, j_ttd, n_admin, j_admin
