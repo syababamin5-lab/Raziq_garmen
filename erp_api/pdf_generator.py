@@ -72,8 +72,9 @@ class PDF(FPDF):
         self.cell(self.w, 8, f'Halaman {self.page_no()}', 0, 0, 'C')
         
         # Waktu Cetak (Kanan)
+        wib = datetime.timezone(datetime.timedelta(hours=7))
         self.set_x(self.w - 100)
-        self.cell(90, 8, f'Dicetak: {datetime.datetime.now().strftime("%d/%m/%Y %H:%M")}', 0, 0, 'R')
+        self.cell(90, 8, f'Dicetak: {datetime.datetime.now(wib).strftime("%d/%m/%Y %H:%M")}', 0, 0, 'R')
 
     def check_page_break(self, height):
         # Deteksi batas bawah (Kertas P tingginya 297mm, Kertas L tingginya 210mm)
