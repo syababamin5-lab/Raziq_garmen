@@ -240,7 +240,11 @@ def get_wip(db: Session = Depends(get_db)):
                 sm = re.search(r'\[SKU:([^\]]+)\]', ket)
                 if pm:
                     sku = sm.group(1).strip() if sm else "—"
-                    cut_map[sku] = cut_map.get(sku, 0) + int(pm.group(1))
+                    qty = int(pm.group(1))
+                    if "VOID" in ket:
+                        cut_map[sku] = cut_map.get(sku, 0) - qty
+                    else:
+                        cut_map[sku] = cut_map.get(sku, 0) + qty
 
         jht_map = {}
         for j in jurnals_jahit:
@@ -248,8 +252,12 @@ def get_wip(db: Session = Depends(get_db)):
             if "Jahit" in ket:
                 m = re.search(r'Masuk (\d+) pcs (.*?) \(Jahit\)', ket)
                 if m:
+                    qty = int(m.group(1))
                     sku = m.group(2).strip()
-                    jht_map[sku] = jht_map.get(sku, 0) + int(m.group(1))
+                    if "VOID" in ket:
+                        jht_map[sku] = jht_map.get(sku, 0) - qty
+                    else:
+                        jht_map[sku] = jht_map.get(sku, 0) + qty
 
         all_skus = set(cut_map.keys()).union(set(jht_map.keys()))
         wip_list = []
