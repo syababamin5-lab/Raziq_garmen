@@ -987,7 +987,7 @@ def export_rekap_pembelian_bulanan_pdf(judul, periode, daily_rows, supplier_rows
 
 def export_rekap_produksi_bulanan_pdf(judul, periode, daily_rows, sku_rows, grand_totals, config=None, nama_ttd=None, jabatan_ttd=None, nama_admin=None, jabatan_admin=None):
     """
-    daily_rows: List of [Tgl, Total Cutting (pcs), Total Jahit (lsn)]
+    daily_rows: List of [Tgl, Total Cutting (pcs), Total Jahit (pcs)]
     sku_rows: List of [SKU, Nama Barang, Total Cutting, Total Jahit]
     grand_totals: Dict { "cutting": 0, "jahit": 0 }
     """
@@ -1000,7 +1000,7 @@ def export_rekap_produksi_bulanan_pdf(judul, periode, daily_rows, sku_rows, gran
     pdf.cell(0, 10, "1. RINGKASAN OUTPUT PRODUKSI HARIAN", 0, 1, 'L')
     pdf.ln(2)
     
-    h1 = ["TANGGAL", "OUTPUT CUTTING (PCS)", "OUTPUT JAHIT (LSN)"]
+    h1 = ["TANGGAL", "OUTPUT CUTTING (PCS)", "OUTPUT JAHIT (PCS)"]
     w1 = [60, 65, 65]
     
     pdf.set_font('Arial', 'B', 10)
@@ -1016,13 +1016,13 @@ def export_rekap_produksi_bulanan_pdf(judul, periode, daily_rows, sku_rows, gran
         pdf.check_page_break(8)
         pdf.cell(w1[0], 8, str(r[0]), 1, 0, 'C')
         pdf.cell(w1[1], 8, f"{int(r[1]):,} Pcs".replace(',', '.'), 1, 0, 'C')
-        pdf.cell(w1[2], 8, f"{r[2]:g} Lsn", 1, 1, 'C')
+        pdf.cell(w1[2], 8, f"{int(r[2]):,} Pcs".replace(',', '.'), 1, 1, 'C')
 
     # Total Row Table 1
     pdf.set_fill_color(240, 250, 245); pdf.set_font('Arial', 'B', 10)
     pdf.cell(w1[0], 10, " TOTAL PRODUKSI", 1, 0, 'L', 1)
     pdf.cell(w1[1], 10, f"{int(grand_totals['cutting']):,} Pcs".replace(',', '.'), 1, 0, 'C', 1)
-    pdf.cell(w1[2], 10, f"{grand_totals['jahit']:g} Lsn", 1, 1, 'C', 1)
+    pdf.cell(w1[2], 10, f"{int(grand_totals['jahit']):,} Pcs".replace(',', '.'), 1, 1, 'C', 1)
 
     # ─── TABEL 2: REKAPITULASI PER MODEL / SKU ────────────────────
     pdf.add_page()
@@ -1031,7 +1031,7 @@ def export_rekap_produksi_bulanan_pdf(judul, periode, daily_rows, sku_rows, gran
     pdf.cell(0, 10, "2. REKAPITULASI PRODUKSI PER MODEL (SKU)", 0, 1, 'L')
     pdf.ln(2)
     
-    h2 = ["KODE SKU", "NAMA BARANG", "CUTTING", "JAHIT"]
+    h2 = ["KODE SKU", "NAMA BARANG", "CUTTING (PCS)", "JAHIT (PCS)"]
     w2 = [40, 90, 30, 30]
     
     pdf.set_font('Arial', 'B', 9)
@@ -1048,8 +1048,8 @@ def export_rekap_produksi_bulanan_pdf(judul, periode, daily_rows, sku_rows, gran
         pdf.cell(w2[0], 8, f" {r[0]}", 1, 0, 'L')
         name = str(r[1]); name = (name[:38] + "...") if len(name) > 38 else name
         pdf.cell(w2[1], 8, f" {name}", 1, 0, 'L')
-        pdf.cell(w2[2], 8, f"{int(r[2]):,}".replace(',', '.'), 1, 0, 'C')
-        pdf.cell(w2[3], 8, f"{r[3]:g} Lsn", 1, 1, 'C')
+        pdf.cell(w2[2], 8, f"{int(r[2]):,} Pcs".replace(',', '.'), 1, 0, 'C')
+        pdf.cell(w2[3], 8, f"{int(r[3]):,} Pcs".replace(',', '.'), 1, 1, 'C')
 
     pdf.add_ttd(config, nama=nama_ttd, jabatan=jabatan_ttd, nama_admin=nama_admin, jabatan_admin=jabatan_admin)
     return pdf.output(dest='S').encode('latin-1')
