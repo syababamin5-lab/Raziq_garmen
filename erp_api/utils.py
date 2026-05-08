@@ -17,7 +17,8 @@ def merge_date_time(date_str):
             return datetime.datetime.combine(input_date, now.time())
         else:
             # Jika sudah ada jam (ISO format)
-            return datetime.datetime.fromisoformat(date_str.replace('Z', '+00:00'))
+            dt = datetime.datetime.fromisoformat(date_str.replace('Z', '+00:00'))
+            return dt.replace(tzinfo=None)
     except:
         return now
 
