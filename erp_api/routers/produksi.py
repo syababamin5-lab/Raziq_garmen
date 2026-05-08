@@ -41,15 +41,24 @@ def get_cutting_stats(db: Session = Depends(get_db)):
             .filter(models.ProductionLog.divisi.ilike("Cutting"), models.ProductionLog.tanggal >= first_day_of_month)\
             .group_by(models.ProductionLog.nama_barang).order_by(func.sum(models.ProductionLog.qty_hasil).desc()).limit(5).all()
 
-        top_k = db.query(models.Karyawan.nama_karyawan, func.sum(models.ProductionLog.qty_hasil))\
-            .join(models.ProductionLog, models.ProductionLog.karyawan_id == models.Karyawan.id)\
+        # Perbaikan: Gunakan query yang tidak butuh JOIN kaku agar data tetap muncul meski karyawan tidak ketemu
+        top_k_raw = db.query(models.ProductionLog.karyawan_id, func.sum(models.ProductionLog.qty_hasil))\
             .filter(models.ProductionLog.divisi.ilike("Cutting"), models.ProductionLog.tanggal >= start_of_day)\
-            .group_by(models.Karyawan.nama_karyawan).order_by(func.sum(models.ProductionLog.qty_hasil).desc()).all()
+            .group_by(models.ProductionLog.karyawan_id).order_by(func.sum(models.ProductionLog.qty_hasil).desc()).all()
+        
+        top_k = []
+        for kid, qty in top_k_raw:
+            k = db.query(models.Karyawan).filter(models.Karyawan.id == kid).first()
+            top_k.append((k.nama_karyawan if k else f"User ID {kid}", qty))
 
-        top_money = db.query(models.Karyawan.nama_karyawan, func.sum(models.ProductionLog.total_ongkos))\
-            .join(models.ProductionLog, models.ProductionLog.karyawan_id == models.Karyawan.id)\
+        top_money_raw = db.query(models.ProductionLog.karyawan_id, func.sum(models.ProductionLog.total_ongkos))\
             .filter(models.ProductionLog.divisi.ilike("Cutting"), models.ProductionLog.tanggal >= first_day_of_month)\
-            .group_by(models.Karyawan.nama_karyawan).order_by(func.sum(models.ProductionLog.total_ongkos).desc()).all()
+            .group_by(models.ProductionLog.karyawan_id).order_by(func.sum(models.ProductionLog.total_ongkos).desc()).all()
+            
+        top_money = []
+        for kid, money in top_money_raw:
+            k = db.query(models.Karyawan).filter(models.Karyawan.id == kid).first()
+            top_money.append((k.nama_karyawan if k else f"User ID {kid}", money))
 
         return {
             "success": True,
