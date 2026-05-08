@@ -20,7 +20,8 @@ router = APIRouter(prefix="/api/produksi", tags=["Produksi"])
 @router.get("/cutting-stats")
 def get_cutting_stats(db: Session = Depends(get_db)):
     try:
-        now = datetime.datetime.now()
+        wib = datetime.timezone(datetime.timedelta(hours=7))
+        now = datetime.datetime.now(wib).replace(tzinfo=None)
         start_of_day = now.replace(hour=0, minute=0, second=0, microsecond=0)
         start_of_week = start_of_day - datetime.timedelta(days=now.weekday())
         first_day_of_month = start_of_day.replace(day=1)
@@ -69,7 +70,8 @@ def get_cutting_stats(db: Session = Depends(get_db)):
 @router.get("/cutting-history")
 def get_cutting_history(periode: str = "hari_ini", db: Session = Depends(get_db)):
     try:
-        now = datetime.datetime.now()
+        wib = datetime.timezone(datetime.timedelta(hours=7))
+        now = datetime.datetime.now(wib).replace(tzinfo=None)
         # Set start_date ke awal hari ini
         start_date = now.replace(hour=0, minute=0, second=0, microsecond=0)
         end_date = start_date + datetime.timedelta(days=1)
