@@ -8,5 +8,10 @@ erp_frontend/index.html
 venv
 __pycache__
 *.db
+ngrok*
+logo_ansa_transparan.png
+logo_ansa2.png
+logo_ansa.png
+ansa a.jpg
 brain/
 .gemini/
