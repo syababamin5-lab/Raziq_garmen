@@ -200,20 +200,20 @@ export default function LaporanKeuangan() {
   const renderTable = (judul, data, total, isNeg = false) => {
       if (!data || Object.keys(data).length === 0) return null;
       return (
-          <div className="space-y-3 mb-8">
-              <h4 className="text-xs font-black text-slate-400 uppercase tracking-widest pl-2 border-l-4 border-emerald-500">{judul}</h4>
-              <div className="bg-white rounded-2xl border border-slate-100 overflow-hidden shadow-sm">
+          <div className="space-y-4 mb-8">
+              <h4 className="text-xs font-black text-slate-400 uppercase tracking-widest pl-3 border-l-4 border-emerald-500">{judul}</h4>
+              <div className="bg-white rounded-[1.5rem] border border-slate-100 overflow-hidden shadow-md shadow-slate-200/40 hover:shadow-lg transition-shadow duration-300">
                   <table className="w-full text-sm">
-                      <tbody className="divide-y divide-slate-50">
+                      <tbody className="divide-y divide-slate-50/80">
                           {Object.entries(data).map(([name, val]) => (
-                              <tr key={name} className="hover:bg-slate-50 transition-all">
-                                  <td className="py-3 px-6 text-slate-600 italic">{name}</td>
-                                  <td className={`py-3 px-6 text-right font-bold ${isNeg ? 'text-red-500' : 'text-slate-800'}`}>{formatRp(val)}</td>
+                              <tr key={name} className="hover:bg-slate-50/50 transition-colors">
+                                  <td className="py-3.5 px-6 text-slate-600 font-medium">{name}</td>
+                                  <td className={`py-3.5 px-6 text-right font-bold ${isNeg ? 'text-red-500' : 'text-slate-800'}`}>{formatRp(val)}</td>
                               </tr>
                           ))}
-                          <tr className="bg-slate-50">
-                              <td className="py-4 px-6 font-black text-[#064E3B] text-right">TOTAL {judul.toUpperCase()}</td>
-                              <td className={`py-4 px-6 text-right font-black border-l-2 border-slate-200 ${isNeg ? 'text-red-600' : 'text-emerald-700'}`}>{formatRp(total)}</td>
+                          <tr className={isNeg ? "bg-red-50/50" : "bg-emerald-50/50"}>
+                              <td className="py-4 px-6 font-black text-slate-700 text-right uppercase tracking-wider text-xs">TOTAL {judul}</td>
+                              <td className={`py-4 px-6 text-right font-black border-l border-white/50 text-base ${isNeg ? 'text-red-600' : 'text-emerald-700'}`}>{formatRp(total)}</td>
                           </tr>
                       </tbody>
                   </table>
@@ -226,25 +226,24 @@ export default function LaporanKeuangan() {
   const renderTableAlways = (judul, data, total, isNeg = false) => {
       const entries = data ? Object.entries(data) : [];
       return (
-          <div className="space-y-3 mb-8">
-              <h4 className="text-xs font-black text-slate-400 uppercase tracking-widest pl-2 border-l-4 border-amber-500">{judul}</h4>
-              <div className="bg-white rounded-2xl border border-slate-100 overflow-hidden shadow-sm">
+          <div className="space-y-4 mb-8">
+              <h4 className="text-xs font-black text-slate-400 uppercase tracking-widest pl-3 border-l-4 border-amber-500">{judul}</h4>
+              <div className="bg-white rounded-[1.5rem] border border-slate-100 overflow-hidden shadow-md shadow-slate-200/40 hover:shadow-lg transition-shadow duration-300">
                   <table className="w-full text-sm">
-                      <tbody className="divide-y divide-slate-50">
+                      <tbody className="divide-y divide-slate-50/80">
                           {entries.length > 0 ? entries.map(([name, val]) => (
-                              <tr key={name} className="hover:bg-slate-50 transition-all">
-                                  <td className="py-3 px-6 text-slate-600 italic">{name}</td>
-                                  <td className={`py-3 px-6 text-right font-bold ${isNeg ? 'text-red-500' : 'text-slate-800'}`}>{formatRp(val)}</td>
+                              <tr key={name} className="hover:bg-slate-50/50 transition-colors">
+                                  <td className="py-3.5 px-6 text-slate-600 font-medium">{name}</td>
+                                  <td className={`py-3.5 px-6 text-right font-bold ${isNeg ? 'text-red-500' : 'text-slate-800'}`}>{formatRp(val)}</td>
                               </tr>
                           )) : (
                               <tr>
-                                  <td className="py-3 px-6 text-slate-400 italic text-sm">Belum ada mutasi persediaan tercatat</td>
-                                  <td className="py-3 px-6 text-right font-bold text-slate-400">Rp 0</td>
+                                  <td className="py-5 px-6 text-slate-400 italic text-sm text-center" colSpan="2">Belum ada mutasi persediaan tercatat</td>
                               </tr>
                           )}
-                          <tr className="bg-slate-50">
-                              <td className="py-4 px-6 font-black text-[#064E3B] text-right">TOTAL {judul.toUpperCase()}</td>
-                              <td className={`py-4 px-6 text-right font-black border-l-2 border-slate-200 ${isNeg ? 'text-red-600' : 'text-emerald-700'}`}>{formatRp(total || 0)}</td>
+                          <tr className={isNeg ? "bg-amber-50/50" : "bg-emerald-50/50"}>
+                              <td className="py-4 px-6 font-black text-slate-700 text-right uppercase tracking-wider text-xs">TOTAL {judul}</td>
+                              <td className={`py-4 px-6 text-right font-black border-l border-white/50 text-base ${isNeg ? 'text-red-600' : 'text-emerald-700'}`}>{formatRp(total || 0)}</td>
                           </tr>
                       </tbody>
                   </table>
@@ -256,77 +255,84 @@ export default function LaporanKeuangan() {
   return (
     <div className="max-w-6xl mx-auto space-y-6 pb-20">
         {/* Header Sekaligus Filter */}
-        <div className="bg-white p-8 rounded-[2rem] shadow-sm border border-slate-100 flex flex-col md:flex-row md:items-center justify-between gap-6">
-            <div className="flex items-center gap-4">
-                <div className="w-14 h-14 rounded-2xl bg-emerald-900 flex items-center justify-center text-white shadow-xl">
+        <div className="bg-white p-8 rounded-[2.5rem] shadow-xl shadow-slate-200/40 border border-slate-100 flex flex-col xl:flex-row xl:items-center justify-between gap-8">
+            <div className="flex items-center gap-5">
+                <div className="w-16 h-16 rounded-[1.25rem] bg-gradient-to-br from-[#064E3B] to-emerald-800 flex items-center justify-center text-emerald-50 shadow-lg shadow-emerald-900/20 flex-shrink-0">
                     <span className="material-symbols-rounded text-3xl">monitoring</span>
                 </div>
                 <div>
-                    <h1 className="text-2xl font-black text-slate-800 uppercase tracking-tighter font-outfit">Laporan Keuangan</h1>
-                    <p className="text-slate-500 text-sm font-medium italic">Periode: {bulan}/{tahun}</p>
+                    <h1 className="text-2xl font-black text-slate-800 uppercase tracking-tight font-outfit">Laporan Keuangan</h1>
+                    <p className="text-slate-500 text-sm font-medium mt-1">Periode: <span className="text-emerald-700 font-bold bg-emerald-50 px-2 py-0.5 rounded-md ml-1">{bulan}/{tahun}</span></p>
                 </div>
             </div>
 
-            <div className="flex items-center gap-3 bg-slate-100 p-2 rounded-2xl">
-                <select className="bg-white p-2.5 rounded-xl text-sm font-bold border-none" value={bulan} onChange={e => setBulan(Number(e.target.value))}>
-                    {[1,2,3,4,5,6,7,8,9,10,11,12].map(m => <option key={m} value={m}>{new Date(2000, m-1).toLocaleString('id-ID', {month: 'long'})}</option>)}
-                </select>
-                <select className="bg-white p-2.5 rounded-xl text-sm font-bold border-none" value={tahun} onChange={e => setTahun(Number(e.target.value))}>
-                    {[2024, 2025, 2026].map(y => <option key={y} value={y}>{y}</option>)}
-                </select>
-                <button onClick={fetchReports} className="bg-emerald-600 text-white p-2.5 rounded-xl hover:bg-black transition-all">
-                    <span className="material-symbols-rounded">sync</span>
-                </button>
-                    <div className="flex items-center gap-2 flex-wrap justify-end">
-                        <a 
-                            id="btn-rekap-penjualan"
-                            href={`${import.meta.env.VITE_API_BASE_URL || ''}/api/laporan/export-pdf-penjualan-rekap?bulan=${bulan}&tahun=${tahun}`}
-                            target="_blank"
-                            rel="noreferrer"
-                            className="bg-emerald-100 text-emerald-800 px-4 py-2.5 rounded-xl text-xs font-black flex items-center gap-2 hover:bg-emerald-600 hover:text-white transition-all border border-emerald-200"
-                        >
-                            <span className="material-symbols-rounded text-sm">summarize</span>
-                            REKAP JUAL
-                        </a>
-                        <a 
-                            id="btn-rekap-pembelian"
-                            href={`${import.meta.env.VITE_API_BASE_URL || ''}/api/laporan/export-pdf-pembelian-rekap?bulan=${bulan}&tahun=${tahun}`}
-                            target="_blank"
-                            rel="noreferrer"
-                            className="bg-orange-100 text-orange-800 px-4 py-2.5 rounded-xl text-xs font-black flex items-center gap-2 hover:bg-orange-600 hover:text-white transition-all border border-orange-200"
-                        >
-                            <span className="material-symbols-rounded text-sm">inventory_2</span>
-                            REKAP BELI
-                        </a>
-                        <a 
-                            id="btn-rekap-produksi"
-                            href={`${import.meta.env.VITE_API_BASE_URL || ''}/api/laporan/export-pdf-produksi-rekap?bulan=${bulan}&tahun=${tahun}`}
-                            target="_blank"
-                            rel="noreferrer"
-                            className="bg-blue-100 text-blue-800 px-4 py-2.5 rounded-xl text-xs font-black flex items-center gap-2 hover:bg-blue-600 hover:text-white transition-all border border-blue-200"
-                        >
-                            <span className="material-symbols-rounded text-sm">precision_manufacturing</span>
-                            REKAP PRODUKSI
-                        </a>
-                        <a 
-                            href={
-                                activeTab === 'ledger' 
-                                ? `${import.meta.env.VITE_API_BASE_URL || ''}/api/laporan/export-pdf-buku-besar?kode_akun=${selectedAkun || 'ALL'}&bulan=${bulan}&tahun=${tahun}&filter_nama=${filterNama}`
-                                : `${import.meta.env.VITE_API_BASE_URL || ''}/api/laporan/export-pdf?tipe=${activeTab === 'hpp' ? 'HPP' : activeTab === 'lr' ? 'LR' : activeTab === 'ekuitas' ? 'EKUITAS' : activeTab === 'aruskas' ? 'ARUSKAS' : 'NERACA'}&bulan=${bulan}&tahun=${tahun}`
-                            }
-                            target="_blank"
-                            rel="noreferrer"
-                            className="bg-slate-800 text-white px-4 py-2.5 rounded-xl text-xs font-black flex items-center gap-2 hover:bg-emerald-600 transition-all shadow-lg shadow-slate-200"
-                        >
-                            <span className="material-symbols-rounded text-sm">print</span>
-                            {activeTab === 'ledger' && !selectedAkun ? 'CETAK SEMUA' : 'CETAK PDF'}
-                        </a>
-                    </div>
+            <div className="flex flex-col sm:flex-row items-center gap-5 w-full xl:w-auto justify-end">
+                {/* Filter Group */}
+                <div className="flex items-center gap-2 bg-slate-50/80 p-2 rounded-2xl border border-slate-200/60 shadow-inner">
+                    <select className="bg-transparent px-3 py-2 rounded-xl text-sm font-bold border-none text-slate-700 focus:ring-0 cursor-pointer hover:bg-white transition-colors" value={bulan} onChange={e => setBulan(Number(e.target.value))}>
+                        {[1,2,3,4,5,6,7,8,9,10,11,12].map(m => <option key={m} value={m}>{new Date(2000, m-1).toLocaleString('id-ID', {month: 'long'})}</option>)}
+                    </select>
+                    <div className="w-px h-6 bg-slate-300/50"></div>
+                    <select className="bg-transparent px-3 py-2 rounded-xl text-sm font-bold border-none text-slate-700 focus:ring-0 cursor-pointer hover:bg-white transition-colors" value={tahun} onChange={e => setTahun(Number(e.target.value))}>
+                        {[2024, 2025, 2026].map(y => <option key={y} value={y}>{y}</option>)}
+                    </select>
+                    <button onClick={fetchReports} className="bg-emerald-600 text-white w-10 h-10 rounded-[14px] hover:bg-emerald-700 active:scale-95 transition-all flex items-center justify-center shadow-md shadow-emerald-600/30 ml-1">
+                        <span className="material-symbols-rounded text-lg">sync</span>
+                    </button>
+                </div>
+                
+                {/* Action Buttons */}
+                <div className="flex items-center gap-2 flex-wrap justify-end">
+                    <a 
+                        id="btn-rekap-penjualan"
+                        href={`${import.meta.env.VITE_API_BASE_URL || ''}/api/laporan/export-pdf-penjualan-rekap?bulan=${bulan}&tahun=${tahun}`}
+                        target="_blank"
+                        rel="noreferrer"
+                        className="bg-emerald-50 text-emerald-700 px-4 py-2.5 rounded-[14px] text-[11px] font-black tracking-wider flex items-center gap-2 hover:bg-emerald-600 hover:text-white transition-colors border border-emerald-100 hover:border-emerald-600 shadow-sm"
+                    >
+                        <span className="material-symbols-rounded text-base">summarize</span>
+                        <span className="hidden sm:inline">REKAP</span> JUAL
+                    </a>
+                    <a 
+                        id="btn-rekap-pembelian"
+                        href={`${import.meta.env.VITE_API_BASE_URL || ''}/api/laporan/export-pdf-pembelian-rekap?bulan=${bulan}&tahun=${tahun}`}
+                        target="_blank"
+                        rel="noreferrer"
+                        className="bg-orange-50 text-orange-700 px-4 py-2.5 rounded-[14px] text-[11px] font-black tracking-wider flex items-center gap-2 hover:bg-orange-500 hover:text-white transition-colors border border-orange-100 hover:border-orange-500 shadow-sm"
+                    >
+                        <span className="material-symbols-rounded text-base">inventory_2</span>
+                        <span className="hidden sm:inline">REKAP</span> BELI
+                    </a>
+                    <a 
+                        id="btn-rekap-produksi"
+                        href={`${import.meta.env.VITE_API_BASE_URL || ''}/api/laporan/export-pdf-produksi-rekap?bulan=${bulan}&tahun=${tahun}`}
+                        target="_blank"
+                        rel="noreferrer"
+                        className="bg-blue-50 text-blue-700 px-4 py-2.5 rounded-[14px] text-[11px] font-black tracking-wider flex items-center gap-2 hover:bg-blue-600 hover:text-white transition-colors border border-blue-100 hover:border-blue-600 shadow-sm"
+                    >
+                        <span className="material-symbols-rounded text-base">precision_manufacturing</span>
+                        <span className="hidden sm:inline">REKAP</span> PROD
+                    </a>
+                    <div className="w-px h-8 bg-slate-200 hidden sm:block mx-1"></div>
+                    <a 
+                        href={
+                            activeTab === 'ledger' 
+                            ? `${import.meta.env.VITE_API_BASE_URL || ''}/api/laporan/export-pdf-buku-besar?kode_akun=${selectedAkun || 'ALL'}&bulan=${bulan}&tahun=${tahun}&filter_nama=${filterNama}`
+                            : `${import.meta.env.VITE_API_BASE_URL || ''}/api/laporan/export-pdf?tipe=${activeTab === 'hpp' ? 'HPP' : activeTab === 'lr' ? 'LR' : activeTab === 'ekuitas' ? 'EKUITAS' : activeTab === 'aruskas' ? 'ARUSKAS' : 'NERACA'}&bulan=${bulan}&tahun=${tahun}`
+                        }
+                        target="_blank"
+                        rel="noreferrer"
+                        className="bg-slate-800 text-white px-5 py-2.5 rounded-[14px] text-[11px] font-black tracking-wider flex items-center gap-2 hover:bg-emerald-600 active:scale-95 transition-all shadow-lg shadow-slate-800/20"
+                    >
+                        <span className="material-symbols-rounded text-base">print</span>
+                        {activeTab === 'ledger' && !selectedAkun ? 'CETAK SEMUA' : 'CETAK PDF'}
+                    </a>
+                </div>
             </div>
         </div>
 
         {/* TABS */}
-        <div className="flex flex-wrap gap-2 p-1 bg-slate-100 rounded-3xl w-fit">
+        <div className="flex flex-wrap gap-2 p-1.5 bg-white/60 backdrop-blur-md rounded-full w-fit shadow-sm border border-slate-200/50">
             {[
                 { id: 'hpp', label: 'HPP', icon: 'inventory' },
                 { id: 'lr', label: 'Laba Rugi', icon: 'finance_mode' },
@@ -336,8 +342,12 @@ export default function LaporanKeuangan() {
                 { id: 'ledger', label: 'Buku Besar', icon: 'analytics' },
                 { id: 'wip', label: 'WIP Cutting', icon: 'content_cut' }
             ].map(t => (
-                <button key={t.id} onClick={() => setActiveTab(t.id)} className={`flex items-center gap-2 px-6 py-3 rounded-2xl text-xs font-black transition-all ${activeTab === t.id ? 'bg-[#064E3B] text-white shadow-lg' : 'text-slate-500 hover:bg-slate-200'}`}>
-                    <span className="material-symbols-rounded text-lg">{t.icon}</span>
+                <button 
+                    key={t.id} 
+                    onClick={() => setActiveTab(t.id)} 
+                    className={`flex items-center gap-2 px-6 py-3 rounded-full text-xs font-bold transition-all duration-300 ${activeTab === t.id ? 'bg-[#064E3B] text-white shadow-md shadow-emerald-900/20 scale-105' : 'text-slate-500 hover:bg-slate-100 hover:text-slate-700'}`}
+                >
+                    <span className="material-symbols-rounded text-[1.1rem]">{t.icon}</span>
                     {t.label.toUpperCase()}
                 </button>
             ))}
@@ -646,7 +656,7 @@ export default function LaporanKeuangan() {
         )}
         {/* Version Indicator */}
         <div className="text-center pt-20 pb-10 opacity-20 hover:opacity-100 transition-opacity">
-            <p className="text-[10px] font-black text-slate-400 uppercase tracking-[0.5em]">Raziq Garmen ERP v1.0.5 - Arus Kas & Date Fix</p>
+            <p className="text-[10px] font-black text-slate-400 uppercase tracking-[0.5em]">Raziq Garmen ERP v1.0.6 - Premium UI Update</p>
         </div>
     </div>
   );
