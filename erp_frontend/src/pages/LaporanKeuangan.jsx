@@ -644,6 +644,10 @@ export default function LaporanKeuangan() {
                 </div>
             </div>
         )}
+        {/* Version Indicator */}
+        <div className="text-center pt-20 pb-10 opacity-20 hover:opacity-100 transition-opacity">
+            <p className="text-[10px] font-black text-slate-400 uppercase tracking-[0.5em]">Raziq Garmen ERP v1.0.5 - Arus Kas & Date Fix</p>
+        </div>
     </div>
   );
 }
