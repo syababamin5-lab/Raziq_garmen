@@ -20,6 +20,118 @@ export default function LaporanKeuangan() {
   const [coa, setCoa] = useState([]);
   const [selectedAkun, setSelectedAkun] = useState('');
   const [filterNama, setFilterNama] = useState('');
+  
+  // ANALOGY MODAL STATE
+  const [analogy, setAnalogy] = useState({ open: false, title: '', content: null });
+
+  const analogies = {
+    hpp: {
+      title: "Analogi Perhitungan HPP (Beban Pokok)",
+      content: (
+        <div className="space-y-4 text-slate-600 leading-relaxed">
+          <p>HPP (Harga Pokok Penjualan) adalah total biaya yang Bapak keluarkan untuk **membuat satu unit produk** sampai siap dijual.</p>
+          <div className="bg-emerald-50 p-4 rounded-2xl border border-emerald-100">
+            <p className="font-black text-emerald-800 text-xs mb-2 uppercase">Rumus Utama:</p>
+            <p className="font-mono text-sm font-bold text-emerald-900">Bahan Baku + Upah Tenaga Kerja + Biaya Overhead = HPP</p>
+          </div>
+          <ul className="space-y-3">
+            <li className="flex gap-3">
+              <span className="w-6 h-6 rounded-full bg-emerald-100 text-emerald-600 flex-shrink-0 flex items-center justify-center font-bold text-xs">1</span>
+              <p><span className="font-black text-slate-800">Pemakaian Bahan Baku:</span> Diambil dari mutasi keluar akun **12110**. Setiap kain yang Bapak potong akan masuk ke sini sebagai modal awal.</p>
+            </li>
+            <li className="flex gap-3">
+              <span className="w-6 h-6 rounded-full bg-emerald-100 text-emerald-600 flex-shrink-0 flex items-center justify-center font-bold text-xs">2</span>
+              <p><span className="font-black text-slate-800">Biaya Tenaga Kerja:</span> Total upah borongan (Cutting, Jahit, QC) yang dicatat di akun **512xx**. Ini adalah biaya 'keringat' orang di workshop.</p>
+            </li>
+            <li className="flex gap-3">
+              <span className="w-6 h-6 rounded-full bg-emerald-100 text-emerald-600 flex-shrink-0 flex items-center justify-center font-bold text-xs">3</span>
+              <p><span className="font-black text-slate-800">Overhead Pabrik:</span> Biaya pendukung seperti Listrik, Benang, Jarum, dan Plastik (Akun **513xx**).</p>
+            </li>
+          </ul>
+        </div>
+      )
+    },
+    lr: {
+      title: "Analogi Perhitungan Laba Rugi",
+      content: (
+        <div className="space-y-4 text-slate-600 leading-relaxed">
+          <p>Laporan ini menunjukkan **performa bisnis** Bapak: Apakah bulan ini untung atau buntung?</p>
+          <div className="bg-blue-50 p-4 rounded-2xl border border-blue-100">
+            <p className="font-black text-blue-800 text-xs mb-2 uppercase">Alur Perhitungan:</p>
+            <p className="font-mono text-sm font-bold text-blue-900">Penjualan Bruto - Retur/Diskon = Pendapatan Bersih</p>
+            <p className="font-mono text-sm font-bold text-blue-900">Pendapatan Bersih - HPP = Laba Kotor</p>
+            <p className="font-mono text-sm font-bold text-blue-900">Laba Kotor - Beban Operasional = Laba Bersih</p>
+          </div>
+          <ul className="space-y-3">
+            <li className="flex gap-3">
+              <span className="w-6 h-6 rounded-full bg-blue-100 text-blue-600 flex-shrink-0 flex items-center justify-center font-bold text-xs">1</span>
+              <p><span className="font-black text-slate-800">Pendapatan (41xxx):</span> Semua uang yang masuk dari invoice penjualan. Nilai ini sudah dikurangi jika ada customer yang retur atau dapat diskon.</p>
+            </li>
+            <li className="flex gap-3">
+              <span className="w-6 h-6 rounded-full bg-blue-100 text-blue-600 flex-shrink-0 flex items-center justify-center font-bold text-xs">2</span>
+              <p><span className="font-black text-slate-800">Laba Kotor:</span> Keuntungan murni dari selisih harga jual dan modal produksi. Belum dipotong biaya kantor.</p>
+            </li>
+            <li className="flex gap-3">
+              <span className="w-6 h-6 rounded-full bg-blue-100 text-blue-600 flex-shrink-0 flex items-center justify-center font-bold text-xs">3</span>
+              <p><span className="font-black text-slate-800">Beban Operasional:</span> Biaya 'sewa napas' perusahaan, seperti Gaji Admin, Iklan, Sewa Domain, dan Listrik Kantor.</p>
+            </li>
+          </ul>
+        </div>
+      )
+    },
+    neraca: {
+      title: "Analogi Perhitungan Neraca",
+      content: (
+        <div className="space-y-4 text-slate-600 leading-relaxed">
+          <p>Neraca adalah potret **kekayaan bersih** perusahaan pada saat ini. Ini harus selalu seimbang antara kiri dan kanan.</p>
+          <div className="bg-amber-50 p-4 rounded-2xl border border-amber-100">
+            <p className="font-black text-amber-800 text-xs mb-2 uppercase">Prinsip Keseimbangan (Balance):</p>
+            <p className="font-mono text-sm font-bold text-amber-900">ASET = KEWAJIBAN + EKUITAS</p>
+          </div>
+          <ul className="space-y-3">
+            <li className="flex gap-3">
+              <span className="w-6 h-6 rounded-full bg-amber-100 text-amber-600 flex-shrink-0 flex items-center justify-center font-bold text-xs">A</span>
+              <p><span className="font-black text-slate-800">Aset (Harta):</span> Uang di Kas/Bank, Piutang (uang di orang lain), Stok Kain, Stok Baju, hingga Mesin Jahit Bapak.</p>
+            </li>
+            <li className="flex gap-3">
+              <span className="w-6 h-6 rounded-full bg-amber-100 text-amber-600 flex-shrink-0 flex items-center justify-center font-bold text-xs">K</span>
+              <p><span className="font-black text-slate-800">Kewajiban (Hutang):</span> Hutang ke supplier kain atau hutang gaji yang belum dibayar.</p>
+            </li>
+            <li className="flex gap-3">
+              <span className="w-6 h-6 rounded-full bg-amber-100 text-amber-600 flex-shrink-0 flex items-center justify-center font-bold text-xs">E</span>
+              <p><span className="font-black text-slate-800">Ekuitas (Modal):</span> Uang modal awal Bapak ditambah akumulasi keuntungan (Laba Ditahan) selama ini.</p>
+            </li>
+          </ul>
+        </div>
+      )
+    },
+    ekuitas: {
+      title: "Analogi Perubahan Ekuitas",
+      content: (
+        <div className="space-y-4 text-slate-600 leading-relaxed">
+          <p>Laporan ini mencatat bagaimana **modal Bapak berkembang** dari awal sampai sekarang.</p>
+          <div className="bg-purple-50 p-4 rounded-2xl border border-purple-100">
+            <p className="font-black text-purple-800 text-xs mb-2 uppercase">Rumus Pertumbuhan:</p>
+            <p className="font-mono text-sm font-bold text-purple-900">Modal Awal + Laba Bersih - Prive = Modal Akhir</p>
+          </div>
+          <ul className="space-y-3">
+            <li className="flex gap-3">
+              <span className="w-6 h-6 rounded-full bg-purple-100 text-purple-600 flex-shrink-0 flex items-center justify-center font-bold text-xs">1</span>
+              <p><span className="font-black text-slate-800">Modal Awal:</span> Uang atau aset yang Bapak masukkan pertama kali saat memulai bisnis ini.</p>
+            </li>
+            <li className="flex gap-3">
+              <span className="w-6 h-6 rounded-full bg-purple-100 text-purple-600 flex-shrink-0 flex items-center justify-center font-bold text-xs">2</span>
+              <p><span className="font-black text-slate-800">Laba Bersih:</span> Tambahan kekayaan yang didapat dari operasional bisnis bulan ini.</p>
+            </li>
+            <li className="flex gap-3">
+              <span className="w-6 h-6 rounded-full bg-purple-100 text-purple-600 flex-shrink-0 flex items-center justify-center font-bold text-xs">3</span>
+              <p><span className="font-black text-slate-800">Prive (Penarikan):</span> Uang yang Bapak ambil dari bisnis untuk keperluan pribadi Bapak.</p>
+            </li>
+          </ul>
+        </div>
+      )
+    }
+  };
 
   const fetchBaseData = async () => {
     try {
@@ -206,10 +318,32 @@ export default function LaporanKeuangan() {
 
         <div className="bg-white p-10 rounded-[3rem] shadow-[0_20px_60px_rgba(0,0,0,0.02)] border border-slate-50 min-h-[500px]">
              
-             {loading && <div className="animate-pulse space-y-4 pt-10"><div className="h-10 bg-slate-100 rounded-xl w-1/3"></div><div className="h-40 bg-slate-50 rounded-3xl"></div></div>}
-             
              {!loading && reportData && (
-                 <>
+                  <>
+                    <div className="flex justify-between items-center mb-10">
+                        <div className="flex items-center gap-3">
+                            <h2 className="text-2xl font-black text-slate-800 font-outfit uppercase tracking-widest">
+                                {activeTab === 'hpp' ? 'Analisis Harga Pokok (HPP)' : 
+                                 activeTab === 'lr' ? 'Laporan Laba Rugi' :
+                                 activeTab === 'neraca' ? 'Posisi Keuangan (Neraca)' :
+                                 activeTab === 'ekuitas' ? 'Perubahan Modal' :
+                                 activeTab === 'ledger' ? 'Buku Besar Akun' : 'WIP Tracking'}
+                            </h2>
+                            {analogies[activeTab] && (
+                                <button 
+                                    onClick={() => setAnalogy({ open: true, ...analogies[activeTab] })}
+                                    className="w-8 h-8 rounded-full bg-amber-100 text-amber-600 flex items-center justify-center hover:bg-amber-500 hover:text-white transition-all shadow-sm"
+                                    title="Klik untuk melihat analogi perhitungan"
+                                >
+                                    <span className="material-symbols-rounded text-lg">lightbulb</span>
+                                </button>
+                            )}
+                        </div>
+                        <div className="text-[10px] font-black text-slate-400 bg-slate-50 px-4 py-1.5 rounded-full border">
+                            REAL-TIME SYNCED
+                        </div>
+                    </div>
+
                     {activeTab === 'hpp' && (
                         <div className="animate-in fade-in slide-in-from-bottom-2">
                              {renderTable("Pemakaian Bahan Baku", reportData.hpp.bahan?.detail, reportData.hpp.bahan?.total)}
@@ -400,6 +534,36 @@ export default function LaporanKeuangan() {
                  </>
              )}
         </div>
+
+        {/* ANALOGY MODAL */}
+        {analogy.open && (
+            <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-slate-900/60 backdrop-blur-sm animate-in fade-in">
+                <div className="bg-white rounded-[2.5rem] shadow-2xl w-full max-w-xl overflow-hidden animate-in zoom-in-95 border border-white/20">
+                    <div className="p-8 border-b border-slate-100 flex justify-between items-center bg-gradient-to-r from-amber-50 to-white">
+                        <div className="flex items-center gap-3">
+                            <div className="w-10 h-10 rounded-xl bg-amber-500 text-white flex items-center justify-center shadow-lg shadow-amber-200">
+                                <span className="material-symbols-rounded">lightbulb</span>
+                            </div>
+                            <h3 className="text-xl font-black text-slate-800 uppercase tracking-tighter">{analogy.title}</h3>
+                        </div>
+                        <button onClick={() => setAnalogy({ ...analogy, open: false })} className="w-10 h-10 rounded-full hover:bg-red-50 hover:text-red-500 text-slate-400 flex items-center justify-center transition-all">
+                            <span className="material-symbols-rounded">close</span>
+                        </button>
+                    </div>
+                    <div className="p-10 max-h-[70vh] overflow-y-auto">
+                        {analogy.content}
+                    </div>
+                    <div className="p-6 bg-slate-50 text-center border-t border-slate-100">
+                        <button 
+                            onClick={() => setAnalogy({ ...analogy, open: false })}
+                            className="bg-[#064E3B] text-white px-10 py-3.5 rounded-2xl font-black text-xs hover:bg-black transition-all shadow-xl shadow-emerald-100"
+                        >
+                            SAYA MENGERTI
+                        </button>
+                    </div>
+                </div>
+            </div>
+        )}
     </div>
   );
 }
