@@ -41,6 +41,7 @@ async def submit_pembelian_bahan(payload: schemas.PembelianBahanRequest, db: Ses
         db.add(header)
 
         total_baku = 0
+        total_jadi = 0
         total_penolong = 0
 
         for i in payload.items:
@@ -62,11 +63,11 @@ async def submit_pembelian_bahan(payload: schemas.PembelianBahanRequest, db: Ses
                 inv.harga_modal = i.harga
             else:
                 new_inv = models.Barang(
-                    model_code="BAHAN",
+                    model_code="MASTER",
                     nama_barang=i.nama,
                     kode_sku=i.sku,
                     kategori=i.kat,
-                    satuan="Kg",
+                    satuan="Pcs" if "Jadi" in i.kat else "Kg",
                     stok_saat_ini=i.qty,
                     harga_modal=i.harga
                 )
@@ -74,6 +75,8 @@ async def submit_pembelian_bahan(payload: schemas.PembelianBahanRequest, db: Ses
             
             if i.kat == "BAHAN_BAKU" or i.kat == "Bahan Baku (Kain)" or i.kat == models.KategoriBarang.BAHAN_BAKU.value: 
                 total_baku += (i.qty * i.harga)
+            elif i.kat == "Barang Jadi (Baju)" or i.kat == "BARANG_JADI" or i.kat == models.KategoriBarang.BARANG_JADI.value:
+                total_jadi += (i.qty * i.harga)
             else: 
                 total_penolong += (i.qty * i.harga)
 
@@ -81,6 +84,8 @@ async def submit_pembelian_bahan(payload: schemas.PembelianBahanRequest, db: Ses
         # Debit: Persediaan (Nilai Bruto)
         if total_baku > 0:
             db.add(models.JurnalUmum(tanggal=tgl_transaksi, kode_akun="12110", nama_akun="Persediaan Bahan Baku (Kain)", keterangan=f"Beli {no_po} - {supp.nama_mitra}", debit=total_baku, kredit=0))
+        if total_jadi > 0:
+            db.add(models.JurnalUmum(tanggal=tgl_transaksi, kode_akun="12150", nama_akun="Persediaan Barang Jadi", keterangan=f"Beli Jadi {no_po} - {supp.nama_mitra}", debit=total_jadi, kredit=0))
         if total_penolong > 0:
             db.add(models.JurnalUmum(tanggal=tgl_transaksi, kode_akun="51320", nama_akun="BOP - Pemakaian Bahan Penolong & Packing", keterangan=f"Beli Penolong {no_po} - {supp.nama_mitra}", debit=total_penolong, kredit=0))
 

@@ -48,7 +48,9 @@ export default function PenjualanRetur() {
                 getPenjualanHistory()
             ]);
             setCustomers(resCust.filter(m => m.kategori === 'Customer / Klien'));
-            setProducts(resProd.filter(b => b.kategori === 'Barang Jadi (Baju)' && b.stok_saat_ini > 0));
+            setProducts(resProd.filter(b => 
+                (b.kategori === 'Barang Jadi (Baju)' || b.kategori === 'BARANG_JADI')
+            ));
             if (resHist.success) setHistory(resHist.data.list);
         } catch (err) { console.error(err); }
     };
@@ -242,7 +244,12 @@ export default function PenjualanRetur() {
                                     }}
                                 >
                                     <option value="">-- Pilih Model Baju --</option>
-                                    {products.map(p => <option key={p.id} value={p.id}>{p.nama_barang} ({(p.stok_saat_ini / 12).toFixed(1)} LS)</option>)}
+                                    {products.map(p => (
+                                        <option key={p.id} value={p.id}>
+                                            {p.nama_barang} 
+                                            {p.stok_saat_ini > 0 ? ` (${(p.stok_saat_ini / 12).toFixed(1)} LS)` : ' (STOK HABIS)'}
+                                        </option>
+                                    ))}
                                 </select>
 
                                 <div className="grid grid-cols-2 gap-4">
