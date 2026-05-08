@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { submitTerimaPiutang, submitBayarUtang, submitMutasi, submitBayarKasbon, getSaldo } from '../api/keuanganApi';
-import { formatRp, formatInputNumber, parseNumber, getLocalDate } from '../utils/formatters';
+import { formatRp, formatInputNumber, parseNumber, getLocalDate, getLocalTimestamp } from '../utils/formatters';
 
 export default function KasPiutang() {
   const [activeTab, setActiveTab] = useState('piutang');
