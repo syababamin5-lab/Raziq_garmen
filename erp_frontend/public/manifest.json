@@ -1,5 +1,5 @@
 {
-  "short_name": "RaziqCutting",
+  "short_name": "Raziq ERP",
   "name": "Raziq Garment Cutting",
   "icons": [
     {
@@ -9,7 +9,7 @@
       "purpose": "any maskable"
     }
   ],
-  "start_url": "/mobile-cutting",
+  "start_url": "/m/cutting",
   "display": "standalone",
   "theme_color": "#064e3b",
   "background_color": "#020617",
