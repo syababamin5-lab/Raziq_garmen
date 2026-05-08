@@ -309,10 +309,20 @@ export default function LaporanKeuangan() {
                             REKAP PRODUKSI
                         </a>
                         <a 
+                            id="btn-rekap-arus-kas"
+                            href={`${import.meta.env.VITE_API_BASE_URL || ''}/api/laporan/export-pdf?tipe=ARUSKAS&bulan=${bulan}&tahun=${tahun}`}
+                            target="_blank"
+                            rel="noreferrer"
+                            className="bg-purple-100 text-purple-800 px-4 py-2.5 rounded-xl text-xs font-black flex items-center gap-2 hover:bg-purple-600 hover:text-white transition-all border border-purple-200"
+                        >
+                            <span className="material-symbols-rounded text-sm">payments</span>
+                            REKAP ARUS KAS
+                        </a>
+                        <a 
                             href={
                                 activeTab === 'ledger' 
                                 ? `${import.meta.env.VITE_API_BASE_URL || ''}/api/laporan/export-pdf-buku-besar?kode_akun=${selectedAkun || 'ALL'}&bulan=${bulan}&tahun=${tahun}&filter_nama=${filterNama}`
-                                : `${import.meta.env.VITE_API_BASE_URL || ''}/api/laporan/export-pdf?tipe=${activeTab === 'hpp' ? 'HPP' : activeTab === 'lr' ? 'LR' : activeTab === 'ekuitas' ? 'EKUITAS' : 'NERACA'}&bulan=${bulan}&tahun=${tahun}`
+                                : `${import.meta.env.VITE_API_BASE_URL || ''}/api/laporan/export-pdf?tipe=${activeTab === 'hpp' ? 'HPP' : activeTab === 'lr' ? 'LR' : activeTab === 'ekuitas' ? 'EKUITAS' : activeTab === 'aruskas' ? 'ARUSKAS' : 'NERACA'}&bulan=${bulan}&tahun=${tahun}`
                             }
                             target="_blank"
                             rel="noreferrer"
