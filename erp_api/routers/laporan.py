@@ -104,6 +104,47 @@ def get_laporan_keuangan(bulan: int, tahun: int, db: Session = Depends(get_db)):
         # total_laba_akum adalah Pendapatan - (HPP + Beban)
         total_laba_akum = laba_kumulatif - hpp_kumulatif - beban_kumulatif
 
+        # 4. Arus Kas (Metode Langsung)
+        # Saldo Awal Kas & Bank (Bulan sebelumnya)
+        d_awal_kas = db.query(func.sum(models.JurnalUmum.debit)).filter(models.JurnalUmum.kode_akun.startswith("111"), models.JurnalUmum.tanggal < start_date).scalar() or 0
+        k_awal_kas = db.query(func.sum(models.JurnalUmum.kredit)).filter(models.JurnalUmum.kode_akun.startswith("111"), models.JurnalUmum.tanggal < start_date).scalar() or 0
+        saldo_awal_kas = d_awal_kas - k_awal_kas
+
+        # Transaksi Bulan Ini
+        jurnals_kas = db.query(models.JurnalUmum).filter(models.JurnalUmum.kode_akun.startswith("111"), models.JurnalUmum.tanggal >= start_date, models.JurnalUmum.tanggal < end_date).all()
+        
+        arus_ops = {"masuk": 0, "keluar": 0, "detail_masuk": {}, "detail_keluar": {}}
+        arus_inv = {"masuk": 0, "keluar": 0, "detail_masuk": {}, "detail_keluar": {}}
+        arus_fin = {"masuk": 0, "keluar": 0, "detail_masuk": {}, "detail_keluar": {}}
+
+        for j in jurnals_kas:
+            # Cari lawan jurnalnya untuk klasifikasi (ini pendekatan simplifikasi berdasarkan keterangan atau akun pendamping)
+            # Karena ini Jurnal Umum (2 baris), kita cari baris pasangannya di detik yang sama
+            pasangan = db.query(models.JurnalUmum).filter(
+                models.JurnalUmum.tanggal == j.tanggal,
+                models.JurnalUmum.id != j.id
+            ).first()
+
+            target_val = (j.debit or 0) - (j.kredit or 0)
+            target_kat = "ops" # default operasional
+            
+            if pasangan:
+                p_kode = pasangan.kode_akun
+                if p_kode.startswith("13"): target_kat = "inv" # Aset Tetap
+                elif p_kode.startswith("31"): target_kat = "fin" # Modal / Prive
+                elif p_kode.startswith(("4", "113")): target_kat = "ops" # Pendapatan / Piutang
+                elif p_kode.startswith(("5", "6", "12", "21")): target_kat = "ops" # Biaya / Persediaan / Utang
+            
+            ref_dict = arus_ops if target_kat == "ops" else arus_inv if target_kat == "inv" else arus_fin
+            
+            label = pasangan.nama_akun if pasangan else "Transaksi Kas"
+            if j.debit > 0:
+                ref_dict["masuk"] += j.debit
+                ref_dict["detail_masuk"][label] = ref_dict["detail_masuk"].get(label, 0) + j.debit
+            else:
+                ref_dict["keluar"] += j.kredit
+                ref_dict["detail_keluar"][label] = ref_dict["detail_keluar"].get(label, 0) + j.kredit
+
         return {
             "success": True,
             "data": {
@@ -144,6 +185,14 @@ def get_laporan_keuangan(bulan: int, tahun: int, db: Session = Depends(get_db)):
                     "laba_akumulasi": total_laba_akum,
                     "prive": prive_val,
                     "modal_akhir": modal_disetor + total_laba_akum - prive_val
+                },
+                "arus_kas": {
+                    "saldo_awal": saldo_awal_kas,
+                    "operasional": arus_ops,
+                    "investasi": arus_inv,
+                    "pendanaan": arus_fin,
+                    "total_kenaikan": (arus_ops["masuk"] - arus_ops["keluar"]) + (arus_inv["masuk"] - arus_inv["keluar"]) + (arus_fin["masuk"] - arus_fin["keluar"]),
+                    "saldo_akhir": saldo_awal_kas + (arus_ops["masuk"] - arus_ops["keluar"]) + (arus_inv["masuk"] - arus_inv["keluar"]) + (arus_fin["masuk"] - arus_fin["keluar"])
                 }
             }
         }
