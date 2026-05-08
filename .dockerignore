@@ -1,0 +1,12 @@
+erp_frontend/node_modules
+erp_frontend/src
+erp_frontend/package.json
+erp_frontend/package-lock.json
+erp_frontend/vite.config.js
+erp_frontend/index.html
+.venv
+venv
+__pycache__
+*.db
+brain/
+.gemini/
