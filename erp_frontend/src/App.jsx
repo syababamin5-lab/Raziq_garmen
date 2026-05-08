@@ -17,6 +17,7 @@ import Profile from './pages/Profile'
 import Login from './pages/Login'
 import SuperAdmin from './pages/SuperAdmin'
 import CuttingInputMobile from './pages/mobile/CuttingInput'
+import InstallPage from './pages/mobile/InstallPage'
 import { getCurrentUser } from './api/authApi'
 
 const ProtectedRoute = ({ children }) => {
@@ -45,6 +46,7 @@ function App() {
         <Route path="/login" element={<Login />} />
         
         {/* Route khusus Mobile (Tanpa Sidebar Desktop) */}
+        <Route path="/install-app" element={<InstallPage />} />
         <Route path="/m/cutting" element={<ProtectedRoute><CuttingInputMobile /></ProtectedRoute>} />
 
         <Route path="/" element={<ProtectedRoute><AppLayout /></ProtectedRoute>}>
