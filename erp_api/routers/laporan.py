@@ -20,19 +20,31 @@ def get_saldo_sqlite(db: Session, kode_prefix: str, tgl_mulai=None, tgl_akhir=No
     jurnals = query.all()
     
     total = 0
-    detail = {}
+    detail_by_code = {} # Menggunakan kode_akun sebagai key agar konsisten
+    name_map = {}       # Menyimpan nama terbaru untuk setiap kode
     
     for j in jurnals:
+        kode = j.kode_akun
         nama_akun = j.nama_akun or "Unknown"
         val = (j.debit or 0) - (j.kredit or 0)
         
-        if j.kode_akun.startswith(("2", "3", "4")):
+        if kode.startswith(("2", "3", "4")):
             val = (j.kredit or 0) - (j.debit or 0)
             
         total += val
-        detail[nama_akun] = detail.get(nama_akun, 0) + val
+        detail_by_code[kode] = detail_by_code.get(kode, 0) + val
+        # Ambil nama akun dari jurnal terbaru untuk kode tersebut
+        name_map[kode] = nama_akun
         
-    return total, detail
+    # Kembalikan detail dalam format {nama_akun: saldo} untuk kompatibilitas UI
+    detail_final = {}
+    for kode, val in detail_by_code.items():
+        # Coba ambil nama resmi dari COA jika tersedia, jika tidak pakai dari jurnal
+        official_acc = db.query(models.AkunBukuBesar).filter(models.AkunBukuBesar.kode_akun == kode).first()
+        label = official_acc.nama_akun if official_acc else name_map[kode]
+        detail_final[label] = detail_final.get(label, 0) + val
+        
+    return total, detail_final
 
 @router.get("/keuangan")
 def get_laporan_keuangan(bulan: int, tahun: int, db: Session = Depends(get_db)):

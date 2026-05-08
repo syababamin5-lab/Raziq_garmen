@@ -314,6 +314,21 @@ async def startup_event():
         if reclass_count > 0:
             db.commit()
             print(f"🚀 Reclassified {reclass_count} journals for account splitting.")
+        
+        # 2c. DATA INTEGRITY: SYNC JURNAL NAMES WITH COA
+        # Memastikan nama akun di jurnal selalu mengikuti nama terbaru di COA (mencegah split di Neraca)
+        sync_count = 0
+        all_accounts = db.query(models.AkunBukuBesar).all()
+        for acc in all_accounts:
+            res = db.query(models.JurnalUmum).filter(
+                models.JurnalUmum.kode_akun == acc.kode_akun,
+                models.JurnalUmum.nama_akun != acc.nama_akun
+            ).update({models.JurnalUmum.nama_akun: acc.nama_akun}, synchronize_session=False)
+            sync_count += res
+        
+        if sync_count > 0:
+            db.commit()
+            print(f"✅ Synchronized {sync_count} journal names for reporting consistency.")
 
         # 3. AUTO-SEED MENU REGISTRY (Penting untuk Navigasi Dinamis)
         existing_menus = [m[0] for m in db.query(models.MenuRegistry.id_menu).all()]
