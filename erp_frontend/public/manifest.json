@@ -1,0 +1,17 @@
+{
+  "short_name": "RaziqCutting",
+  "name": "Raziq Garment Cutting",
+  "icons": [
+    {
+      "src": "/raziq_cutting_app_icon.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "any maskable"
+    }
+  ],
+  "start_url": "/mobile-cutting",
+  "display": "standalone",
+  "theme_color": "#064e3b",
+  "background_color": "#020617",
+  "orientation": "portrait"
+}
