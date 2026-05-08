@@ -3,14 +3,34 @@
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>ANSA - ERP</title>
+    <title>RAZIQ - ERP</title>
     <link rel="icon" type="image/jpeg" href="/favicon.jpg" />
+    
+    <!-- PWA Configuration -->
+    <link rel="manifest" href="/manifest.json" />
+    <meta name="theme-color" content="#064e3b" />
+    <meta name="mobile-web-app-capable" content="yes" />
+    <meta name="apple-mobile-web-app-capable" content="yes" />
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+    <link rel="apple-touch-icon" href="/raziq_cutting_app_icon.png" />
+
     <!-- Material Symbols Rounded -->
     <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Material+Symbols+Rounded:opsz,wght,FILL,GRAD@24,400,1,0" />
-    <script type="module" crossorigin src="/assets/index-WohDQgY3.js"></script>
-    <link rel="stylesheet" crossorigin href="/assets/index-CoFNjfrL.css">
+    <script type="module" crossorigin src="/assets/index-BMlozufd.js"></script>
+    <link rel="stylesheet" crossorigin href="/assets/index-C87HN-l3.css">
   </head>
   <body>
     <div id="root"></div>
+
+    <!-- Service Worker Registration -->
+    <script>
+      if ('serviceWorker' in navigator) {
+        window.addEventListener('load', () => {
+          navigator.serviceWorker.register('/sw.js')
+            .then(reg => console.log('SW Registered'))
+            .catch(err => console.log('SW Registration Failed', err));
+        });
+      }
+    </script>
   </body>
 </html>

@@ -621,6 +621,7 @@ export default function CuttingInputMobile() {
             <span className="material-symbols-rounded text-xl">person</span>
             <span className="text-[8px] font-black uppercase tracking-[0.1em]">Profil</span>
           </button>
+        </div>
       </div>
 
       {/* ── DETAIL MODAL (BOTTOM SHEET) ── */}
