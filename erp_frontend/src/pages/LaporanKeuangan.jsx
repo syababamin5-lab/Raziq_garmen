@@ -130,6 +130,32 @@ export default function LaporanKeuangan() {
           </ul>
         </div>
       )
+    },
+    aruskas: {
+      title: "Analogi Perhitungan Arus Kas",
+      content: (
+        <div className="space-y-4 text-slate-600 leading-relaxed">
+          <p>Laporan ini mencatat **alur uang tunai** (Kas/Bank) masuk dan keluar. Berbeda dengan Laba Rugi, ini fokus pada 'fisik' uangnya.</p>
+          <div className="bg-emerald-50 p-4 rounded-2xl border border-emerald-100">
+            <p className="font-black text-emerald-800 text-xs mb-2 uppercase">3 Kategori Utama:</p>
+            <p className="font-mono text-sm font-bold text-emerald-900">Operasional + Investasi + Pendanaan = Alur Kas</p>
+          </div>
+          <ul className="space-y-3">
+            <li className="flex gap-3">
+              <span className="w-6 h-6 rounded-full bg-emerald-100 text-emerald-600 flex-shrink-0 flex items-center justify-center font-bold text-xs">1</span>
+              <p><span className="font-black text-slate-800">Aktivitas Operasional:</span> Uang dari jualan customer dikurangi bayar supplier, gaji karyawan, dan listrik. Ini adalah 'darah' bisnis Bapak.</p>
+            </li>
+            <li className="flex gap-3">
+              <span className="w-6 h-6 rounded-full bg-emerald-100 text-emerald-600 flex-shrink-0 flex items-center justify-center font-bold text-xs">2</span>
+              <p><span className="font-black text-slate-800">Aktivitas Investasi:</span> Uang yang Bapak keluarkan untuk beli aset jangka panjang, seperti mesin jahit baru atau kendaraan operasional.</p>
+            </li>
+            <li className="flex gap-3">
+              <span className="w-6 h-6 rounded-full bg-emerald-100 text-emerald-600 flex-shrink-0 flex items-center justify-center font-bold text-xs">3</span>
+              <p><span className="font-black text-slate-800">Aktivitas Pendanaan:</span> Uang masuk dari suntikan modal atau uang keluar yang Bapak ambil (Prive).</p>
+            </li>
+          </ul>
+        </div>
+      )
     }
   };
 
@@ -305,6 +331,7 @@ export default function LaporanKeuangan() {
                 { id: 'hpp', label: 'HPP', icon: 'inventory' },
                 { id: 'lr', label: 'Laba Rugi', icon: 'finance_mode' },
                 { id: 'neraca', label: 'Neraca', icon: 'account_balance' },
+                { id: 'aruskas', label: 'Arus Kas', icon: 'account_balance_wallet' },
                 { id: 'ekuitas', label: 'Ekuitas', icon: 'finance_chip' },
                 { id: 'ledger', label: 'Buku Besar', icon: 'analytics' },
                 { id: 'wip', label: 'WIP Cutting', icon: 'content_cut' }
@@ -326,6 +353,7 @@ export default function LaporanKeuangan() {
                                 {activeTab === 'hpp' ? 'Analisis Harga Pokok (HPP)' : 
                                  activeTab === 'lr' ? 'Laporan Laba Rugi' :
                                  activeTab === 'neraca' ? 'Posisi Keuangan (Neraca)' :
+                                 activeTab === 'aruskas' ? 'Laporan Arus Kas' :
                                  activeTab === 'ekuitas' ? 'Perubahan Modal' :
                                  activeTab === 'ledger' ? 'Buku Besar Akun' : 'WIP Tracking'}
                             </h2>
@@ -419,6 +447,58 @@ export default function LaporanKeuangan() {
                                     {reportData.neraca.is_balance ? '✅ NERACA BALANCE!' : '❌ NERACA TIDAK BALANCE!'}
                                 </div>
                              </div>
+                        </div>
+                    )}
+
+                    {activeTab === 'aruskas' && (
+                        <div className="animate-in fade-in slide-in-from-bottom-2 space-y-6">
+                            <div className="bg-white p-8 rounded-[2rem] border border-slate-100 shadow-sm">
+                                <div className="flex justify-between items-center mb-6 border-b pb-4 px-2">
+                                    <span className="text-slate-400 font-black text-xs uppercase tracking-widest">Saldo Awal Kas & Bank</span>
+                                    <span className="text-xl font-black text-slate-800">{formatRp(reportData.arus_kas.saldo_awal)}</span>
+                                </div>
+
+                                <div className="space-y-8">
+                                    {/* OPERASIONAL */}
+                                    <div className="space-y-4">
+                                        <h4 className="text-[10px] font-black text-emerald-600 uppercase tracking-[0.2em] bg-emerald-50 w-fit px-3 py-1 rounded-full ml-2">Aktivitas Operasional</h4>
+                                        {renderTable("Uang Masuk Operasional", reportData.arus_kas.operasional.detail_masuk, reportData.arus_kas.operasional.masuk)}
+                                        {renderTable("Uang Keluar Operasional", reportData.arus_kas.operasional.detail_keluar, reportData.arus_kas.operasional.keluar, true)}
+                                    </div>
+
+                                    {/* INVESTASI */}
+                                    {(reportData.arus_kas.investasi.masuk > 0 || reportData.arus_kas.investasi.keluar > 0) && (
+                                        <div className="space-y-4">
+                                            <h4 className="text-[10px] font-black text-blue-600 uppercase tracking-[0.2em] bg-blue-50 w-fit px-3 py-1 rounded-full ml-2">Aktivitas Investasi</h4>
+                                            {reportData.arus_kas.investasi.masuk > 0 && renderTable("Uang Masuk Investasi", reportData.arus_kas.investasi.detail_masuk, reportData.arus_kas.investasi.masuk)}
+                                            {reportData.arus_kas.investasi.keluar > 0 && renderTable("Uang Keluar Investasi", reportData.arus_kas.investasi.detail_keluar, reportData.arus_kas.investasi.keluar, true)}
+                                        </div>
+                                    )}
+
+                                    {/* PENDANAAN */}
+                                    <div className="space-y-4">
+                                        <h4 className="text-[10px] font-black text-purple-600 uppercase tracking-[0.2em] bg-purple-50 w-fit px-3 py-1 rounded-full ml-2">Aktivitas Pendanaan</h4>
+                                        {renderTable("Uang Masuk Pendanaan", reportData.arus_kas.pendanaan.detail_masuk, reportData.arus_kas.pendanaan.masuk)}
+                                        {renderTable("Uang Keluar Pendanaan", reportData.arus_kas.pendanaan.detail_keluar, reportData.arus_kas.pendanaan.keluar, true)}
+                                    </div>
+                                </div>
+
+                                <div className="mt-10 pt-6 border-t-4 border-double border-slate-100 flex flex-col gap-4">
+                                    <div className="flex justify-between items-center text-sm font-bold text-slate-500 px-4">
+                                        <span>Total Kenaikan / Penurunan Kas</span>
+                                        <span className={reportData.arus_kas.total_kenaikan >= 0 ? 'text-emerald-600' : 'text-red-600'}>
+                                            {formatRp(reportData.arus_kas.total_kenaikan)}
+                                        </span>
+                                    </div>
+                                    <div className="bg-[#064E3B] p-8 rounded-3xl text-white flex justify-between items-center shadow-2xl">
+                                        <div>
+                                            <p className="text-[10px] font-black tracking-[0.3em] uppercase opacity-80">Saldo Akhir Kas & Bank</p>
+                                            <h2 className="text-4xl font-black font-outfit">{formatRp(reportData.arus_kas.saldo_akhir)}</h2>
+                                        </div>
+                                        <span className="material-symbols-rounded text-6xl opacity-30">payments</span>
+                                    </div>
+                                </div>
+                            </div>
                         </div>
                     )}
 
