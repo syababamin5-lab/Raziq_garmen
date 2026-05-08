@@ -731,6 +731,22 @@ def get_master_karyawan(db: Session = Depends(get_db)):
 def get_master_mitra(db: Session = Depends(get_db)):
     return db.query(models.Mitra).filter(models.Mitra.is_active == 1).all()
 
+@app.get("/api/repair/opening-balance-date")
+def repair_opening_balance_date(db: Session = Depends(get_db)):
+    """Memperbaiki tanggal saldo awal modal operasional ke tanggal 1"""
+    try:
+        from models import JurnalUmum
+        jurnals = db.query(JurnalUmum).filter(JurnalUmum.keterangan.like("%Saldo Awal Modal Operasional%")).all()
+        count = 0
+        for j in jurnals:
+            if j.tanggal.day != 1:
+                j.tanggal = j.tanggal.replace(day=1, hour=0, minute=0, second=0)
+                count += 1
+        db.commit()
+        return {"success": True, "message": f"Berhasil memperbaiki {count} transaksi ke tanggal 1"}
+    except Exception as e:
+        return {"success": False, "message": str(e)}
+
 @app.get("/api/master/akun")
 def get_master_akun(db: Session = Depends(get_db)):
     return db.query(models.AkunBukuBesar).all()
