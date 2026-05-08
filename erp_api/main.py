@@ -1342,6 +1342,73 @@ def export_full_database(db: Session = Depends(get_db)):
     except Exception as e:
         return {"status": "error", "message": str(e)}
 
+# ==========================================================
+# USER PROFILE & PHOTO MANAGEMENT
+# ==========================================================
+@app.post("/api/users/upload-photo")
+async def upload_user_photo(file: UploadFile = File(...), db: Session = Depends(get_db)):
+    """Upload foto profil dan konversi ke Base64 untuk disimpan di DB."""
+    try:
+        import base64
+        contents = await file.read()
+        base64_str = base64.b64encode(contents).decode('utf-8')
+        # Tentukan mime type sederhana
+        ext = file.filename.split('.')[-1].lower()
+        mime = f"image/{ext}" if ext in ['png', 'jpg', 'jpeg', 'gif'] else "image/jpeg"
+        data_url = f"data:{mime};base64,{base64_str}"
+        
+        return {"status": "success", "url": data_url}
+    except Exception as e:
+        return {"status": "error", "message": str(e)}
+
+@app.post("/api/users/update-profile")
+async def update_profile_mobile(data: dict, db: Session = Depends(get_db)):
+    """Update informasi profil user dari Mobile."""
+    try:
+        user_id = data.get("id")
+        user = db.query(models.User).filter(models.User.id == user_id).first()
+        
+        if not user:
+            return {"status": "error", "message": "User tidak ditemukan"}
+            
+        # Update fields jika ada di data
+        if "new_username" in data: user.username = data["new_username"]
+        if "nama_lengkap" in data: user.nama_lengkap = data["nama_lengkap"]
+        if "email" in data: user.email = data["email"]
+        if "no_hp" in data: user.no_hp = data["no_hp"]
+        if "foto_base64" in data and data["foto_base64"]:
+            user.foto_base64 = data["foto_base64"]
+            
+        # Update password jika diisi
+        if "password" in data and data["password"].strip():
+            user.password_hash = get_password_hash(data["password"])
+            
+        db.commit()
+        db.refresh(user)
+        
+        # Generate token baru jika username berubah (untuk keamanan)
+        access_token = None
+        if "new_username" in data:
+            access_token = jwt.encode({"sub": user.username}, SECRET_KEY, algorithm=ALGORITHM)
+            
+        return {
+            "status": "success", 
+            "message": "Profil berhasil diperbarui",
+            "access_token": access_token,
+            "user": {
+                "id": user.id,
+                "username": user.username,
+                "nama_lengkap": user.nama_lengkap,
+                "email": user.email,
+                "no_hp": user.no_hp,
+                "foto_base64": user.foto_base64,
+                "role": user.role
+            }
+        }
+    except Exception as e:
+        db.rollback()
+        return {"status": "error", "message": str(e)}
+
 # LOGS MANAGEMENT
 @app.get("/api/admin/logs")
 def get_user_logs(db: Session = Depends(get_db)):
