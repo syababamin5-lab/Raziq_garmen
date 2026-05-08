@@ -1409,6 +1409,24 @@ async def update_profile_mobile(data: dict, db: Session = Depends(get_db)):
         db.rollback()
         return {"status": "error", "message": str(e)}
 
+@app.get("/api/admin/db-check")
+def check_database_stats(db: Session = Depends(get_db)):
+    """Cek jumlah data di setiap tabel utama (Diagnostic)."""
+    try:
+        return {
+            "status": "success",
+            "counts": {
+                "production_logs": db.query(models.ProductionLog).count(),
+                "users": db.query(models.User).count(),
+                "barang": db.query(models.Barang).count(),
+                "jurnal": db.query(models.JurnalUmum).count(),
+                "karyawan": db.query(models.Karyawan).count()
+            },
+            "latest_production": db.query(models.ProductionLog).order_by(models.ProductionLog.id.desc()).limit(1).first()
+        }
+    except Exception as e:
+        return {"status": "error", "message": str(e)}
+
 # LOGS MANAGEMENT
 @app.get("/api/admin/logs")
 def get_user_logs(db: Session = Depends(get_db)):
