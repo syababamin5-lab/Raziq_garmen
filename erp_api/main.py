@@ -864,14 +864,18 @@ def add_master_saldo(data: schemas.MasterSaldoAwalRequest, db: Session = Depends
         # Kewajiban (2), Ekuitas (3), dan Pendapatan (4) bersaldo normal Kredit
         is_kredit = data.akun_id.startswith(("2", "3", "4"))
         
+        # OTOMATISASI: Paksa tanggal ke hari pertama di bulan berjalan (Jam 00:00)
+        # Agar terbaca sebagai Saldo Awal yang benar di Buku Besar & Arus Kas
+        tgl_awal = datetime.now().replace(day=1, hour=0, minute=0, second=0, microsecond=0)
+        
         if is_kredit:
             # Akun Kredit: Saldo Awal menambah di Kredit, Lawannya Debit Modal Disetor
-            db.add(models.JurnalUmum(kode_akun=data.akun_id, nama_akun=data.nama_akun, keterangan=data.keterangan, debit=0, kredit=data.nominal_saldo, tanggal=datetime.now()))
-            db.add(models.JurnalUmum(kode_akun="31110", nama_akun="Modal Disetor", keterangan=data.keterangan, debit=data.nominal_saldo, kredit=0, tanggal=datetime.now()))
+            db.add(models.JurnalUmum(kode_akun=data.akun_id, nama_akun=data.nama_akun, keterangan=data.keterangan, debit=0, kredit=data.nominal_saldo, tanggal=tgl_awal))
+            db.add(models.JurnalUmum(kode_akun="31110", nama_akun="Modal Disetor", keterangan=data.keterangan, debit=data.nominal_saldo, kredit=0, tanggal=tgl_awal))
         else:
             # Akun Debit: Saldo Awal menambah di Debit, Lawannya Kredit Modal Disetor
-            db.add(models.JurnalUmum(kode_akun=data.akun_id, nama_akun=data.nama_akun, keterangan=data.keterangan, debit=data.nominal_saldo, kredit=0, tanggal=datetime.now()))
-            db.add(models.JurnalUmum(kode_akun="31110", nama_akun="Modal Disetor", keterangan=data.keterangan, debit=0, kredit=data.nominal_saldo, tanggal=datetime.now()))
+            db.add(models.JurnalUmum(kode_akun=data.akun_id, nama_akun=data.nama_akun, keterangan=data.keterangan, debit=data.nominal_saldo, kredit=0, tanggal=tgl_awal))
+            db.add(models.JurnalUmum(kode_akun="31110", nama_akun="Modal Disetor", keterangan=data.keterangan, debit=0, kredit=data.nominal_saldo, tanggal=tgl_awal))
             
         db.commit()
         return {"status": "success", "message": "Saldo Awal tersimpan dengan format akuntansi yang benar"}
