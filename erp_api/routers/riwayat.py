@@ -107,8 +107,12 @@ def hapus_jurnal(jurnal_id: int, db: Session = Depends(get_db)):
                 message="DITOLAK! Transaksi faktur tidak bisa dihapus langsung. Gunakan fitur Retur."
             )
         
-        # Hapus semua pasangan jurnal dengan keterangan yang sama
-        pasangan = db.query(models.JurnalUmum).filter(models.JurnalUmum.keterangan == ket).all()
+        # Hapus hanya pasangan jurnal dengan keterangan DAN tanggal yang sama persis
+        # Ini mencegah penghapusan massal jika ada mutasi dengan nominal & keterangan sama di waktu berbeda
+        pasangan = db.query(models.JurnalUmum).filter(
+            models.JurnalUmum.keterangan == ket,
+            models.JurnalUmum.tanggal == jurnal.tanggal
+        ).all()
         jumlah = len(pasangan)
         for p in pasangan:
             db.delete(p)
