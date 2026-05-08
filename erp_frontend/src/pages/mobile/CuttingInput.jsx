@@ -19,13 +19,16 @@ export default function CuttingInputMobile() {
   
   const [historyData, setHistoryData] = useState([]);
   const [historyPeriode, setHistoryPeriode] = useState('hari_ini');
+  const [selectedHistory, setSelectedHistory] = useState(null);
 
   // Profile Form State
   const [profileForm, setProfileForm] = useState({
     username: localStorage.getItem('username') || 'admin',
     name: localStorage.getItem('user_name') || 'Humam Abdul Azis',
-    email: 'mywifi2207@gmail.com',
-    hp: '',
+    email: localStorage.getItem('email') || '',
+    hp: localStorage.getItem('no_hp') || '',
+    foto_url: localStorage.getItem('foto_url') || '',
+    foto_base64: localStorage.getItem('foto_base64') || '',
     password: ''
   });
   
@@ -77,6 +80,14 @@ export default function CuttingInputMobile() {
 
   useEffect(() => {
     fetchData();
+
+    // REAL-TIME: Polling setiap 30 detik untuk update stats & data terbaru
+    const interval = setInterval(() => {
+      if (activeTab === 'dashboard') fetchData();
+      if (activeTab === 'history') fetchHistory();
+    }, 30000);
+
+    return () => clearInterval(interval);
   }, []);
 
   useEffect(() => {
@@ -125,6 +136,7 @@ export default function CuttingInputMobile() {
         nama_lengkap: profileForm.name,
         email: profileForm.email,
         no_hp: profileForm.hp,
+        foto_base64: profileForm.foto_base64, // Kirim foto baru
         password: profileForm.password
       });
 
@@ -133,7 +145,10 @@ export default function CuttingInputMobile() {
         // Update LocalStorage agar UI web/mobile lain ikut berubah
         localStorage.setItem('username', res.user.username);
         localStorage.setItem('user_name', res.user.nama_lengkap);
-        localStorage.setItem('email', res.user.email);
+        localStorage.setItem('email', res.user.email || '');
+        localStorage.setItem('no_hp', res.user.no_hp || '');
+        localStorage.setItem('foto_url', res.user.foto_url || '');
+        localStorage.setItem('foto_base64', res.user.foto_base64 || '');
         
         // Jika token baru dikirim (karena ganti username), simpan
         if (res.access_token) {
@@ -323,7 +338,9 @@ export default function CuttingInputMobile() {
             </div>
             <div className="space-y-5 px-4">
               {historyData.map((item, idx) => (
-                <div key={idx} className="bg-[#0f172a] border border-white/5 rounded-[2.5rem] shadow-2xl overflow-hidden">
+                <div key={idx} 
+                  onClick={() => setSelectedHistory(item)}
+                  className="bg-[#0f172a] border border-white/5 rounded-[2.5rem] shadow-2xl overflow-hidden active:scale-95 transition-all cursor-pointer">
                    <div className="bg-white/5 p-4 flex justify-between items-center border-b border-white/5">
                       <span className="text-[10px] font-black uppercase text-slate-200 tracking-widest">{item.karyawan}</span>
                       <span className="text-[9px] font-bold text-slate-600 uppercase tracking-tighter">{item.tanggal}</span>
@@ -350,6 +367,11 @@ export default function CuttingInputMobile() {
                             <p className="text-[8px] font-black text-slate-500 uppercase mb-1">Total (Lusin)</p>
                             <span className="text-xl font-black text-amber-400">{item.lusin}</span>
                          </div>
+                      </div>
+                      <div className="flex justify-center">
+                        <span className="text-[8px] font-black text-slate-700 uppercase tracking-[0.3em] flex items-center gap-1">
+                          Klik untuk rincian <span className="material-symbols-rounded text-[10px]">expand_more</span>
+                        </span>
                       </div>
                    </div>
                 </div>
@@ -458,7 +480,11 @@ export default function CuttingInputMobile() {
             <div className="p-6 pt-10">
                <div className="bg-[#064e3b] rounded-[2.5rem] p-8 flex items-center gap-6 shadow-2xl relative overflow-hidden">
                   <div className="w-16 h-16 rounded-2xl overflow-hidden border-2 border-white/20 shadow-lg flex-shrink-0">
-                     <img src="https://images.unsplash.com/photo-1539571696357-5a69c17a67c6?w=400&h=400&fit=crop" alt="avatar" className="w-full h-full object-cover" />
+                     <img 
+                       src={profileForm.foto_base64 || profileForm.foto_url || "https://images.unsplash.com/photo-1539571696357-5a69c17a67c6?w=400&h=400&fit=crop"} 
+                       alt="avatar" 
+                       className="w-full h-full object-cover" 
+                     />
                   </div>
                   <div className="relative z-10">
                      <h2 className="text-3xl font-bold text-white tracking-tight leading-none">Profil Saya</h2>
@@ -472,10 +498,41 @@ export default function CuttingInputMobile() {
                <div className="bg-slate-50 rounded-[3.5rem] p-8 shadow-sm border border-slate-100">
                   <div className="flex flex-col items-center mb-10">
                      <div className="w-48 h-48 rounded-[3rem] overflow-hidden border-4 border-white shadow-2xl mb-4 relative group">
-                        <img src="https://images.unsplash.com/photo-1539571696357-5a69c17a67c6?w=400&h=400&fit=crop" alt="profile large" className="w-full h-full object-cover" />
-                        <div className="absolute inset-0 bg-black/20 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity cursor-pointer">
+                        <img 
+                          src={profileForm.foto_base64 || profileForm.foto_url || "https://images.unsplash.com/photo-1539571696357-5a69c17a67c6?w=400&h=400&fit=crop"} 
+                          alt="profile large" 
+                          className="w-full h-full object-cover" 
+                        />
+                        <label className="absolute inset-0 bg-black/20 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity cursor-pointer">
                            <span className="material-symbols-rounded text-white text-4xl">photo_camera</span>
-                        </div>
+                           <input 
+                             type="file" 
+                             accept="image/*" 
+                             className="hidden" 
+                             onChange={async (e) => {
+                               const file = e.target.files[0];
+                               if (!file) return;
+                               
+                               const formData = new FormData();
+                               formData.append('file', file);
+                               
+                               try {
+                                 setLoading(true);
+                                 const res = await api.post('/users/upload-photo', formData, {
+                                   headers: { 'Content-Type': 'multipart/form-data' }
+                                 });
+                                 if (res.data.status === 'success') {
+                                   setProfileForm(prev => ({ ...prev, foto_base64: res.data.url }));
+                                   setMsg({ text: '📸 Foto terpilih! Klik simpan untuk permanen.', type: 'success' });
+                                 }
+                               } catch (err) {
+                                 setMsg({ text: 'Gagal upload foto', type: 'error' });
+                               } finally {
+                                 setLoading(false);
+                               }
+                             }}
+                           />
+                        </label>
                      </div>
                      <p className="text-[9px] font-black text-slate-400 uppercase tracking-widest text-center">Klik gambar untuk mengubah foto</p>
                   </div>
@@ -564,9 +621,72 @@ export default function CuttingInputMobile() {
             <span className="material-symbols-rounded text-xl">person</span>
             <span className="text-[8px] font-black uppercase tracking-[0.1em]">Profil</span>
           </button>
-        </div>
       </div>
 
+      {/* ── DETAIL MODAL (BOTTOM SHEET) ── */}
+      {selectedHistory && (
+        <div className="fixed inset-0 z-[100] flex items-end justify-center bg-black/60 backdrop-blur-sm p-4 animate-in fade-in duration-300" 
+          onClick={() => setSelectedHistory(null)}>
+          <div className="bg-[#0f172a] w-full max-w-md rounded-[3rem] shadow-2xl border border-white/10 animate-in slide-in-from-bottom-20 duration-500"
+            onClick={e => e.stopPropagation()}>
+            <div className="p-8 space-y-8">
+              <div className="flex justify-between items-start">
+                <div>
+                  <h3 className="text-2xl font-black text-white uppercase tracking-tight leading-none">Rincian Produksi</h3>
+                  <p className="text-[10px] font-bold text-slate-500 uppercase tracking-[0.2em] mt-2">{selectedHistory.tanggal}</p>
+                </div>
+                <button onClick={() => setSelectedHistory(null)} className="w-10 h-10 bg-white/5 rounded-full flex items-center justify-center border border-white/10">
+                  <span className="material-symbols-rounded">close</span>
+                </button>
+              </div>
+
+              <div className="grid grid-cols-2 gap-4">
+                <div className="bg-white/5 p-5 rounded-3xl space-y-1">
+                  <p className="text-[8px] font-black text-slate-500 uppercase tracking-widest">Karyawan</p>
+                  <p className="text-sm font-black text-white uppercase">{selectedHistory.karyawan}</p>
+                </div>
+                <div className="bg-white/5 p-5 rounded-3xl space-y-1">
+                  <p className="text-[8px] font-black text-slate-500 uppercase tracking-widest">Model SKU</p>
+                  <p className="text-sm font-black text-blue-400 uppercase">{selectedHistory.sku}</p>
+                </div>
+              </div>
+
+              <div className="space-y-4">
+                 <div className="flex justify-between items-center border-b border-white/5 pb-4 px-2">
+                    <span className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">Material Kain</span>
+                    <span className="text-xs font-black text-slate-200">{selectedHistory.kain}</span>
+                 </div>
+                 <div className="flex justify-between items-center border-b border-white/5 pb-4 px-2">
+                    <span className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">Berat Kain Pakai</span>
+                    <span className="text-xs font-black text-emerald-400">{selectedHistory.kg} KG</span>
+                 </div>
+                 <div className="flex justify-between items-center border-b border-white/5 pb-4 px-2">
+                    <span className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">Hasil Produksi</span>
+                    <span className="text-xs font-black text-white">{selectedHistory.qty} Pcs ({(selectedHistory.qty/12).toFixed(1)} Lsn)</span>
+                 </div>
+                 <div className="flex justify-between items-center pt-2 px-2">
+                    <span className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">Efisiensi (Pcs/Kg)</span>
+                    <span className="text-xs font-black text-amber-400">{(selectedHistory.qty / (selectedHistory.kg || 1)).toFixed(2)} Pcs/Kg</span>
+                 </div>
+              </div>
+
+              <div className="bg-emerald-600/10 border border-emerald-500/20 p-6 rounded-[2.5rem] flex justify-between items-center">
+                 <div>
+                    <p className="text-[9px] font-black text-emerald-200 uppercase tracking-widest mb-1">Estimasi Upah</p>
+                    <h4 className="text-2xl font-black text-white">Rp {(selectedHistory.qty * 1500).toLocaleString('id-ID')}</h4>
+                 </div>
+                 <div className="w-12 h-12 bg-emerald-500 rounded-2xl flex items-center justify-center shadow-lg">
+                    <span className="material-symbols-rounded text-white">payments</span>
+                 </div>
+              </div>
+
+              <button onClick={() => setSelectedHistory(null)} className="w-full bg-white/10 py-5 rounded-3xl font-black text-xs uppercase tracking-[0.2em] hover:bg-white/20 transition-colors">
+                TUTUP RINCIAN
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }
