@@ -154,6 +154,28 @@ export default function Dashboard() {
             </div>
 
             <div className="flex flex-col sm:flex-row items-stretch md:items-center gap-4 w-full md:w-auto">
+              {user.role === 'super_admin' && (
+                <button 
+                  onClick={async () => {
+                    if (confirm("Jalankan Rekonsiliasi Data? Ini akan menyamakan semua nama akun di riwayat agar laporan keuangan sinkron.")) {
+                      try {
+                        setLoading(true);
+                        const res = await api.post('/dashboard/reconcile');
+                        alert(res.data.message);
+                        window.location.reload();
+                      } catch (err) {
+                        alert("Gagal: " + err.message);
+                      } finally {
+                        setLoading(false);
+                      }
+                    }
+                  }}
+                  className="bg-white/10 hover:bg-white/20 text-white px-4 py-3 rounded-2xl border border-white/20 flex items-center gap-2 transition-all group/btn"
+                >
+                  <span className="material-symbols-rounded text-xl group-hover/btn:rotate-180 transition-all duration-500">sync</span>
+                  <span className="text-[10px] font-black uppercase tracking-widest">Rekonsiliasi Data</span>
+                </button>
+              )}
               <div className="flex flex-col gap-2">
                 <PrayerTimes />
                 <IslamicCalendarCard />

@@ -280,3 +280,26 @@ def update_target(data: dict, db: Session = Depends(get_db)):
         db.rollback()
         return {"success": False, "message": str(e)}
 
+@router.post("/reconcile")
+def reconcile_data(db: Session = Depends(get_db)):
+    """Fitur Darurat untuk memperbaiki konsistensi data jurnal"""
+    try:
+        # 1. Sinkronkan Nama Akun Jurnal dengan COA
+        all_accounts = db.query(models.AkunBukuBesar).all()
+        sync_count = 0
+        for acc in all_accounts:
+            res = db.query(models.JurnalUmum).filter(
+                models.JurnalUmum.kode_akun == acc.kode_akun,
+                models.JurnalUmum.nama_akun != acc.nama_akun
+            ).update({models.JurnalUmum.nama_akun: acc.nama_akun}, synchronize_session=False)
+            sync_count += res
+            
+        db.commit()
+        return {
+            "success": True, 
+            "message": f"Rekonsiliasi selesai. {sync_count} data nama akun telah diseragamkan."
+        }
+    except Exception as e:
+        db.rollback()
+        return {"success": False, "message": str(e)}
+
