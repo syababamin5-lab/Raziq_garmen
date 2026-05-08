@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { submitInvoice, submitReturPenjualan, voidInvoice, getPenjualanHistory, getInvoiceDetails, bayarInvoiceCepat } from '../api/penjualanApi';
-import { formatRp, formatInputNumber, parseNumber } from '../utils/formatters';
+import { formatRp, formatInputNumber, parseNumber, getLocalDate, getLocalTimestamp } from '../utils/formatters';
 import InvoiceDetailModal from '../components/dashboard/InvoiceDetailModal';
 
 export default function PenjualanRetur() {
@@ -15,11 +15,11 @@ export default function PenjualanRetur() {
     // POS CART
     const [cart, setCart] = useState([]);
     const [cartForm, setCartForm] = useState({ id: '', sku: '', nama: '', qty: 1, harga: 0 });
-    const [meta, setMeta] = useState({ customer_id: '', metode: 'Tunai', tgl: new Date().toISOString().split('T')[0], dp: 0, dp_sumber: 'Kas Tunai', diskon: 0 });
+    const [meta, setMeta] = useState({ customer_id: '', metode: 'Tunai', tgl: getLocalDate(), dp: 0, dp_sumber: 'Kas Tunai', diskon: 0 });
 
     // RETUR FORM
     const [returForm, setReturForm] = useState({
-        tgl_retur: new Date().toISOString().split('T')[0],
+        tgl_retur: getLocalDate(),
         alasan: 'Barang Cacat / Rusak',
         sumber_refund: 'BCA'
     });
@@ -79,12 +79,8 @@ export default function PenjualanRetur() {
         if (cart.length === 0 || !meta.customer_id) return alert("Lengkapi data nota!");
         setLoading(true);
         try {
-            const selectedDate = new Date(meta.tgl);
-            const now = new Date();
-            selectedDate.setHours(now.getHours(), now.getMinutes(), now.getSeconds());
-
             const res = await submitInvoice({
-                tgl_jual: selectedDate.toISOString(),
+                tgl_jual: meta.tgl === getLocalDate() ? getLocalTimestamp() : meta.tgl,
                 customer_id: Number(meta.customer_id),
                 metode: meta.metode,
                 dp: Number(meta.dp),
@@ -109,13 +105,12 @@ export default function PenjualanRetur() {
         const remaining = item.qty - (item.qty_retur || 0);
         if (returForm.qty_retur > remaining) return alert(`Retur tidak boleh melebihi sisa barang (${remaining} LS)!`);
 
-        const selectedDate = new Date(returForm.tgl_retur);
-        const now = new Date();
-        selectedDate.setHours(now.getHours(), now.getMinutes(), now.getSeconds());
-
         setLoading(true);
         try {
-            const res = await submitReturPenjualan({ ...returForm, tgl_retur: selectedDate.toISOString() });
+            const res = await submitReturPenjualan({ 
+                ...returForm, 
+                tgl_retur: returForm.tgl_retur === getLocalDate() ? getLocalTimestamp() : returForm.tgl_retur 
+            });
             if (res.success) {
                 setMsg({ text: res.message, type: 'success' });
                 setReturForm({ ...returForm, no_invoice: '', kode_sku: '', qty_retur: 0, sumber_refund: 'BCA' });
@@ -150,7 +145,8 @@ export default function PenjualanRetur() {
             const res = await bayarInvoiceCepat({
                 no_invoice: payModal.no_invoice,
                 nominal: payModal.nominal,
-                sumber_dana: payModal.sumber_dana
+                sumber_dana: payModal.sumber_dana,
+                tgl: getLocalTimestamp()
             });
             if (res.success) {
                 setMsg({ text: res.message, type: 'success' });

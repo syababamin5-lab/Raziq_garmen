@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import api from '../api/api';
 import { getRiwayatTransaksi } from '../api/kasbonRiwayatApi';
-import { formatRp } from '../utils/formatters';
+import { formatRp, getLocalTimestamp } from '../utils/formatters';
 
 const user = JSON.parse(localStorage.getItem('user') || '{}');
 const isSuperAdmin = user.role === 'super_admin';
@@ -38,7 +38,11 @@ export default function RiwayatEdit() {
     try {
       let res;
       if (modal.type === 'void') {
-        const { data } = await api.post('/riwayat/void', { jurnal_id: modal.row.id, alasan });
+        const { data } = await api.post('/riwayat/void', { 
+          jurnal_id: modal.row.id, 
+          alasan, 
+          tgl: getLocalTimestamp() 
+        });
         res = data;
       } else if (modal.type === 'hapus') {
         const { data } = await api.delete(`/riwayat/hapus/${modal.row.id}`);

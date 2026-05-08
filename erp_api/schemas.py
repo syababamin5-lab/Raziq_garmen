@@ -131,6 +131,9 @@ class RekapCuttingItem(BaseModel):
     tukang_potong: str
     hasil_potong: str
     tagihan_upah: float
+    nama_kain: Optional[str] = ""
+    nama_baju: Optional[str] = ""
+    kg_pakai: Optional[float] = 0.0
 
 class RekapCuttingResponse(BaseModel):
     rincian_harian: List[RekapCuttingItem]
@@ -293,6 +296,7 @@ class BayarPOCepatRequest(BaseModel):
     no_po: str
     nominal: float
     sumber_dana: str = "Kas Tunai"
+    tgl: str
 
 # ============================================================
 # SCHEMA: Penjualan & Retur (Tahap 5)
@@ -326,6 +330,7 @@ class BayarInvoiceCepatRequest(BaseModel):
     no_invoice: str
     nominal: float
     sumber_dana: str = "Kas Tunai"
+    tgl: str
 
 # ============================================================
 # SCHEMA: Keuangan & Arus Kas (Tahap 5)
@@ -365,6 +370,7 @@ class KasbonLoanRequest(BaseModel):
 class VoidRequest(BaseModel):
     jurnal_id: int
     alasan: str = ""
+    tgl: Optional[str] = None
 
 # ============================================================
 # SCHEMA: Auth (Login & Users)

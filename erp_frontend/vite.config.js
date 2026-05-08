@@ -5,6 +5,7 @@ export default defineConfig({
   plugins: [react()],
   server: {
     port: 5173,
+    host: true, // Izinkan akses dari HP di jaringan yang sama
     // Proxy API calls ke FastAPI — hindari CORS di production-like setup
     proxy: {
       '/api': {

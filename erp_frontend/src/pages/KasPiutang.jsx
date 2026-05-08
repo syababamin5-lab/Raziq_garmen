@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { submitTerimaPiutang, submitBayarUtang, submitMutasi, submitBayarKasbon, getSaldo } from '../api/keuanganApi';
-import { formatRp, formatInputNumber, parseNumber } from '../utils/formatters';
+import { formatRp, formatInputNumber, parseNumber, getLocalDate } from '../utils/formatters';
 
 export default function KasPiutang() {
   const [activeTab, setActiveTab] = useState('piutang');
@@ -13,10 +13,10 @@ export default function KasPiutang() {
   const [karyawan, setKaryawan] = useState([]);
 
   // FORMS
-  const [piutangForm, setPiutangForm] = useState({ customer_id: '', nominal: '', sumber: 'Kas Tunai', tgl: new Date().toISOString().split('T')[0], keterangan: 'Pelunasan Piutang' });
-  const [utangForm, setUtangForm] = useState({ supplier_id: '', nominal: '', sumber: 'BCA', tgl: new Date().toISOString().split('T')[0], keterangan: 'Pelunasan Utang Material' });
-  const [mutasiForm, setMutasiForm] = useState({ jenis: 'Setor Tunai', nominal: '', tgl: new Date().toISOString().split('T')[0] });
-  const [kasbonForm, setKasbonForm] = useState({ karyawan_id: '', nominal: '', sumber: 'Kas Tunai', tgl: new Date().toISOString().split('T')[0] });
+  const [piutangForm, setPiutangForm] = useState({ customer_id: '', nominal: '', sumber: 'Kas Tunai', tgl: getLocalDate(), keterangan: 'Pelunasan Piutang' });
+  const [utangForm, setUtangForm] = useState({ supplier_id: '', nominal: '', sumber: 'BCA', tgl: getLocalDate(), keterangan: 'Pelunasan Utang Material' });
+  const [mutasiForm, setMutasiForm] = useState({ jenis: 'Setor Tunai', nominal: '', tgl: getLocalDate() });
+  const [kasbonForm, setKasbonForm] = useState({ karyawan_id: '', nominal: '', sumber: 'Kas Tunai', tgl: getLocalDate() });
 
   const fetchData = async () => {
     try {
@@ -42,10 +42,22 @@ export default function KasPiutang() {
     setLoading(true);
     let res;
     try {
-        if (type === 'piutang') res = await submitTerimaPiutang({ ...piutangForm, nominal: Number(piutangForm.nominal) });
-        if (type === 'utang') res = await submitBayarUtang({ ...utangForm, nominal: Number(utangForm.nominal) });
-        if (type === 'mutasi') res = await submitMutasi({ ...mutasiForm, nominal: Number(mutasiForm.nominal) });
-        if (type === 'kasbon') res = await submitBayarKasbon({ ...kasbonForm, nominal: Number(kasbonForm.nominal) });
+        if (type === 'piutang') {
+            const finalTgl = piutangForm.tgl === getLocalDate() ? getLocalTimestamp() : piutangForm.tgl;
+            res = await submitTerimaPiutang({ ...piutangForm, nominal: Number(piutangForm.nominal), tgl: finalTgl });
+        }
+        if (type === 'utang') {
+            const finalTgl = utangForm.tgl === getLocalDate() ? getLocalTimestamp() : utangForm.tgl;
+            res = await submitBayarUtang({ ...utangForm, nominal: Number(utangForm.nominal), tgl: finalTgl });
+        }
+        if (type === 'mutasi') {
+            const finalTgl = mutasiForm.tgl === getLocalDate() ? getLocalTimestamp() : mutasiForm.tgl;
+            res = await submitMutasi({ ...mutasiForm, nominal: Number(mutasiForm.nominal), tgl: finalTgl });
+        }
+        if (type === 'kasbon') {
+            const finalTgl = kasbonForm.tgl === getLocalDate() ? getLocalTimestamp() : kasbonForm.tgl;
+            res = await submitBayarKasbon({ ...kasbonForm, nominal: Number(kasbonForm.nominal), tgl: finalTgl });
+        }
 
         if (res.success) {
             setMsg({ text: res.message, type: 'success' });

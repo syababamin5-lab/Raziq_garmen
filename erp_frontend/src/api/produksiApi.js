@@ -44,3 +44,13 @@ export const deleteSaldoAwalWip = async (entryId) => {
   if (!data?.success) throw new Error(data?.message || 'Error occurred');
   return data;
 };
+
+export const getCuttingStats = async () => {
+  const { data } = await api.get('/produksi/cutting-stats');
+  return data;
+};
+
+export const getCuttingHistory = async (periode) => {
+  const { data } = await api.get(`/produksi/cutting-history?periode=${periode}`);
+  return data;
+};

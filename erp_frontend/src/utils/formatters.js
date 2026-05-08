@@ -59,3 +59,37 @@ export function parseNumber(val) {
   const num = val.toString().replace(/[^0-9]/g, '');
   return num ? parseInt(num) : 0;
 }
+
+/**
+ * Mendapatkan tanggal hari ini dalam format YYYY-MM-DD
+ * Berdasarkan waktu lokal komputer user (bukan UTC)
+ */
+export function getLocalDate() {
+  const d = new Date();
+  const year = d.getFullYear();
+  const month = String(d.getMonth() + 1).padStart(2, '0');
+  const day = String(d.getDate()).padStart(2, '0');
+  return `${year}-${month}-${day}`;
+}
+
+/**
+ * Mendapatkan timestamp lengkap (ISO) berdasarkan waktu lokal komputer user
+ */
+export function getLocalTimestamp() {
+  const d = new Date();
+  const tzOffset = -d.getTimezoneOffset();
+  const diff = tzOffset >= 0 ? '+' : '-';
+  const pad = (num) => String(num).padStart(2, '0');
+  
+  const iso = d.getFullYear() +
+    '-' + pad(d.getMonth() + 1) +
+    '-' + pad(d.getDate()) +
+    'T' + pad(d.getHours()) +
+    ':' + pad(d.getMinutes()) +
+    ':' + pad(d.getSeconds());
+    
+  const offH = pad(Math.floor(Math.abs(tzOffset) / 60));
+  const offM = pad(Math.floor(Math.abs(tzOffset) % 60));
+  
+  return iso + diff + offH + ':' + offM;
+}

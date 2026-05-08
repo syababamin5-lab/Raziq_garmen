@@ -13,7 +13,7 @@ import {
     voidPembelian
 } from '../api/pembelianApi';
 import { getDashboardSummary } from '../api/dashboardApi';
-import { formatRp, formatInputNumber, parseNumber } from '../utils/formatters';
+import { formatRp, formatInputNumber, parseNumber, getLocalDate, getLocalTimestamp } from '../utils/formatters';
 import PurchaseDetailModal from '../components/dashboard/PurchaseDetailModal';
 
 export default function PembelianBiaya() {
@@ -33,16 +33,16 @@ export default function PembelianBiaya() {
   // CART (State untuk Pembelian Bahan)
   const [cart, setCart] = useState([]);
   const [cartForm, setCartForm] = useState({ sku: '', nama: '', qty: 1, harga: 0, kat: 'Bahan Baku (Kain)' });
-  const [bahanMeta, setBahanMeta] = useState({ supplier_id: '', metode: 'Kas Tunai', tgl: new Date().toISOString().split('T')[0], dp: 0, dp_sumber: 'Kas Tunai', diskon: 0 });
+  const [bahanMeta, setBahanMeta] = useState({ supplier_id: '', metode: 'Kas Tunai', tgl: getLocalDate(), dp: 0, dp_sumber: 'Kas Tunai', diskon: 0 });
 
   // Purchase Detail Modal (icon mata)
   const [purchaseModal, setPurchaseModal] = useState({ open: false, po: null });
 
   // OPEX FORM
-  const [opexForm, setOpexForm] = useState({ tgl: new Date().toISOString().split('T')[0], akun: '', nominal: 0, ket: '', sumber: 'Kas Tunai' });
+  const [opexForm, setOpexForm] = useState({ tgl: getLocalDate(), akun: '', nominal: 0, ket: '', sumber: 'Kas Tunai' });
 
   // ASET FORM
-  const [asetForm, setAsetForm] = useState({ tgl: new Date().toISOString().split('T')[0], akun: '13210', nama_barang: '', nominal: 0, sumber: 'Kas Tunai' });
+  const [asetForm, setAsetForm] = useState({ tgl: getLocalDate(), akun: '13210', nama_barang: '', nominal: 0, sumber: 'Kas Tunai' });
 
   // RETUR FORM
   const [poList, setPoList] = useState([]);
@@ -51,7 +51,7 @@ export default function PembelianBiaya() {
     no_po: '', 
     kode_sku: '', 
     qty_retur: 0, 
-    tgl_retur: new Date().toISOString().split('T')[0], 
+    tgl_retur: getLocalDate(), 
     alasan: 'Barang Cacat / Rusak' 
   });
   const [payModal, setPayModal] = useState({ open: false, no_po: '', nama_supplier: '', nominal: 0, sumber_dana: 'Kas Tunai' });
@@ -108,7 +108,7 @@ export default function PembelianBiaya() {
     setLoading(true);
     try {
       const res = await submitPembelianBahan({
-        tgl_po: bahanMeta.tgl,
+        tgl_po: bahanMeta.tgl === getLocalDate() ? getLocalTimestamp() : bahanMeta.tgl,
         supplier_id: Number(bahanMeta.supplier_id),
         metode_pembayaran: bahanMeta.metode,
         dp: Number(bahanMeta.dp),
@@ -136,7 +136,7 @@ export default function PembelianBiaya() {
     try {
         const selAkun = coa.find(a => a.kode_akun === opexForm.akun);
         const res = await submitOpex({
-            tgl_opex: opexForm.tgl,
+            tgl_opex: opexForm.tgl === getLocalDate() ? getLocalTimestamp() : opexForm.tgl,
             kode_akun_opex: opexForm.akun,
             nama_akun_opex: selAkun ? selAkun.nama_akun : '',
             keterangan: opexForm.ket,
@@ -165,7 +165,7 @@ export default function PembelianBiaya() {
           "11410": "Sewa Dibayar di Muka"
         };
         const res = await submitAset({
-            tgl_aset: asetForm.tgl,
+            tgl_aset: asetForm.tgl === getLocalDate() ? getLocalTimestamp() : asetForm.tgl,
             kode_akun_aset: asetForm.akun,
             nama_akun_aset: asetNames[asetForm.akun],
             nama_barang: asetForm.nama_barang,
@@ -215,9 +215,11 @@ export default function PembelianBiaya() {
     const item = poDetails.find(d => d.kode_sku === returForm.kode_sku);
     if (returForm.qty_retur > item.qty) return alert(`Jumlah retur (${returForm.qty_retur}) tidak boleh melebihi jumlah beli (${item.qty})!`);
 
-    setLoading(true);
     try {
-        const res = await submitReturPembelian(returForm);
+        const res = await submitReturPembelian({ 
+            ...returForm, 
+            tgl_retur: returForm.tgl_retur === getLocalDate() ? getLocalTimestamp() : returForm.tgl_retur 
+        });
         if (res.success) {
             setMsg({ text: res.message, type: 'success' });
             setReturForm({ ...returForm, no_po: '', kode_sku: '', qty_retur: 0 });
@@ -239,7 +241,8 @@ export default function PembelianBiaya() {
         const res = await bayarPOCepat({
             no_po: payModal.no_po,
             nominal: payModal.nominal,
-            sumber_dana: payModal.sumber_dana
+            sumber_dana: payModal.sumber_dana,
+            tgl: getLocalTimestamp()
         });
         if (res.success) {
             setMsg({ text: res.message, type: 'success' });

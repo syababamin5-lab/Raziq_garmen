@@ -185,7 +185,11 @@ class ProductionLog(Base):
     kode_sku = Column(String)
     nama_barang = Column(String)
     qty_hasil = Column(Integer)  # Pcs hasil cutting atau Lusin hasil jahit
+    kain_id = Column(Integer, nullable=True)
+    qty_pakai = Column(Float, nullable=True)
     karyawan_id = Column(Integer, nullable=True)
+    ongkos_per_pcs = Column(Float, default=0.0)
+    total_ongkos = Column(Float, default=0.0)
     keterangan = Column(String, nullable=True)
 
 

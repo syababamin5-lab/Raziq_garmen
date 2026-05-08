@@ -5,6 +5,8 @@ from models import get_db
 import models
 import schemas
 
+from utils import merge_date_time
+
 router = APIRouter(prefix="/api/karyawan", tags=["Manajemen Karyawan"])
 
 @router.post("/kasbon-baru", response_model=schemas.APIResponse)
@@ -20,13 +22,15 @@ def tambah_kasbon(payload: schemas.KasbonLoanRequest, db: Session = Depends(get_
         kode_kredit = "11110" if payload.sumber == "Kas Tunai" else "11120"
         nama_kredit = "Kas Tunai" if payload.sumber == "Kas Tunai" else "BCA"
         
+        waktu_bayar = merge_date_time(payload.tgl)
+        
         db.add(models.JurnalUmum(
-            tanggal=datetime.datetime.now(), 
+            tanggal=waktu_bayar, 
             kode_akun="11220", nama_akun="Piutang Karyawan", 
             keterangan=f"Kasbon Baru: {kary.nama_karyawan}", debit=payload.nominal, kredit=0
         ))
         db.add(models.JurnalUmum(
-            tanggal=datetime.datetime.now(), 
+            tanggal=waktu_bayar, 
             kode_akun=kode_kredit, nama_akun=nama_kredit, 
             keterangan=f"Keluar Kasbon: {kary.nama_karyawan}", debit=0, kredit=payload.nominal
         ))

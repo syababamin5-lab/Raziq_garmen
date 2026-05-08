@@ -5,6 +5,7 @@ from sqlalchemy import func
 from models import get_db
 import models
 import schemas
+from utils import merge_date_time
 
 router = APIRouter(prefix="/api/keuangan", tags=["Keuangan & Arus Kas"])
 
@@ -21,14 +22,16 @@ def terima_piutang(payload: schemas.CollectionRequest, db: Session = Depends(get
         kode_debit = "11110" if payload.sumber == "Kas Tunai" else "11120"
         nama_debit = "Kas Tunai" if payload.sumber == "Kas Tunai" else "BCA"
         
+        waktu_bayar = merge_date_time(payload.tgl)
+        
         db.add(models.JurnalUmum(
-            tanggal=datetime.datetime.now(), 
+            tanggal=waktu_bayar, 
             kode_akun=kode_debit, nama_akun=nama_debit, 
             keterangan=f"Terima Piutang: {cust.nama_mitra} - {payload.keterangan}", 
             debit=payload.nominal, kredit=0
         ))
         db.add(models.JurnalUmum(
-            tanggal=datetime.datetime.now(), 
+            tanggal=waktu_bayar, 
             kode_akun="11210", nama_akun="Piutang Usaha", 
             keterangan=f"Pelunasan: {cust.nama_mitra}", 
             debit=0, kredit=payload.nominal
@@ -107,8 +110,10 @@ def bayar_utang(payload: schemas.PaymentRequest, db: Session = Depends(get_db)):
         kode_kredit = "11110" if payload.sumber == "Kas Tunai" else "11120"
         nama_kredit = "Kas Tunai" if payload.sumber == "Kas Tunai" else "BCA"
         
-        db.add(models.JurnalUmum(tanggal=datetime.datetime.now(), kode_akun="21110", nama_akun="Utang Usaha", keterangan=f"Bayar Utang: {supp.nama_mitra}", debit=payload.nominal, kredit=0))
-        db.add(models.JurnalUmum(tanggal=datetime.datetime.now(), kode_akun=kode_kredit, nama_akun=nama_kredit, keterangan=f"Pelunasan ke {supp.nama_mitra} - {payload.keterangan}", debit=0, kredit=payload.nominal))
+        waktu_bayar = merge_date_time(payload.tgl)
+        
+        db.add(models.JurnalUmum(tanggal=waktu_bayar, kode_akun="21110", nama_akun="Utang Usaha", keterangan=f"Bayar Utang: {supp.nama_mitra}", debit=payload.nominal, kredit=0))
+        db.add(models.JurnalUmum(tanggal=waktu_bayar, kode_akun=kode_kredit, nama_akun=nama_kredit, keterangan=f"Pelunasan ke {supp.nama_mitra} - {payload.keterangan}", debit=0, kredit=payload.nominal))
 
         db.commit()
         return schemas.APIResponse(success=True, message=f"Pembayaran utang ke {supp.nama_mitra} berhasil.")
@@ -119,12 +124,13 @@ def bayar_utang(payload: schemas.PaymentRequest, db: Session = Depends(get_db)):
 @router.post("/mutasi", response_model=schemas.APIResponse)
 def mutasi_kas(payload: schemas.MutationRequest, db: Session = Depends(get_db)):
     try:
+        waktu_mutasi = merge_date_time(payload.tgl)
         if payload.jenis == "Setor Tunai":
-            db.add(models.JurnalUmum(tanggal=datetime.datetime.now(), kode_akun="11120", nama_akun="BCA", keterangan="Setoran Kas ke Bank", debit=payload.nominal, kredit=0))
-            db.add(models.JurnalUmum(tanggal=datetime.datetime.now(), kode_akun="11110", nama_akun="Kas Tunai", keterangan="Setoran Kas ke Bank", debit=0, kredit=payload.nominal))
+            db.add(models.JurnalUmum(tanggal=waktu_mutasi, kode_akun="11120", nama_akun="BCA", keterangan="Setoran Kas ke Bank", debit=payload.nominal, kredit=0))
+            db.add(models.JurnalUmum(tanggal=waktu_mutasi, kode_akun="11110", nama_akun="Kas Tunai", keterangan="Setoran Kas ke Bank", debit=0, kredit=payload.nominal))
         else:
-            db.add(models.JurnalUmum(tanggal=datetime.datetime.now(), kode_akun="11110", nama_akun="Kas Tunai", keterangan="Penarikan Bank ke Kas", debit=payload.nominal, kredit=0))
-            db.add(models.JurnalUmum(tanggal=datetime.datetime.now(), kode_akun="11120", nama_akun="BCA", keterangan="Penarikan Bank ke Kas", debit=0, kredit=payload.nominal))
+            db.add(models.JurnalUmum(tanggal=waktu_mutasi, kode_akun="11110", nama_akun="Kas Tunai", keterangan="Penarikan Bank ke Kas", debit=payload.nominal, kredit=0))
+            db.add(models.JurnalUmum(tanggal=waktu_mutasi, kode_akun="11120", nama_akun="BCA", keterangan="Penarikan Bank ke Kas", debit=0, kredit=payload.nominal))
 
         db.commit()
         return schemas.APIResponse(success=True, message=f"Mutasi {payload.jenis} berhasil dicatat.")
@@ -143,8 +149,10 @@ def bayar_kasbon(payload: schemas.KasbonPaymentRequest, db: Session = Depends(ge
         kode_debit = "11110" if payload.sumber == "Kas Tunai" else "11120"
         nama_debit = "Kas Tunai" if payload.sumber == "Kas Tunai" else "BCA"
         
-        db.add(models.JurnalUmum(tanggal=datetime.datetime.now(), kode_akun=kode_debit, nama_akun=nama_debit, keterangan=f"Cicilan Kasbon: {kary.nama_karyawan}", debit=payload.nominal, kredit=0))
-        db.add(models.JurnalUmum(tanggal=datetime.datetime.now(), kode_akun="11220", nama_akun="Piutang Karyawan", keterangan=f"Cicilan Kasbon: {kary.nama_karyawan}", debit=0, kredit=payload.nominal))
+        waktu_bayar = merge_date_time(payload.tgl)
+        
+        db.add(models.JurnalUmum(tanggal=waktu_bayar, kode_akun=kode_debit, nama_akun=nama_debit, keterangan=f"Cicilan Kasbon: {kary.nama_karyawan}", debit=payload.nominal, kredit=0))
+        db.add(models.JurnalUmum(tanggal=waktu_bayar, kode_akun="11220", nama_akun="Piutang Karyawan", keterangan=f"Cicilan Kasbon: {kary.nama_karyawan}", debit=0, kredit=payload.nominal))
 
         db.commit()
         return schemas.APIResponse(success=True, message=f"Pembayaran kasbon {kary.nama_karyawan} berhasil.")

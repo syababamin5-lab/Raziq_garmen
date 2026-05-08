@@ -16,6 +16,7 @@ import SettingsCompany from './pages/SettingsCompany'
 import Profile from './pages/Profile'
 import Login from './pages/Login'
 import SuperAdmin from './pages/SuperAdmin'
+import CuttingInputMobile from './pages/mobile/CuttingInput'
 import { getCurrentUser } from './api/authApi'
 
 const ProtectedRoute = ({ children }) => {
@@ -43,6 +44,9 @@ function App() {
       <Routes>
         <Route path="/login" element={<Login />} />
         
+        {/* Route khusus Mobile (Tanpa Sidebar Desktop) */}
+        <Route path="/m/cutting" element={<ProtectedRoute><CuttingInputMobile /></ProtectedRoute>} />
+
         <Route path="/" element={<ProtectedRoute><AppLayout /></ProtectedRoute>}>
           <Route index element={<Dashboard />} />
           <Route path="produksi" element={<Produksi />} />

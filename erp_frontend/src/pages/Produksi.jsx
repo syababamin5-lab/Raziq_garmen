@@ -3,7 +3,7 @@ import {
   getProduksiOptions, submitCutting, submitJahit, getRekapCutting, getWip,
   submitSaldoAwalWip, getSaldoAwalWipList, deleteSaldoAwalWip
 } from '../api/produksiApi';
-import { formatInputNumber, parseNumber } from '../utils/formatters';
+import { formatInputNumber, parseNumber, getLocalDate, getLocalTimestamp } from '../utils/formatters';
 
 export default function Produksi() {
   const [activeTab, setActiveTab] = useState('cutting');
@@ -21,7 +21,7 @@ export default function Produksi() {
   const [wipAwalList, setWipAwalList] = useState(null);
   const TAHAP_OPTIONS = ['Siap Jahit','Siap Finishing','Siap QC','Siap Packing','Siap Kirim','Lainnya'];
   const [wipAwalForm, setWipAwalForm] = useState({
-    tanggal_cutoff: new Date().toISOString().split('T')[0],
+    tanggal_cutoff: getLocalDate(),
     produk_id: '',
     qty_pcs: '',
     tahap_saat_ini: 'Siap Jahit',
@@ -33,7 +33,7 @@ export default function Produksi() {
 
   // Form State Cutting
   const [cuttingForm, setCuttingForm] = useState({
-    tgl_cutting: new Date().toISOString().split('T')[0],
+    tgl_cutting: getLocalDate(),
     kain_id: '',
     produk_id: '',
     kg_pakai: '',
@@ -44,7 +44,7 @@ export default function Produksi() {
 
   // Form State Jahit
   const [jahitForm, setJahitForm] = useState({
-    tgl_jahit: new Date().toISOString().split('T')[0],
+    tgl_jahit: getLocalDate(),
     produk_id: '',
     qty_lusin: '',
   });
@@ -148,13 +148,9 @@ export default function Produksi() {
       if(!cuttingForm.kain_id || !cuttingForm.produk_id || !cuttingForm.tukang_potong_id) {
           throw new Error("Pilih semua field yang wajib!");
       }
-      const selectedDate = new Date(cuttingForm.tgl_cutting);
-      const now = new Date();
-      selectedDate.setHours(now.getHours(), now.getMinutes(), now.getSeconds());
-
       const res = await submitCutting({
         ...cuttingForm,
-        tgl_cutting: selectedDate.toISOString(),
+        tgl_cutting: cuttingForm.tgl_cutting === getLocalDate() ? getLocalTimestamp() : cuttingForm.tgl_cutting,
         kain_id: Number(cuttingForm.kain_id),
         produk_id: Number(cuttingForm.produk_id),
         kg_pakai: Number(cuttingForm.kg_pakai),
@@ -182,13 +178,9 @@ export default function Produksi() {
     setLoading(true); setMsg({text:'', type:''});
     try {
       if(!jahitForm.produk_id) throw new Error("Pilih produk!");
-      const selectedDate = new Date(jahitForm.tgl_jahit);
-      const now = new Date();
-      selectedDate.setHours(now.getHours(), now.getMinutes(), now.getSeconds());
-
       const res = await submitJahit({
         ...jahitForm,
-        tgl_jahit: selectedDate.toISOString(),
+        tgl_jahit: jahitForm.tgl_jahit === getLocalDate() ? getLocalTimestamp() : jahitForm.tgl_jahit,
         produk_id: Number(jahitForm.produk_id),
         qty_lusin: Number(jahitForm.qty_lusin)
       });

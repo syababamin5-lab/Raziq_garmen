@@ -355,7 +355,7 @@ def bayar_invoice_cepat(payload: schemas.BayarInvoiceCepatRequest, db: Session =
         # =====================================================
         # PROSES PELUNASAN DALAM SATU BLOK TRANSAKSI ATOMIK
         # =====================================================
-        waktu_bayar = datetime.datetime.now()
+        waktu_bayar = merge_date_time(payload.tgl)
 
         # 1. Set status invoice ke Lunas + nolkan sisa_tagihan
         invoice.status = "Lunas"

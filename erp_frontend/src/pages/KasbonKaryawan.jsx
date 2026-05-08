@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import api from '../api/api';
-import { formatRp, formatInputNumber, parseNumber } from '../utils/formatters';
+import { formatRp, formatInputNumber, parseNumber, getLocalDate } from '../utils/formatters';
 
 const user = JSON.parse(localStorage.getItem('user') || '{}');
 const isBos = user.role === 'bos';
@@ -13,7 +13,7 @@ export default function KasbonKaryawan() {
     karyawan_id: '', 
     nominal: '', 
     sumber: 'Kas Tunai', 
-    tgl: new Date().toISOString().split('T')[0] 
+    tgl: getLocalDate() 
   });
 
   const fetchData = async () => {
@@ -32,9 +32,11 @@ export default function KasbonKaryawan() {
     }
     setLoading(true);
     try {
+      const finalTgl = kasbonForm.tgl === getLocalDate() ? getLocalTimestamp() : kasbonForm.tgl;
       const { data } = await api.post('/karyawan/kasbon-baru', { 
         ...kasbonForm, 
-        nominal: Number(kasbonForm.nominal) 
+        nominal: Number(kasbonForm.nominal),
+        tgl: finalTgl
       });
       if (data.success) {
         setMsg({ text: data.message, type: 'success' });

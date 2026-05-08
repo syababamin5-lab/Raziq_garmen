@@ -4,6 +4,7 @@ from sqlalchemy.orm import Session
 from models import get_db
 import models
 import schemas
+from utils import merge_date_time, format_rp
 import re
 
 router = APIRouter(prefix="/api/riwayat", tags=["Riwayat & Void"])
@@ -27,10 +28,11 @@ async def void_transaksi(payload: schemas.VoidRequest, db: Session = Depends(get
 
         pasangan = db.query(models.JurnalUmum).filter(models.JurnalUmum.keterangan == ket).all()
         alasan = payload.alasan or "Tanpa alasan"
+        waktu_void = merge_date_time(payload.tgl)
         
         for p in pasangan:
             new_jurnal = models.JurnalUmum(
-                tanggal=datetime.datetime.now(),
+                tanggal=waktu_void,
                 kode_akun=p.kode_akun,
                 nama_akun=p.nama_akun,
                 keterangan=f"VOID: {ket} | Alasan: {alasan}",

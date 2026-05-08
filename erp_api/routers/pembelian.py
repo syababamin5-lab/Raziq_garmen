@@ -17,10 +17,9 @@ router = APIRouter(prefix="/api/pembelian", tags=["Pembelian & Biaya"])
 async def submit_pembelian_bahan(payload: schemas.PembelianBahanRequest, db: Session = Depends(get_db)):
     if not payload.items: return schemas.APIResponse(success=False, message="Keranjang kosong!")
     try:
-        no_po = f"PO-{datetime.datetime.now().strftime('%y%m%d%H%M')}"
-        
         # Parse Tanggal
         tgl_transaksi = merge_date_time(payload.tgl_po)
+        no_po = f"PO-{tgl_transaksi.strftime('%y%m%d%H%M')}"
 
         total_bruto = sum(i.qty * i.harga for i in payload.items)
         total_netto = total_bruto - (payload.diskon or 0)
@@ -373,7 +372,7 @@ def bayar_po_cepat(payload: schemas.BayarPOCepatRequest, db: Session = Depends(g
         supp = db.query(models.Mitra).filter(models.Mitra.nama_mitra == po.nama_supplier).first()
         if not supp: raise Exception("Data supplier tidak ditemukan")
 
-        waktu_bayar = datetime.datetime.now() # Cepat biasanya sekarang
+        waktu_bayar = merge_date_time(payload.tgl)
         po.status = "Lunas"
         
         # Kurangi saldo utang ke supplier
@@ -396,7 +395,7 @@ def bayar_po_cepat(payload: schemas.BayarPOCepatRequest, db: Session = Depends(g
 @router.post("/retur", response_model=schemas.APIResponse)
 def submit_retur_pembelian(payload: schemas.ReturPembelianRequest, db: Session = Depends(get_db)):
     try:
-        waktu_retur = datetime.datetime.now() # Retur biasanya sekarang
+        waktu_retur = merge_date_time(payload.tgl_retur)
         po = db.query(models.HeaderPembelian).filter(models.HeaderPembelian.no_po == payload.no_po).first()
         detail = db.query(models.DetailPembelian).filter(models.DetailPembelian.no_po == payload.no_po, models.DetailPembelian.kode_sku == payload.kode_sku).first()
         

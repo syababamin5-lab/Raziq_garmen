@@ -2,6 +2,7 @@ import datetime
 import re
 from fastapi import APIRouter, Depends, HTTPException
 from sqlalchemy.orm import Session
+from sqlalchemy import func, text
 from models import get_db
 from utils import merge_date_time
 import models
@@ -15,6 +16,134 @@ from schemas import (
 from utils import format_rp
 
 router = APIRouter(prefix="/api/produksi", tags=["Produksi"])
+
+@router.get("/cutting-stats")
+def get_cutting_stats(db: Session = Depends(get_db)):
+    try:
+        now = datetime.datetime.now()
+        start_of_day = now.replace(hour=0, minute=0, second=0, microsecond=0)
+        start_of_week = start_of_day - datetime.timedelta(days=now.weekday())
+        first_day_of_month = start_of_day.replace(day=1)
+
+        # DEBUG: Ambil 3 data terakhir apa adanya
+        last_logs = db.query(models.ProductionLog).order_by(models.ProductionLog.id.desc()).limit(3).all()
+        log_debug = [{"div": l.divisi, "qty": l.qty_hasil, "tgl": str(l.tanggal)} for l in last_logs]
+
+        def get_total(start_date):
+            # Gunakan ilike agar lebih aman terhadap huruf besar/kecil
+            res = db.query(func.sum(models.ProductionLog.qty_hasil))\
+                .filter(models.ProductionLog.divisi.ilike("Cutting"), models.ProductionLog.tanggal >= start_date)\
+                .scalar()
+            return res if res else 0
+
+        top_p = db.query(models.ProductionLog.nama_barang, func.sum(models.ProductionLog.qty_hasil))\
+            .filter(models.ProductionLog.divisi.ilike("Cutting"), models.ProductionLog.tanggal >= first_day_of_month)\
+            .group_by(models.ProductionLog.nama_barang).order_by(func.sum(models.ProductionLog.qty_hasil).desc()).limit(5).all()
+
+        top_k = db.query(models.Karyawan.nama_karyawan, func.sum(models.ProductionLog.qty_hasil))\
+            .join(models.ProductionLog, models.ProductionLog.karyawan_id == models.Karyawan.id)\
+            .filter(models.ProductionLog.divisi.ilike("Cutting"), models.ProductionLog.tanggal >= start_of_day)\
+            .group_by(models.Karyawan.nama_karyawan).order_by(func.sum(models.ProductionLog.qty_hasil).desc()).all()
+
+        top_money = db.query(models.Karyawan.nama_karyawan, func.sum(models.ProductionLog.total_ongkos))\
+            .join(models.ProductionLog, models.ProductionLog.karyawan_id == models.Karyawan.id)\
+            .filter(models.ProductionLog.divisi.ilike("Cutting"), models.ProductionLog.tanggal >= first_day_of_month)\
+            .group_by(models.Karyawan.nama_karyawan).order_by(func.sum(models.ProductionLog.total_ongkos).desc()).all()
+
+        return {
+            "success": True,
+            "data": {
+                "db_path": models.DB_PATH,
+                "log_debug": log_debug,
+                "hari_ini": get_total(start_of_day),
+                "minggu_ini": get_total(start_of_week),
+                "bulan_ini": get_total(first_day_of_month),
+                "top_produk": [{"nama": r[0], "total": r[1] or 0} for r in top_p],
+                "top_karyawan": [{"nama": r[0], "total": r[1] or 0} for r in top_k],
+                "top_penghasilan": [{"nama": r[0], "total": r[1] or 0} for r in top_money]
+            }
+        }
+    except Exception as e:
+        return {"success": False, "message": str(e)}
+
+@router.get("/cutting-history")
+def get_cutting_history(periode: str = "hari_ini", db: Session = Depends(get_db)):
+    try:
+        now = datetime.datetime.now()
+        # Set start_date ke awal hari ini
+        start_date = now.replace(hour=0, minute=0, second=0, microsecond=0)
+        end_date = start_date + datetime.timedelta(days=1)
+
+        if periode == "minggu_ini":
+            start_date = start_date - datetime.timedelta(days=now.weekday())
+            end_date = start_date + datetime.timedelta(days=7)
+        elif periode == "bulan_ini":
+            start_date = start_date.replace(day=1)
+            next_month = (start_date.replace(day=28) + datetime.timedelta(days=4)).replace(day=1)
+            end_date = next_month
+        elif periode == "semua":
+            start_date = datetime.datetime(2020, 1, 1)
+            end_date = now + datetime.timedelta(days=365)
+        elif periode.startswith("minggu_"):
+            week_num = int(periode.split("_")[1])
+            # Filter berdasarkan minggu ke-X di bulan ini
+            first_day_of_month = now.replace(day=1, hour=0, minute=0, second=0)
+            start_date = first_day_of_month + datetime.timedelta(days=(week_num-1)*7)
+            end_date = start_date + datetime.timedelta(days=7)
+
+        # Query Utama: Gunakan filter ilike dan rentang tanggal yang pas
+        logs = db.query(models.ProductionLog).filter(
+            models.ProductionLog.divisi.ilike("Cutting"),
+            models.ProductionLog.tanggal >= start_date,
+            models.ProductionLog.tanggal < end_date
+        ).order_by(models.ProductionLog.tanggal.desc()).all()
+
+        result = []
+        for l in logs:
+            # Ambil nama karyawan
+            karyawan = db.query(models.Karyawan).filter(models.Karyawan.id == l.karyawan_id).first()
+            nama_karyawan = karyawan.nama_karyawan if karyawan else "Petugas"
+            
+            # --- LOGIKA PINTAR UNTUK DATA LAMA ---
+            nama_kain = "Kain Standar"
+            kg_terpakai = getattr(l, 'qty_pakai', 0) or 0
+            
+            # Jika kain_id ada, ambil langsung
+            if getattr(l, 'kain_id', None):
+                kain_obj = db.query(models.Barang).filter(models.Barang.id == l.kain_id).first()
+                if kain_obj:
+                    nama_kain = kain_obj.nama_barang
+            else:
+                # Jika data lama (kain_id null), cari di JurnalUmum yang cocok
+                jurnal = db.query(models.JurnalUmum).filter(
+                    models.JurnalUmum.kode_akun == "51110",
+                    models.JurnalUmum.keterangan.like(f"%Cutting {l.qty_hasil} pcs%"),
+                    models.JurnalUmum.keterangan.like(f"%[SKU:{l.kode_sku}]%")
+                ).first()
+                if jurnal:
+                    ket = str(jurnal.keterangan)
+                    kg_match = re.search(r'dari (\d+\.?\d*)kg (.*?) \[SKU:', ket)
+                    if kg_match:
+                        kg_terpakai = float(kg_match.group(1))
+                        nama_kain = kg_match.group(2).strip()
+
+            pcs = l.qty_hasil or 0
+            
+            result.append({
+                "id": l.id,
+                "tanggal": l.tanggal.strftime("%d/%m/%y %H:%M") if l.tanggal else "-",
+                "sku": l.kode_sku or "-",
+                "produk": l.nama_barang or "-",
+                "qty": pcs,
+                "lusin": round(pcs / 12, 1),
+                "karyawan": nama_karyawan,
+                "kain": nama_kain,
+                "kg": kg_terpakai
+            })
+
+        return {"success": True, "data": result}
+    except Exception as e:
+        return {"success": False, "message": str(e)}
 
 @router.get("/options", response_model=APIResponse)
 def get_produksi_options(db: Session = Depends(get_db)):
@@ -92,10 +221,14 @@ def submit_cutting(payload: CuttingRequest, db: Session = Depends(get_db)):
         db.add(models.ProductionLog(
             tanggal=waktu_transaksi,
             divisi="Cutting",
+            kain_id=payload.kain_id,
+            qty_pakai=payload.kg_pakai,
             kode_sku=produk.kode_sku,
             nama_barang=produk.nama_barang,
             qty_hasil=payload.hasil_pcs,
-            karyawan_id=payload.tukang_potong_id
+            karyawan_id=payload.tukang_potong_id,
+            ongkos_per_pcs=payload.ongkos_per_pcs,
+            total_ongkos=total_upah
         ))
 
         db.commit()
@@ -206,9 +339,25 @@ def get_rekap_cutting(db: Session = Depends(get_db)):
                     upah = float(info_potong.split("Upah: ")[1].strip())
                     pcs_match = re.search(r'Cutting (\d+) pcs', ket)
                     pcs = int(pcs_match.group(1)) if pcs_match else 0
+
+                    # Ekstrak Nama Kain & Kg Pakai
+                    kg_match = re.search(r'dari (\d+\.?\d*)kg (.*?) \[SKU:', ket)
+                    kg_val = float(kg_match.group(1)) if kg_match else 0.0
+                    kain_val = kg_match.group(2).strip() if kg_match else "-"
+
+                    # Ekstrak SKU Baju
+                    sku_match = re.search(r'\[SKU:(.*?)\]', ket)
+                    sku_val = sku_match.group(1).strip() if sku_match else "-"
                     
-                    data_rekap.append(RekapCuttingItem(waktu=j.tanggal.strftime("%Y-%m-%d %H:%M"), tukang_potong=nama, hasil_potong=f"{pcs} Pcs", tagihan_upah=upah))
-                    group_map[nama] = group_map.get(nama, 0) + upah
+                    data_rekap.append(RekapCuttingItem(
+                        waktu=j.tanggal.strftime("%Y-%m-%d %H:%M"), 
+                        tukang_potong=nama, 
+                        hasil_potong=f"{pcs} Pcs", 
+                        tagihan_upah=upah,
+                        nama_kain=kain_val,
+                        nama_baju=sku_val,
+                        kg_pakai=kg_val
+                    ))
                 except: pass
 
         group_karyawan = [{"tukang_potong": k, "total_upah": v, "total_upah_rp": format_rp(v)} for k, v in group_map.items()]

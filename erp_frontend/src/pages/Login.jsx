@@ -39,7 +39,13 @@ export default function Login() {
       } else if (res.access_token) {
         localStorage.setItem('token', res.access_token);
         localStorage.setItem('user', JSON.stringify(res.user));
-        window.location.href = '/';
+        
+        // Pengalihan Otomatis: Jika user adalah cutting, langsung ke halaman HP
+        if (username.toLowerCase() === 'cutting') {
+          window.location.href = '/m/cutting';
+        } else {
+          window.location.href = '/';
+        }
       } else {
         setError('Respons tidak valid dari server.');
       }
