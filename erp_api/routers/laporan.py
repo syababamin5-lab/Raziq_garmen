@@ -110,8 +110,7 @@ def get_laporan_keuangan(bulan: int, tahun: int, db: Session = Depends(get_db)):
         k_awal_kas = db.query(func.sum(models.JurnalUmum.kredit)).filter(models.JurnalUmum.kode_akun.startswith("111"), models.JurnalUmum.tanggal < start_date).scalar() or 0
         saldo_awal_kas = d_awal_kas - k_awal_kas
 
-        # Ambil transaksi saldo awal yang diinput manual di bulan ini (biasanya tanggal 1)
-        # Kita masukkan ini ke Saldo Awal agar laporan Arus Kas dimulai dari angka setup awal
+        # Ambil transaksi saldo awal setup (untuk ditampilkan di Saldo Awal paling atas)
         setup_awal = db.query(func.sum(models.JurnalUmum.debit - models.JurnalUmum.kredit)).filter(
             models.JurnalUmum.kode_akun.startswith("111"),
             models.JurnalUmum.tanggal >= start_date,
@@ -121,7 +120,7 @@ def get_laporan_keuangan(bulan: int, tahun: int, db: Session = Depends(get_db)):
         
         saldo_awal_fix = saldo_awal_kas + setup_awal
 
-        # Transaksi Bulan Ini (Kecuali yang sudah masuk ke setup_awal)
+        # Transaksi Bulan Ini (Kecuali setup awal)
         jurnals_kas = db.query(models.JurnalUmum).filter(
             models.JurnalUmum.kode_akun.startswith("111"), 
             models.JurnalUmum.tanggal >= start_date, 
@@ -134,27 +133,22 @@ def get_laporan_keuangan(bulan: int, tahun: int, db: Session = Depends(get_db)):
         arus_fin = {"masuk": 0, "keluar": 0, "detail_masuk": {}, "detail_keluar": {}}
 
         for j in jurnals_kas:
-            # Cari pasangan jurnal
             pasangan = db.query(models.JurnalUmum).filter(
                 models.JurnalUmum.tanggal == j.tanggal,
-                models.JurnalUmum.id != j.id,
-                ~models.JurnalUmum.kode_akun.startswith("111") # Jangan ambil pasangan sesama Kas (Mutasi)
+                models.JurnalUmum.id != j.id
             ).first()
 
-            if not pasangan:
-                # Jika tidak ada pasangan (mungkin mutasi Kas ke Bank), abaikan di Arus Kas karena uangnya tetap di dalam
-                continue
-
-            p_kode = pasangan.kode_akun
             target_kat = "ops"
-            if p_kode.startswith("13"): target_kat = "inv"
-            elif p_kode.startswith("31"): target_kat = "fin"
-            elif p_kode.startswith(("4", "113")): target_kat = "ops"
-            elif p_kode.startswith(("5", "6", "12", "21")): target_kat = "ops"
+            if pasangan:
+                p_kode = pasangan.kode_akun
+                if p_kode.startswith("13"): target_kat = "inv"
+                elif p_kode.startswith("31"): target_kat = "fin"
+                elif p_kode.startswith(("4", "112", "113")): target_kat = "ops" # 112 adalah Piutang
+                elif p_kode.startswith(("5", "6", "12", "21", "111")): target_kat = "ops"
             
             ref_dict = arus_ops if target_kat == "ops" else arus_inv if target_kat == "inv" else arus_fin
+            label = pasangan.nama_akun if pasangan else "Transaksi Kas"
             
-            label = pasangan.nama_akun
             if j.debit > 0:
                 ref_dict["masuk"] += j.debit
                 ref_dict["detail_masuk"][label] = ref_dict["detail_masuk"].get(label, 0) + j.debit
