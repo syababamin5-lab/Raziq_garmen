@@ -255,20 +255,21 @@ export default function LaporanKeuangan() {
   return (
     <div className="max-w-6xl mx-auto space-y-6 pb-20">
         {/* Header Sekaligus Filter */}
-        <div className="bg-white p-8 rounded-[2.5rem] shadow-xl shadow-slate-200/40 border border-slate-100 flex flex-col xl:flex-row xl:items-center justify-between gap-8">
-            <div className="flex items-center gap-5">
-                <div className="w-16 h-16 rounded-[1.25rem] bg-gradient-to-br from-[#064E3B] to-emerald-800 flex items-center justify-center text-emerald-50 shadow-lg shadow-emerald-900/20 flex-shrink-0">
-                    <span className="material-symbols-rounded text-3xl">monitoring</span>
+        <div className="bg-white p-6 md:p-8 rounded-[2.5rem] shadow-xl shadow-slate-200/40 border border-slate-100 flex flex-col gap-6">
+            
+            {/* Baris Atas: Judul & Filter */}
+            <div className="flex flex-col lg:flex-row justify-between items-start lg:items-center gap-6">
+                <div className="flex items-center gap-5">
+                    <div className="w-16 h-16 rounded-[1.25rem] bg-gradient-to-br from-[#064E3B] to-emerald-800 flex items-center justify-center text-emerald-50 shadow-lg shadow-emerald-900/20 flex-shrink-0">
+                        <span className="material-symbols-rounded text-3xl">monitoring</span>
+                    </div>
+                    <div>
+                        <h1 className="text-2xl font-black text-slate-800 uppercase tracking-tight font-outfit">Laporan Keuangan</h1>
+                        <p className="text-slate-500 text-sm font-medium mt-1">Periode: <span className="text-emerald-700 font-bold bg-emerald-50 px-2 py-0.5 rounded-md ml-1">{bulan}/{tahun}</span></p>
+                    </div>
                 </div>
-                <div>
-                    <h1 className="text-2xl font-black text-slate-800 uppercase tracking-tight font-outfit">Laporan Keuangan</h1>
-                    <p className="text-slate-500 text-sm font-medium mt-1">Periode: <span className="text-emerald-700 font-bold bg-emerald-50 px-2 py-0.5 rounded-md ml-1">{bulan}/{tahun}</span></p>
-                </div>
-            </div>
 
-            <div className="flex flex-col sm:flex-row items-center gap-5 w-full xl:w-auto justify-end">
-                {/* Filter Group */}
-                <div className="flex items-center gap-2 bg-slate-50/80 p-2 rounded-2xl border border-slate-200/60 shadow-inner">
+                <div className="flex items-center gap-2 bg-slate-50/80 p-2 rounded-2xl border border-slate-200/60 shadow-inner w-full lg:w-auto justify-between lg:justify-start">
                     <select className="bg-transparent px-3 py-2 rounded-xl text-sm font-bold border-none text-slate-700 focus:ring-0 cursor-pointer hover:bg-white transition-colors" value={bulan} onChange={e => setBulan(Number(e.target.value))}>
                         {[1,2,3,4,5,6,7,8,9,10,11,12].map(m => <option key={m} value={m}>{new Date(2000, m-1).toLocaleString('id-ID', {month: 'long'})}</option>)}
                     </select>
@@ -280,54 +281,57 @@ export default function LaporanKeuangan() {
                         <span className="material-symbols-rounded text-lg">sync</span>
                     </button>
                 </div>
-                
-                {/* Action Buttons */}
-                <div className="flex items-center gap-2 flex-wrap justify-end">
-                    <a 
-                        id="btn-rekap-penjualan"
-                        href={`${import.meta.env.VITE_API_BASE_URL || ''}/api/laporan/export-pdf-penjualan-rekap?bulan=${bulan}&tahun=${tahun}`}
-                        target="_blank"
-                        rel="noreferrer"
-                        className="bg-emerald-50 text-emerald-700 px-4 py-2.5 rounded-[14px] text-[11px] font-black tracking-wider flex items-center gap-2 hover:bg-emerald-600 hover:text-white transition-colors border border-emerald-100 hover:border-emerald-600 shadow-sm"
-                    >
-                        <span className="material-symbols-rounded text-base">summarize</span>
-                        <span className="hidden sm:inline">REKAP</span> JUAL
-                    </a>
-                    <a 
-                        id="btn-rekap-pembelian"
-                        href={`${import.meta.env.VITE_API_BASE_URL || ''}/api/laporan/export-pdf-pembelian-rekap?bulan=${bulan}&tahun=${tahun}`}
-                        target="_blank"
-                        rel="noreferrer"
-                        className="bg-orange-50 text-orange-700 px-4 py-2.5 rounded-[14px] text-[11px] font-black tracking-wider flex items-center gap-2 hover:bg-orange-500 hover:text-white transition-colors border border-orange-100 hover:border-orange-500 shadow-sm"
-                    >
-                        <span className="material-symbols-rounded text-base">inventory_2</span>
-                        <span className="hidden sm:inline">REKAP</span> BELI
-                    </a>
-                    <a 
-                        id="btn-rekap-produksi"
-                        href={`${import.meta.env.VITE_API_BASE_URL || ''}/api/laporan/export-pdf-produksi-rekap?bulan=${bulan}&tahun=${tahun}`}
-                        target="_blank"
-                        rel="noreferrer"
-                        className="bg-blue-50 text-blue-700 px-4 py-2.5 rounded-[14px] text-[11px] font-black tracking-wider flex items-center gap-2 hover:bg-blue-600 hover:text-white transition-colors border border-blue-100 hover:border-blue-600 shadow-sm"
-                    >
-                        <span className="material-symbols-rounded text-base">precision_manufacturing</span>
-                        <span className="hidden sm:inline">REKAP</span> PROD
-                    </a>
-                    <div className="w-px h-8 bg-slate-200 hidden sm:block mx-1"></div>
-                    <a 
-                        href={
-                            activeTab === 'ledger' 
-                            ? `${import.meta.env.VITE_API_BASE_URL || ''}/api/laporan/export-pdf-buku-besar?kode_akun=${selectedAkun || 'ALL'}&bulan=${bulan}&tahun=${tahun}&filter_nama=${filterNama}`
-                            : `${import.meta.env.VITE_API_BASE_URL || ''}/api/laporan/export-pdf?tipe=${activeTab === 'hpp' ? 'HPP' : activeTab === 'lr' ? 'LR' : activeTab === 'ekuitas' ? 'EKUITAS' : activeTab === 'aruskas' ? 'ARUSKAS' : 'NERACA'}&bulan=${bulan}&tahun=${tahun}`
-                        }
-                        target="_blank"
-                        rel="noreferrer"
-                        className="bg-slate-800 text-white px-5 py-2.5 rounded-[14px] text-[11px] font-black tracking-wider flex items-center gap-2 hover:bg-emerald-600 active:scale-95 transition-all shadow-lg shadow-slate-800/20"
-                    >
-                        <span className="material-symbols-rounded text-base">print</span>
-                        {activeTab === 'ledger' && !selectedAkun ? 'CETAK SEMUA' : 'CETAK PDF'}
-                    </a>
-                </div>
+            </div>
+
+            {/* Garis Pemisah */}
+            <div className="w-full h-px bg-slate-100"></div>
+
+            {/* Baris Bawah: Tombol-tombol Aksi */}
+            <div className="flex flex-wrap items-center justify-start lg:justify-end gap-3 w-full">
+                <a 
+                    id="btn-rekap-penjualan"
+                    href={`${import.meta.env.VITE_API_BASE_URL || ''}/api/laporan/export-pdf-penjualan-rekap?bulan=${bulan}&tahun=${tahun}`}
+                    target="_blank"
+                    rel="noreferrer"
+                    className="bg-emerald-50 text-emerald-700 px-4 py-2.5 rounded-[14px] text-[11px] font-black tracking-wider flex items-center gap-2 hover:bg-emerald-600 hover:text-white transition-colors border border-emerald-100 hover:border-emerald-600 shadow-sm"
+                >
+                    <span className="material-symbols-rounded text-base">summarize</span>
+                    <span className="hidden sm:inline">REKAP</span> JUAL
+                </a>
+                <a 
+                    id="btn-rekap-pembelian"
+                    href={`${import.meta.env.VITE_API_BASE_URL || ''}/api/laporan/export-pdf-pembelian-rekap?bulan=${bulan}&tahun=${tahun}`}
+                    target="_blank"
+                    rel="noreferrer"
+                    className="bg-orange-50 text-orange-700 px-4 py-2.5 rounded-[14px] text-[11px] font-black tracking-wider flex items-center gap-2 hover:bg-orange-500 hover:text-white transition-colors border border-orange-100 hover:border-orange-500 shadow-sm"
+                >
+                    <span className="material-symbols-rounded text-base">inventory_2</span>
+                    <span className="hidden sm:inline">REKAP</span> BELI
+                </a>
+                <a 
+                    id="btn-rekap-produksi"
+                    href={`${import.meta.env.VITE_API_BASE_URL || ''}/api/laporan/export-pdf-produksi-rekap?bulan=${bulan}&tahun=${tahun}`}
+                    target="_blank"
+                    rel="noreferrer"
+                    className="bg-blue-50 text-blue-700 px-4 py-2.5 rounded-[14px] text-[11px] font-black tracking-wider flex items-center gap-2 hover:bg-blue-600 hover:text-white transition-colors border border-blue-100 hover:border-blue-600 shadow-sm"
+                >
+                    <span className="material-symbols-rounded text-base">precision_manufacturing</span>
+                    <span className="hidden sm:inline">REKAP</span> PROD
+                </a>
+                <div className="w-px h-8 bg-slate-200 hidden sm:block mx-1"></div>
+                <a 
+                    href={
+                        activeTab === 'ledger' 
+                        ? `${import.meta.env.VITE_API_BASE_URL || ''}/api/laporan/export-pdf-buku-besar?kode_akun=${selectedAkun || 'ALL'}&bulan=${bulan}&tahun=${tahun}&filter_nama=${filterNama}`
+                        : `${import.meta.env.VITE_API_BASE_URL || ''}/api/laporan/export-pdf?tipe=${activeTab === 'hpp' ? 'HPP' : activeTab === 'lr' ? 'LR' : activeTab === 'ekuitas' ? 'EKUITAS' : activeTab === 'aruskas' ? 'ARUSKAS' : 'NERACA'}&bulan=${bulan}&tahun=${tahun}`
+                    }
+                    target="_blank"
+                    rel="noreferrer"
+                    className="bg-slate-800 text-white px-6 py-2.5 rounded-[14px] text-[11px] font-black tracking-wider flex items-center gap-2 hover:bg-emerald-600 active:scale-95 transition-all shadow-lg shadow-slate-800/20"
+                >
+                    <span className="material-symbols-rounded text-base">print</span>
+                    {activeTab === 'ledger' && !selectedAkun ? 'CETAK SEMUA' : 'CETAK PDF'}
+                </a>
             </div>
         </div>
 
