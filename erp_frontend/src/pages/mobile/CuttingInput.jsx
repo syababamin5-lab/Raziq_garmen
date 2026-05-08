@@ -32,6 +32,20 @@ export default function CuttingInputMobile() {
     password: ''
   });
   
+  const [deferredPrompt, setDeferredPrompt] = useState(null);
+
+  useEffect(() => {
+    window.addEventListener('beforeinstallprompt', (e) => {
+      e.preventDefault();
+      setDeferredPrompt(e);
+    });
+
+    window.addEventListener('appinstalled', () => {
+      setDeferredPrompt(null);
+      console.log('PWA was installed');
+    });
+  }, []);
+
   const [form, setForm] = useState({
     tgl_cutting: getLocalDate(),
     kain_id: '',
@@ -581,6 +595,22 @@ export default function CuttingInputMobile() {
                         </span>
                         {loading ? 'MENYIMPAN...' : 'SIMPAN PERUBAHAN PROFIL'}
                      </button>
+
+                      {deferredPrompt && (
+                        <button 
+                          onClick={async () => {
+                            if (deferredPrompt) {
+                              deferredPrompt.prompt();
+                              const { outcome } = await deferredPrompt.userChoice;
+                              if (outcome === 'accepted') setDeferredPrompt(null);
+                            }
+                          }}
+                          className="w-full bg-blue-600 text-white font-black py-6 rounded-3xl mt-12 shadow-xl shadow-blue-600/20 active:scale-[0.98] transition-all flex items-center justify-center gap-3 animate-bounce"
+                        >
+                          <span className="material-symbols-rounded">download_for_offline</span>
+                          INSTAL APLIKASI RAZIQ DI HP
+                        </button>
+                      )}
 
                      <button onClick={handleLogout} className="w-full bg-red-50 text-red-500 font-black py-6 rounded-3xl mt-4 border border-red-100 active:scale-[0.98] transition-all">
                         KELUAR APLIKASI
