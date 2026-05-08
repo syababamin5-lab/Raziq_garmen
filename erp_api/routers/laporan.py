@@ -416,7 +416,32 @@ def export_laporan_pdf(tipe: str, bulan: int, tahun: int, db: Session = Depends(
             label_total = "MODAL AKHIR"
             val_total = data["ekuitas"]["modal_akhir"]
 
-        # DEFAULT (HPP / LR / EKUITAS) - Tetap 2 Kolom
+        elif tipe == "ARUSKAS":
+            judul = "LAPORAN ARUS KAS (METODE LANGSUNG)"
+            pdf_list.append(("SALDO AWAL KAS & BANK", data["arus_kas"]["saldo_awal"], True))
+            
+            # Operasional
+            pdf_list.append(("AKTIVITAS OPERASIONAL", None, True))
+            pdf_list.append(("Uang Masuk Operasional", data["arus_kas"]["operasional"]["masuk"], False))
+            pdf_list.append(("Uang Keluar Operasional", -data["arus_kas"]["operasional"]["keluar"], False))
+            
+            # Investasi
+            if data["arus_kas"]["investasi"]["masuk"] > 0 or data["arus_kas"]["investasi"]["keluar"] > 0:
+                pdf_list.append(("AKTIVITAS INVESTASI", None, True))
+                pdf_list.append(("Uang Masuk Investasi", data["arus_kas"]["investasi"]["masuk"], False))
+                pdf_list.append(("Uang Keluar Investasi", -data["arus_kas"]["investasi"]["keluar"], False))
+            
+            # Pendanaan
+            pdf_list.append(("AKTIVITAS PENDANAAN", None, True))
+            pdf_list.append(("Uang Masuk Pendanaan", data["arus_kas"]["pendanaan"]["masuk"], False))
+            pdf_list.append(("Uang Keluar Pendanaan", -data["arus_kas"]["pendanaan"]["keluar"], False))
+            
+            pdf_list.append(("TOTAL KENAIKAN / PENURUNAN KAS", data["arus_kas"]["total_kenaikan"], True))
+            
+            label_total = "SALDO AKHIR KAS & BANK"
+            val_total = data["arus_kas"]["saldo_akhir"]
+
+        # DEFAULT (HPP / LR / EKUITAS / ARUSKAS) - Tetap 2 Kolom
         # Ambil Profil & Config TTD
         config = db.query(models.CompanyConfig).first()
         n_ttd = config.ttd_laporan_nama if (config and config.ttd_laporan_nama) else (config.nama_pemilik if config else "Yana Taryana")
