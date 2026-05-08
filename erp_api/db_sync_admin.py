@@ -62,6 +62,26 @@ def sync_db():
             except Exception as e:
                 print(f"ℹ️ Info on users.{col_name}: {e}")
 
+        # 3. Update production_logs
+        for col_name, col_type, default_val in [
+            ('kain_id', 'INTEGER', 'NULL'),
+            ('qty_pakai', 'DOUBLE PRECISION', 'NULL'),
+            ('karyawan_id', 'INTEGER', 'NULL'),
+            ('ongkos_per_pcs', 'DOUBLE PRECISION', '0'),
+            ('total_ongkos', 'DOUBLE PRECISION', '0'),
+            ('keterangan', 'TEXT', 'NULL')
+        ]:
+            try:
+                if "postgresql" in db_url:
+                    query = text(f"ALTER TABLE production_logs ADD COLUMN IF NOT EXISTS {col_name} {col_type} DEFAULT {default_val}")
+                else:
+                    query = text(f"ALTER TABLE production_logs ADD COLUMN {col_name} {col_type}")
+                conn.execute(query)
+                conn.commit()
+                print(f"✅ Column production_logs.{col_name} checked/added.")
+            except Exception as e:
+                print(f"ℹ️ Info on production_logs.{col_name}: {e}")
+
         # 3. DATA REPAIR: Restore SKU OVS-08-JB & Cleanup Bad Journals
         try:
             sku = "OVS-08-JB"
