@@ -368,51 +368,71 @@ def get_rekap_cutting(db: Session = Depends(get_db)):
         for j in jurnals:
             ket = str(j.keterangan)
             
-            # FORMAT BARU (Perpetual)
-            if "Upah Potong" in ket:
+            # --- PARSING LOGIC (Handles both Perpetual and Legacy formats) ---
+            if "Upah Potong" in ket or "[Potong:" in ket:
                 try:
-                    # Contoh: "Upah Potong 24 pcs - Humam Abdul Azis"
-                    pcs_match = re.search(r'Upah Potong (\d+) pcs', ket)
+                    # 1. Dasar: Nama & Upah
+                    if "[Potong:" in ket:
+                        info_potong = ket.split("[Potong: ")[1].split("]")[0] 
+                        nama = info_potong.split(" | ")[0].strip()
+                        upah = float(info_potong.split("Upah: ")[1].strip())
+                    else:
+                        # "Upah Potong 24 pcs - Humam Abdul Azis"
+                        nama = ket.split(" - ")[1].strip() if " - " in ket else "Unknown"
+                        upah = j.debit if j.debit > 0 else j.kredit
+
+                    # 2. Detail Tambahan: Pcs, Kain, Baju, Kg
+                    pcs_match = re.search(r'(\d+) pcs', ket) or re.search(r'Cutting (\d+) pcs', ket)
                     pcs = int(pcs_match.group(1)) if pcs_match else 0
-                    nama = ket.split(" - ")[1].strip() if " - " in ket else "Unknown"
-                    upah = j.debit if j.debit > 0 else j.kredit
                     
+                    # Extract SKU (Model Jadi)
+                    sku_match = re.search(r'\[SKU:(.*?)\]', ket)
+                    sku = sku_match.group(1) if sku_match else "-"
+                    
+                    # Extract Kain (Material)
+                    # Format: "... dari 32kg COMBED 20S PI HITAM [SKU:..."
+                    kain = "-"
+                    if "dari" in ket and "[SKU:" in ket:
+                        try:
+                            kain_part = ket.split("dari")[1].split("[SKU:")[0].strip()
+                            # Hilangkan angka kg di depan (misal "32kg ")
+                            kain = re.sub(r'^\d+\.?\d*kg\s+', '', kain_part)
+                        except: pass
+                    
+                    # Extract Kg
+                    kg_match = re.search(r'dari (\d+\.?\d*)kg', ket)
+                    kg = float(kg_match.group(1)) if kg_match else 0
+
+                    # 3. Aggregasi & Hasil
                     group_map[nama] = group_map.get(nama, 0) + upah
                     
-                    # Cari pasangan bahan (biasanya di ID berdekatan)
-                    data_rekap.append(RekapCuttingItem(
+                    # Hindari duplikasi jika ada 2 jurnal untuk 1 transaksi (Upah vs Bahan)
+                    # Kita pilih yang paling lengkap (yang ada SKU-nya)
+                    entry = RekapCuttingItem(
                         waktu=j.tanggal.strftime("%Y-%m-%d %H:%M"), 
                         tukang_potong=nama, 
                         hasil_potong=f"{pcs} Pcs", 
                         tagihan_upah=upah,
-                        nama_kain="-", # Akan diisi dari detail jurnal pasangan jika perlu
-                        nama_baju="-",
-                        kg_pakai=0
-                    ))
-                except: pass
-
-            # FORMAT LAMA (Legacy)
-            elif "[Potong:" in ket:
-                try:
-                    info_potong = ket.split("[Potong: ")[1].split("]")[0] 
-                    nama = info_potong.split(" | ")[0].strip()
-                    upah = float(info_potong.split("Upah: ")[1].strip())
+                        nama_kain=kain,
+                        nama_baju=sku,
+                        kg_pakai=kg
+                    )
                     
-                    group_map[nama] = group_map.get(nama, 0) + upah
-
-                    pcs_match = re.search(r'Cutting (\d+) pcs', ket)
-                    pcs = int(pcs_match.group(1)) if pcs_match else 0
+                    # Simple de-duplication: jika waktu dan nama sama, ambil yang lebih lengkap
+                    is_duplicate = False
+                    for i, existing in enumerate(data_rekap):
+                        if existing.waktu == entry.waktu and existing.tukang_potong == entry.tukang_potong:
+                            if entry.nama_baju != "-" and existing.nama_baju == "-":
+                                data_rekap[i] = entry
+                            is_duplicate = True
+                            break
                     
-                    data_rekap.append(RekapCuttingItem(
-                        waktu=j.tanggal.strftime("%Y-%m-%d %H:%M"), 
-                        tukang_potong=nama, 
-                        hasil_potong=f"{pcs} Pcs", 
-                        tagihan_upah=upah,
-                        nama_kain="-",
-                        nama_baju="-",
-                        kg_pakai=0
-                    ))
-                except: pass
+                    if not is_duplicate:
+                        data_rekap.append(entry)
+
+                except Exception as e:
+                    print(f"DEBUG Parse Rekap Error: {e}")
+                    continue
 
         group_karyawan = [{"tukang_potong": k, "total_upah": v, "total_upah_rp": format_rp(v)} for k, v in group_map.items()]
         return APIResponse(success=True, message="Rekap fetched successfully", data=RekapCuttingResponse(rincian_harian=data_rekap, group_karyawan=group_karyawan).dict())
