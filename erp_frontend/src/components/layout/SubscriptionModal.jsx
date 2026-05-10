@@ -16,7 +16,7 @@ const SubscriptionModal = ({ isOpen, onClose }) => {
         },
         {
             name: "SMART FACTORY",
-            price: "Rp 980.000",
+            price: "Rp 999.000",
             period: "/ Bulan",
             color: "from-emerald-600 to-emerald-400",
             bg: "bg-emerald-50",
