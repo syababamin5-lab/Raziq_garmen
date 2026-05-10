@@ -41,6 +41,7 @@ export default function CuttingInputMobile() {
     password: ''
   });
   
+  const [showZoom, setShowZoom] = useState(false);
   const [deferredPrompt, setDeferredPrompt] = useState(null);
 
   useEffect(() => {
@@ -252,9 +253,6 @@ export default function CuttingInputMobile() {
                 <span className="material-symbols-rounded text-xl">refresh</span>
               </button>
             )}
-            <button onClick={handleLogout} className="w-10 h-10 bg-red-500/20 rounded-full text-red-200 flex items-center justify-center border border-red-500/20 shadow-inner">
-              <span className="material-symbols-rounded text-xl">logout</span>
-            </button>
           </div>
         </div>
       )}
@@ -522,18 +520,28 @@ export default function CuttingInputMobile() {
         {activeTab === 'profile' && (
           <div className="animate-in fade-in duration-500 bg-white min-h-screen">
             <div className="p-6 pt-10">
-               <div className="bg-[#064e3b] rounded-[2.5rem] p-8 flex items-center gap-6 shadow-2xl relative overflow-hidden">
-                  <div className="w-16 h-16 rounded-2xl overflow-hidden border-2 border-white/20 shadow-lg flex-shrink-0">
-                     <img 
-                       src={profileForm.foto_base64 || profileForm.foto_url || "https://images.unsplash.com/photo-1539571696357-5a69c17a67c6?w=400&h=400&fit=crop"} 
-                       alt="avatar" 
-                       className="w-full h-full object-cover" 
-                     />
+               <div className="bg-[#064e3b] rounded-[2.5rem] p-8 flex items-center justify-between shadow-2xl relative overflow-hidden">
+                  <div className="flex items-center gap-6 relative z-10">
+                    <div className="w-16 h-16 rounded-2xl overflow-hidden border-2 border-white/20 shadow-lg flex-shrink-0">
+                       <img 
+                         src={profileForm.foto_base64 || profileForm.foto_url || "https://images.unsplash.com/photo-1539571696357-5a69c17a67c6?w=400&h=400&fit=crop"} 
+                         alt="avatar" 
+                         className="w-full h-full object-cover" 
+                       />
+                    </div>
+                    <div>
+                       <h2 className="text-2xl font-bold text-white tracking-tight leading-none">Halo, {userData.nama_lengkap?.split(' ')[0] || 'Cutter'}!</h2>
+                       <p className="text-[9px] font-bold text-emerald-200/60 uppercase tracking-[0.2em] mt-2">Kelola Informasi Pribadi Anda</p>
+                    </div>
                   </div>
-                  <div className="relative z-10">
-                     <h2 className="text-3xl font-bold text-white tracking-tight leading-none">Profil Saya</h2>
-                     <p className="text-[10px] font-bold text-emerald-200/60 uppercase tracking-[0.2em] mt-2">Kelola Informasi Pribadi Anda</p>
-                  </div>
+                  
+                  <button 
+                    onClick={handleLogout}
+                    className="relative z-20 w-12 h-12 rounded-2xl bg-red-500/20 backdrop-blur-md border border-red-500/30 flex items-center justify-center text-red-200 active:scale-90 transition-all shadow-lg"
+                  >
+                    <span className="material-symbols-rounded">logout</span>
+                  </button>
+                  
                   <div className="absolute -right-10 -bottom-10 w-40 h-40 bg-white/5 rounded-full"></div>
                </div>
             </div>
@@ -541,7 +549,10 @@ export default function CuttingInputMobile() {
             <div className="px-6 pb-20">
                <div className="bg-slate-50 rounded-[3.5rem] p-8 shadow-sm border border-slate-100">
                   <div className="flex flex-col items-center mb-10">
-                     <div className="w-48 h-48 rounded-[3rem] overflow-hidden border-4 border-white shadow-2xl mb-4 relative group">
+                     <div 
+                        className={`w-48 h-48 rounded-[3rem] overflow-hidden border-4 border-white shadow-2xl mb-4 relative group ${!isEditing ? 'cursor-zoom-in active:scale-95 transition-transform' : ''}`}
+                        onClick={() => !isEditing && setShowZoom(true)}
+                      >
                         <img 
                           src={profileForm.foto_base64 || profileForm.foto_url || "https://images.unsplash.com/photo-1539571696357-5a69c17a67c6?w=400&h=400&fit=crop"} 
                           alt="profile large" 
