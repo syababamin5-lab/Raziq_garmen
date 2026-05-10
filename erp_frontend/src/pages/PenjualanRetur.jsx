@@ -218,26 +218,28 @@ export default function PenjualanRetur() {
                         { id: 'retur', label: 'Retur Barang', icon: 'keyboard_return' },
                         { id: 'history', label: 'Riwayat & Void', icon: 'history' }
                     ].map(t => (
-                        <button
-                            key={t.id}
-                            onClick={() => { setActiveTab(t.id); setMsg({ text: '', type: '' }); }}
-                            className={`flex items-center gap-2 px-6 py-2.5 rounded-xl text-sm font-bold transition-all ${activeTab === t.id ? 'bg-[#10B981] text-white shadow-md' : 'text-slate-500 hover:bg-slate-200'
-                                }`}
-                        >
-                            <span className="material-symbols-rounded text-lg">{t.icon}</span>
-                            {t.label}
-                        </button>
+                        <div key={t.id} className="relative group/tab">
+                            <button
+                                onClick={() => { setActiveTab(t.id); setMsg({ text: '', type: '' }); }}
+                                className={`flex items-center gap-2 px-6 py-2.5 rounded-xl text-sm font-bold transition-all ${activeTab === t.id ? 'bg-[#10B981] text-white shadow-md' : 'text-slate-500 hover:bg-slate-200'
+                                    }`}
+                            >
+                                <span className="material-symbols-rounded text-lg">{t.icon}</span>
+                                {t.label}
+                            </button>
+                            
+                            {/* Small "i" Icon Button at Top Right */}
+                            <button 
+                                onClick={(e) => { e.stopPropagation(); setShowHelp(true); }}
+                                className={`absolute -top-1 -right-1 w-5 h-5 rounded-full flex items-center justify-center shadow-sm border transition-all z-10 
+                                    ${activeTab === t.id ? 'bg-white text-emerald-600 border-emerald-100' : 'bg-slate-200 text-slate-500 border-white hover:bg-emerald-500 hover:text-white'}`}
+                                title={`Panduan ${t.label}`}
+                            >
+                                <span className="material-symbols-rounded text-[14px] font-black">info</span>
+                            </button>
+                        </div>
                     ))}
                 </div>
-
-                <button 
-                    onClick={() => setShowHelp(true)}
-                    className="flex items-center gap-2 px-4 py-2.5 rounded-xl bg-white border border-slate-200 text-slate-500 hover:bg-emerald-50 hover:text-emerald-600 hover:border-emerald-200 transition-all font-bold text-sm shadow-sm group"
-                >
-                    <span className="material-symbols-rounded text-xl group-hover:rotate-12 transition-transform">help</span>
-                    <span>Bantuan</span>
-                    <span className="w-2 h-2 bg-red-500 rounded-full animate-pulse"></span>
-                </button>
             </div>
 
             <div className="bg-white rounded-[2rem] p-8 shadow-[0_10px_40px_rgba(0,0,0,0.03)] border border-slate-100 min-h-[500px]">
