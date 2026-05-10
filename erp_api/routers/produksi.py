@@ -335,48 +335,64 @@ def submit_jahit(payload: JahitRequest, db: Session = Depends(get_db)):
 @router.get("/rekap-cutting", response_model=APIResponse)
 def get_rekap_cutting(db: Session = Depends(get_db)):
     try:
-        # Filter ledger untuk WIP
-        jurnals = db.query(models.JurnalUmum).filter(models.JurnalUmum.kode_akun == "12130").order_by(models.JurnalUmum.tanggal.desc()).limit(100).all()
+        # Baca dari Akun Baru (12130) DAN Akun Lama (51110, 51210) agar data tidak hilang
+        target_akuns = ["12130", "51110", "51210"]
+        jurnals = db.query(models.JurnalUmum).filter(models.JurnalUmum.kode_akun.in_(target_akuns)).order_by(models.JurnalUmum.tanggal.desc()).limit(300).all()
         
         data_rekap = []
         group_map = {}
 
         for j in jurnals:
             ket = str(j.keterangan)
-            if "[Potong:" in ket:
+            
+            # FORMAT BARU (Perpetual)
+            if "Upah Potong" in ket:
+                try:
+                    # Contoh: "Upah Potong 24 pcs - Humam Abdul Azis"
+                    pcs_match = re.search(r'Upah Potong (\d+) pcs', ket)
+                    pcs = int(pcs_match.group(1)) if pcs_match else 0
+                    nama = ket.split(" - ")[1].strip() if " - " in ket else "Unknown"
+                    upah = j.debit if j.debit > 0 else j.kredit
+                    
+                    group_map[nama] = group_map.get(nama, 0) + upah
+                    
+                    # Cari pasangan bahan (biasanya di ID berdekatan)
+                    data_rekap.append(RekapCuttingItem(
+                        waktu=j.tanggal.strftime("%Y-%m-%d %H:%M"), 
+                        tukang_potong=nama, 
+                        hasil_potong=f"{pcs} Pcs", 
+                        tagihan_upah=upah,
+                        nama_kain="-", # Akan diisi dari detail jurnal pasangan jika perlu
+                        nama_baju="-",
+                        kg_pakai=0
+                    ))
+                except: pass
+
+            # FORMAT LAMA (Legacy)
+            elif "[Potong:" in ket:
                 try:
                     info_potong = ket.split("[Potong: ")[1].split("]")[0] 
                     nama = info_potong.split(" | ")[0].strip()
                     upah = float(info_potong.split("Upah: ")[1].strip())
                     
-                    # Update Grouping Map untuk ringkasan di atas
                     group_map[nama] = group_map.get(nama, 0) + upah
 
                     pcs_match = re.search(r'Cutting (\d+) pcs', ket)
                     pcs = int(pcs_match.group(1)) if pcs_match else 0
-
-                    # Ekstrak Nama Kain & Kg Pakai
-                    kg_match = re.search(r'dari (\d+\.?\d*)kg (.*?) \[SKU:', ket)
-                    kg_val = float(kg_match.group(1)) if kg_match else 0.0
-                    kain_val = kg_match.group(2).strip() if kg_match else "-"
-
-                    # Ekstrak SKU Baju
-                    sku_match = re.search(r'\[SKU:(.*?)\]', ket)
-                    sku_val = sku_match.group(1).strip() if sku_match else "-"
                     
                     data_rekap.append(RekapCuttingItem(
                         waktu=j.tanggal.strftime("%Y-%m-%d %H:%M"), 
                         tukang_potong=nama, 
                         hasil_potong=f"{pcs} Pcs", 
                         tagihan_upah=upah,
-                        nama_kain=kain_val,
-                        nama_baju=sku_val,
-                        kg_pakai=kg_val
+                        nama_kain="-",
+                        nama_baju="-",
+                        kg_pakai=0
                     ))
                 except: pass
 
         group_karyawan = [{"tukang_potong": k, "total_upah": v, "total_upah_rp": format_rp(v)} for k, v in group_map.items()]
-        return APIResponse(success=True, message="Rekap fetched from Local DB", data=RekapCuttingResponse(rincian_harian=data_rekap, group_karyawan=group_karyawan).dict())
+        return APIResponse(success=True, message="Rekap fetched successfully", data=RekapCuttingResponse(rincian_harian=data_rekap, group_karyawan=group_karyawan).dict())
     except Exception as e:
         return APIResponse(success=False, message=str(e))
 
