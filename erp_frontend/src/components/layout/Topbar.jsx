@@ -8,7 +8,7 @@ import api, { getFileUrl } from '../../api/api'
 import PrayerTimesCompact from './PrayerTimesCompact'
 import TransactionNotifications from './TransactionNotifications'
 
-export default function Topbar({ title, onToggleSidebar, isSidebarOpen, onOpenChat, unreadCount }) {
+export default function Topbar({ title, onToggleSidebar, isSidebarOpen, onOpenChat, onOpenProfile, unreadCount }) {
   const user = getCurrentUser();
 
   return (
@@ -41,8 +41,11 @@ export default function Topbar({ title, onToggleSidebar, isSidebarOpen, onOpenCh
       </div>
 
       <div className="flex items-center gap-4">
-        <div className="flex items-center gap-3">
-          <div className="w-9 h-9 rounded-xl bg-emerald-50 border border-emerald-100 flex items-center justify-center text-emerald-700 font-black text-sm overflow-hidden shadow-sm">
+        <div 
+          onClick={onOpenProfile}
+          className="flex items-center gap-3 cursor-pointer hover:bg-slate-50 p-1.5 rounded-2xl transition-all active:scale-95 group"
+        >
+          <div className="w-9 h-9 rounded-xl bg-emerald-50 border border-emerald-100 flex items-center justify-center text-emerald-700 font-black text-sm overflow-hidden shadow-sm group-hover:border-emerald-400 transition-colors">
             {user?.foto_base64 || user?.foto_url ? (
               <img src={user.foto_base64 || getFileUrl(user.foto_url)} className="w-full h-full object-cover" alt="" />
             ) : (
@@ -50,7 +53,7 @@ export default function Topbar({ title, onToggleSidebar, isSidebarOpen, onOpenCh
             )}
           </div>
           <div className="hidden md:flex flex-col items-end">
-            <p className="text-slate-900 font-bold text-xs uppercase tracking-tighter">{user?.nama_lengkap || 'Syabab Amin'}</p>
+            <p className="text-slate-900 font-bold text-xs uppercase tracking-tighter group-hover:text-emerald-700 transition-colors">{user?.nama_lengkap || 'Syabab Amin'}</p>
             <p className="text-emerald-600 font-black text-[9px] uppercase tracking-widest">{user?.role?.replace('_', ' ') || 'Administrator'}</p>
           </div>
         </div>
