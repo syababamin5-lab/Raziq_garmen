@@ -861,8 +861,14 @@ export default function PembelianBiaya() {
                 </div>
 
                 <div className="space-y-6">
-                    <div className="bg-blue-100/30 p-5 rounded-2xl border border-blue-100">
+                    <div className="bg-blue-100/30 p-5 rounded-2xl border border-blue-100 flex items-center justify-between">
                         <h3 className="text-blue-800 font-black flex items-center gap-2 uppercase text-xs tracking-widest"><span className="material-symbols-rounded">info</span> AI Standard Costing</h3>
+                        <button 
+                            onClick={() => { setHelpContext('costing'); setShowHelp(true); }}
+                            className="w-6 h-6 rounded-full flex items-center justify-center bg-blue-500/10 backdrop-blur-md text-blue-600 hover:bg-blue-600 hover:text-white transition-all shadow-sm border border-blue-100"
+                        >
+                            <span className="material-symbols-rounded text-[14px]">info</span>
+                        </button>
                     </div>
                     <div className="bg-white p-6 rounded-2xl border border-slate-100 shadow-sm space-y-4">
                         <h4 className="font-bold text-slate-700">Ringkasan Penyusutan</h4>
@@ -1025,17 +1031,18 @@ export default function PembelianBiaya() {
                     helpContext === 'opex' ? 'from-emerald-700 to-emerald-500' : 
                     helpContext === 'retur' ? 'from-amber-700 to-amber-500' :
                     helpContext === 'aset' ? 'from-purple-700 to-purple-500' :
+                    helpContext === 'costing' ? 'from-blue-900 to-blue-700' :
                     'from-slate-700 to-slate-500'
                 }`}>
                     <div className="flex items-center gap-6">
                         <div className="w-14 h-14 bg-white/20 rounded-2xl flex items-center justify-center backdrop-blur-sm border border-white/20 shadow-inner">
                             <span className="material-symbols-rounded text-2xl">
-                                {helpContext === 'bahan' ? 'package' : helpContext === 'opex' ? 'account_balance_wallet' : helpContext === 'retur' ? 'keyboard_return' : helpContext === 'aset' ? 'computer' : 'history'}
+                                {helpContext === 'bahan' ? 'package' : helpContext === 'opex' ? 'account_balance_wallet' : helpContext === 'retur' ? 'keyboard_return' : helpContext === 'aset' ? 'computer' : helpContext === 'costing' ? 'auto_fix_high' : 'history'}
                             </span>
                         </div>
                         <div>
                             <h2 className="text-xl font-black uppercase tracking-tighter">
-                                PANDUAN {helpContext === 'bahan' ? 'BELI BAHAN' : helpContext === 'opex' ? 'BIAYA / OPEX' : helpContext === 'retur' ? 'RETUR PEMBELIAN' : helpContext === 'aset' ? 'ASET TETAP' : 'RIWAYAT PEMBELIAN'}
+                                PANDUAN {helpContext === 'bahan' ? 'BELI BAHAN' : helpContext === 'opex' ? 'BIAYA / OPEX' : helpContext === 'retur' ? 'RETUR PEMBELIAN' : helpContext === 'aset' ? 'ASET TETAP' : helpContext === 'costing' ? 'AI STANDARD COSTING' : 'RIWAYAT PEMBELIAN'}
                             </h2>
                             <p className="text-white/70 text-xs font-medium italic">Standard Operating Procedure - Raziq Garmen Procurement</p>
                         </div>
@@ -1118,6 +1125,31 @@ export default function PembelianBiaya() {
                                     "Aset tidak langsung mengurangi laba perusahaan secara utuh di bulan pembelian. Nilainya akan dialokasikan menjadi biaya secara bertahap setiap bulan melalui fitur <b>Jalankan Penyusutan</b> di tab ini."
                                 </p>
                             </section>
+                        </div>
+                    )}
+
+                    {helpContext === 'costing' && (
+                        <div className="space-y-6">
+                            <section className="bg-blue-50/50 p-6 rounded-2xl border border-blue-100 space-y-2">
+                                <h3 className="font-black text-blue-800 uppercase text-sm tracking-widest">AI Standard Costing (Penyusutan)</h3>
+                                <p className="text-sm leading-relaxed">Fitur kecerdasan buatan untuk menghitung dan mencatat <b>Beban Penyusutan Aset</b> secara otomatis setiap bulan berdasarkan nilai perolehan dan masa manfaat.</p>
+                            </section>
+                            <section className="space-y-4">
+                                <div className="grid grid-cols-1 gap-4 text-xs">
+                                    <div className="p-4 bg-slate-900 text-white rounded-2xl border border-slate-700 shadow-xl">
+                                        <p className="font-black text-blue-400 mb-2 uppercase tracking-widest text-[10px]">Alur Kerja Sistem:</p>
+                                        <p className="leading-relaxed text-slate-300">Sistem membagi total harga aset dengan masa manfaat (bulan). Setiap kali tombol "Jalankan" ditekan, sistem membuat jurnal otomatis yang mengurangi laba perusahaan bulan ini sebagai representasi biaya penggunaan alat produksi.</p>
+                                    </div>
+                                    <div className="p-4 bg-amber-50 border border-amber-100 rounded-2xl text-amber-900">
+                                        <p className="font-black mb-1 uppercase tracking-tighter">Aturan Pembatasan:</p>
+                                        <p className="font-medium">Hanya boleh dijalankan <b>1 kali setiap akhir bulan</b>. Jika dijalankan lebih dari satu kali, sistem akan mendeteksi dan mencegah duplikasi biaya untuk menjaga integritas laporan keuangan.</p>
+                                    </div>
+                                </div>
+                            </section>
+                            <div className="flex items-center gap-3 bg-blue-50 p-4 rounded-xl border border-blue-100">
+                                <span className="material-symbols-rounded text-blue-600">policy</span>
+                                <p className="text-[10px] font-bold text-blue-800 uppercase">REFERENSI: PSAK 16 - ASET TETAP & METODE GARIS LURUS (STRAIGHT LINE)</p>
+                            </div>
                         </div>
                     )}
 
