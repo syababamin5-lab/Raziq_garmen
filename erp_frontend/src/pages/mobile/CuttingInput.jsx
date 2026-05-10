@@ -234,7 +234,7 @@ export default function CuttingInputMobile() {
   const getThemeStyles = () => {
     switch(activeTab) {
       case 'input': return { bg: 'bg-[#022c22]', header: 'bg-emerald-600/90', accent: 'emerald', text: 'text-emerald-400' };
-      case 'history': return { bg: 'bg-[#451a03]', header: 'bg-amber-600/90', accent: 'amber', text: 'text-amber-400' };
+      case 'history': return { bg: 'bg-[#082f49]', header: 'bg-sky-600/90', accent: 'sky', text: 'text-sky-400' };
       case 'dashboard': return { bg: 'bg-[#172554]', header: 'bg-blue-600/90', accent: 'blue', text: 'text-blue-400' };
       case 'profile': return { bg: 'bg-white', header: 'bg-[#064e3b]', accent: 'emerald', text: 'text-emerald-600' };
       default: return { bg: 'bg-[#020617]', header: 'bg-slate-800/90', accent: 'slate', text: 'text-slate-400' };
@@ -384,7 +384,7 @@ export default function CuttingInputMobile() {
               ].map(p => (
                 <button key={p.id} onClick={() => setHistoryPeriode(p.id)}
                   className={`px-6 py-3 rounded-full text-[10px] font-black uppercase tracking-widest whitespace-nowrap border-2 transition-all shadow-lg ${
-                    historyPeriode === p.id ? 'bg-amber-600 border-amber-500 text-white scale-105' : 'bg-slate-900 border-white/5 text-slate-500'
+                    historyPeriode === p.id ? 'bg-sky-600 border-sky-500 text-white scale-105' : 'bg-slate-900 border-white/5 text-slate-500'
                   }`}>
                   {p.label}
                 </button>
@@ -419,7 +419,7 @@ export default function CuttingInputMobile() {
                          </div>
                          <div className="text-center">
                             <p className="text-[8px] font-black text-slate-500 uppercase mb-1">Total (Lusin)</p>
-                            <span className="text-xl font-black text-amber-400">{item.lusin}</span>
+                            <span className="text-xl font-black text-sky-400">{item.lusin}</span>
                          </div>
                       </div>
                       <div className="flex justify-center">
@@ -514,7 +514,7 @@ export default function CuttingInputMobile() {
                        <span className={`w-8 h-8 rounded-full flex items-center justify-center font-black text-[10px] ${i === 0 ? 'bg-amber-500 text-amber-950 shadow-lg' : 'bg-slate-800 text-slate-500'}`}>{i + 1}</span>
                        <span className="text-xs font-black text-slate-200 uppercase tracking-wide">{k.nama}</span>
                     </div>
-                    <span className="text-sm font-black text-amber-400 tabular-nums">
+                    <span className="text-sm font-black text-sky-400 tabular-nums">
                       Rp {(k.total || 0).toLocaleString('id-ID')}
                     </span>
                   </div>
@@ -673,7 +673,7 @@ export default function CuttingInputMobile() {
           </button>
           
           <button onClick={() => setActiveTab('history')}
-            className={`flex-1 flex flex-col items-center gap-1 py-3 rounded-3xl transition-all duration-500 ${activeTab === 'history' ? 'bg-amber-500 text-amber-950 shadow-xl scale-105' : 'text-slate-500'}`}>
+            className={`flex-1 flex flex-col items-center gap-1 py-3 rounded-3xl transition-all duration-500 ${activeTab === 'history' ? 'bg-sky-500 text-sky-950 shadow-xl scale-105' : 'text-slate-500'}`}>
             <span className="material-symbols-rounded text-xl">history</span>
             <span className="text-[8px] font-black uppercase tracking-[0.1em]">Riwayat</span>
           </button>
@@ -755,7 +755,7 @@ export default function CuttingInputMobile() {
                  </div>
                  <div className="flex justify-between items-center pt-2 px-2">
                     <span className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">Efisiensi (Pcs/Kg)</span>
-                    <span className="text-xs font-black text-amber-400">{(selectedHistory.qty / (selectedHistory.kg || 1)).toFixed(2)} Pcs/Kg</span>
+                    <span className="text-xs font-black text-sky-400">{(selectedHistory.qty / (selectedHistory.kg || 1)).toFixed(2)} Pcs/Kg</span>
                  </div>
               </div>
 
