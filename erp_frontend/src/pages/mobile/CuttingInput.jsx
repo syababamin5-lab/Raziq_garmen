@@ -510,19 +510,16 @@ export default function CuttingInputMobile() {
                 {(!stats?.top_penghasilan || stats.top_penghasilan.length === 0) && (
                   <p className="text-center text-[10px] text-slate-600 font-bold uppercase tracking-widest py-4">Belum ada data bulan ini</p>
                 )}
-              </div>
-            </div>
-            <FooterInfo />
-          </div>
-        )}
-
-        {/* ── TAB 4: PROFIL SAYA ────────────────── */}
-        {activeTab === 'profile' && (
+              </        {activeTab === 'profile' && (
           <div className="animate-in fade-in duration-500 bg-white min-h-screen">
             <div className="p-6 pt-10">
-               <div className="bg-[#064e3b] rounded-[2.5rem] p-8 flex items-center justify-center shadow-2xl relative overflow-hidden">
-                  <div className="flex items-center gap-6 relative z-10">
-                    <div className="w-16 h-16 rounded-2xl overflow-hidden border-2 border-white/20 shadow-lg flex-shrink-0">
+               {/* ── PROFILE HEADER ── */}
+               <div className="bg-[#064e3b] rounded-[2.5rem] p-8 flex items-center justify-center shadow-2xl relative overflow-hidden mb-10">
+                  <div className="flex flex-col items-center gap-6 relative z-10">
+                    <div 
+                      className={`w-24 h-24 rounded-3xl overflow-hidden border-4 border-white/20 shadow-lg flex-shrink-0 cursor-zoom-in active:scale-95 transition-transform`}
+                      onClick={() => setShowZoom(true)}
+                    >
                        <img 
                          src={profileForm.foto_base64 || profileForm.foto_url || "https://images.unsplash.com/photo-1539571696357-5a69c17a67c6?w=400&h=400&fit=crop"} 
                          alt="avatar" 
@@ -534,135 +531,117 @@ export default function CuttingInputMobile() {
                        <p className="text-[9px] font-bold text-emerald-200/60 uppercase tracking-[0.2em] mt-2">Kelola Informasi Pribadi Anda</p>
                     </div>
                   </div>
-                  
                   <div className="absolute -right-10 -bottom-10 w-40 h-40 bg-white/5 rounded-full"></div>
                </div>
-            </div>
 
-            <div className="px-6 pb-20">
+               {/* ── PROFILE CARD ── */}
                <div className="bg-slate-50 rounded-[3.5rem] p-8 shadow-sm border border-slate-100">
-                  <div className="flex flex-col items-center mb-10">
-                     <div 
-                        className={`w-48 h-48 rounded-[3rem] overflow-hidden border-4 border-white shadow-2xl mb-4 relative group ${!isEditing ? 'cursor-zoom-in active:scale-95 transition-transform' : ''}`}
-                        onClick={() => !isEditing && setShowZoom(true)}
-                      >
-                        <img 
-                          src={profileForm.foto_base64 || profileForm.foto_url || "https://images.unsplash.com/photo-1539571696357-5a69c17a67c6?w=400&h=400&fit=crop"} 
-                          alt="profile large" 
-                          className="w-full h-full object-cover" 
-                        />
-                        {isEditing && (
-                          <label className="absolute inset-0 bg-black/20 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity cursor-pointer">
-                             <span className="material-symbols-rounded text-white text-4xl">photo_camera</span>
-                             <input 
-                               type="file" 
-                               accept="image/*" 
-                               className="hidden" 
-                               onChange={async (e) => {
-                                 const file = e.target.files[0];
-                                 if (!file) return;
-                                 
-                                 const formData = new FormData();
-                                 formData.append('file', file);
-                                 
-                                 try {
-                                   setLoading(true);
-                                   const res = await api.post('/users/upload-photo', formData, {
-                                     headers: { 'Content-Type': 'multipart/form-data' }
-                                   });
-                                   if (res.data.status === 'success') {
-                                     setProfileForm(prev => ({ ...prev, foto_base64: res.data.url }));
-                                     setMsg({ text: '📸 Foto terpilih! Klik simpan untuk permanen.', type: 'success' });
-                                   }
-                                 } catch (err) {
-                                   setMsg({ text: 'Gagal upload foto', type: 'error' });
-                                 } finally {
-                                   setLoading(false);
-                                 }
-                               }}
-                             />
-                          </label>
-                        )}
-                     </div>
-                     {!isEditing ? (
-                        <button onClick={() => setIsEditing(true)} className="bg-emerald-50 text-emerald-600 px-6 py-2 rounded-full text-xs font-black uppercase tracking-widest flex items-center gap-2 border border-emerald-100">
-                          <span className="material-symbols-rounded text-sm">edit</span> EDIT PROFIL SAYA
-                        </button>
-                     ) : (
-                        <p className="text-[9px] font-black text-slate-400 uppercase tracking-widest text-center">Mode Edit Aktif - Klik gambar untuk ganti foto</p>
-                     )}
-                   </div>
-
-                   {isEditing && (
+                  {!isEditing ? (
+                    <div className="flex flex-col items-center py-6 space-y-8">
+                       <button 
+                         onClick={() => setIsEditing(true)} 
+                         className="bg-emerald-600 text-white px-10 py-5 rounded-3xl font-black text-xs uppercase tracking-widest flex items-center gap-3 shadow-xl shadow-emerald-600/20 active:scale-95 transition-all"
+                       >
+                         <span className="material-symbols-rounded text-lg">edit</span> EDIT PROFIL SAYA
+                       </button>
+                       <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest text-center">Data pribadi Anda disembunyikan untuk kenyamanan.<br/>Klik tombol di atas untuk melihat atau mengubah.</p>
+                    </div>
+                  ) : (
                     <div className="space-y-6 animate-in slide-in-from-top-4 duration-500">
-                       <div className="space-y-2">
-                          <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1">Username Login</label>
-                          <input type="text" readOnly={!isEditing} className={`w-full border border-transparent rounded-2xl p-5 text-base font-bold outline-none transition-all ${isEditing ? 'bg-slate-100/50 focus:border-emerald-500 focus:bg-white text-slate-800' : 'bg-slate-50 text-slate-400'}`}
-                            value={profileForm.username} onChange={e => setProfileForm({...profileForm, username: e.target.value})} />
+                       <div className="flex flex-col items-center mb-8">
+                          <div className="w-32 h-32 rounded-[2rem] overflow-hidden border-4 border-white shadow-xl relative group">
+                             <img 
+                               src={profileForm.foto_base64 || profileForm.foto_url || "https://images.unsplash.com/photo-1539571696357-5a69c17a67c6?w=400&h=400&fit=crop"} 
+                               alt="profile edit" 
+                               className="w-full h-full object-cover" 
+                             />
+                             <label className="absolute inset-0 bg-black/40 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity cursor-pointer">
+                                <span className="material-symbols-rounded text-white text-3xl">photo_camera</span>
+                                <input type="file" accept="image/*" className="hidden" onChange={async (e) => {
+                                   const file = e.target.files[0];
+                                   if (!file) return;
+                                   const formData = new FormData();
+                                   formData.append('file', file);
+                                   try {
+                                     setLoading(true);
+                                     const res = await api.post('/users/upload-photo', formData, { headers: { 'Content-Type': 'multipart/form-data' } });
+                                     if (res.data.status === 'success') {
+                                       setProfileForm(prev => ({ ...prev, foto_base64: res.data.url }));
+                                       setMsg({ text: '📸 Foto terpilih!', type: 'success' });
+                                     }
+                                   } catch (err) { setMsg({ text: 'Gagal upload', type: 'error' }); } finally { setLoading(false); }
+                                }} />
+                             </label>
+                          </div>
+                          <p className="text-[9px] font-black text-slate-400 uppercase tracking-widest mt-3">Klik gambar untuk ganti foto</p>
                        </div>
 
-                       <div className="space-y-2">
-                          <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1">Nama Lengkap</label>
-                          <input type="text" readOnly={!isEditing} className={`w-full border border-transparent rounded-2xl p-5 text-base font-bold outline-none transition-all ${isEditing ? 'bg-slate-100/50 focus:border-emerald-500 focus:bg-white text-slate-800' : 'bg-slate-50 text-slate-400'}`}
-                            value={profileForm.name} onChange={e => setProfileForm({...profileForm, name: e.target.value})} />
+                       <div className="space-y-5">
+                          <div className="space-y-1">
+                             <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1">Username Login</label>
+                             <input type="text" className="w-full bg-white border border-slate-200 rounded-2xl p-5 text-base font-bold text-slate-800 outline-none focus:border-emerald-500 transition-all"
+                               value={profileForm.username} onChange={e => setProfileForm({...profileForm, username: e.target.value})} />
+                          </div>
+                          <div className="space-y-1">
+                             <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1">Nama Lengkap</label>
+                             <input type="text" className="w-full bg-white border border-slate-200 rounded-2xl p-5 text-base font-bold text-slate-800 outline-none focus:border-emerald-500 transition-all"
+                               value={profileForm.name} onChange={e => setProfileForm({...profileForm, name: e.target.value})} />
+                          </div>
+                          <div className="space-y-1">
+                             <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1">Email</label>
+                             <input type="email" className="w-full bg-white border border-slate-200 rounded-2xl p-5 text-base font-bold text-slate-800 outline-none focus:border-emerald-500 transition-all"
+                               value={profileForm.email} onChange={e => setProfileForm({...profileForm, email: e.target.value})} />
+                          </div>
+                          <div className="space-y-1">
+                             <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1">Nomor HP</label>
+                             <input type="tel" className="w-full bg-white border border-slate-200 rounded-2xl p-5 text-base font-bold text-slate-800 outline-none focus:border-emerald-500 transition-all"
+                               value={profileForm.hp} onChange={e => setProfileForm({...profileForm, hp: e.target.value})} />
+                          </div>
+                          <div className="space-y-1">
+                             <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1">Password Baru (Kosongkan jika tetap)</label>
+                             <input type="password" placeholder="••••••••" className="w-full bg-white border border-slate-200 rounded-2xl p-5 text-base font-bold text-slate-800 outline-none focus:border-emerald-500 transition-all"
+                               value={profileForm.password} onChange={e => setProfileForm({...profileForm, password: e.target.value})} />
+                          </div>
                        </div>
 
-                       <div className="space-y-2">
-                          <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1">Email</label>
-                          <input type="email" readOnly={!isEditing} className={`w-full border border-transparent rounded-2xl p-5 text-base font-bold outline-none transition-all ${isEditing ? 'bg-slate-100/50 focus:border-emerald-500 focus:bg-white text-slate-800' : 'bg-slate-50 text-slate-400'}`}
-                            value={profileForm.email} onChange={e => setProfileForm({...profileForm, email: e.target.value})} />
-                       </div>
-
-                       <div className="space-y-2">
-                          <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1">Nomor HP</label>
-                          <input type="tel" readOnly={!isEditing} className={`w-full border border-transparent rounded-2xl p-5 text-base font-bold outline-none transition-all ${isEditing ? 'bg-slate-100/50 focus:border-emerald-500 focus:bg-white text-slate-800' : 'bg-slate-50 text-slate-400'}`}
-                            placeholder="" value={profileForm.hp} onChange={e => setProfileForm({...profileForm, hp: e.target.value})} />
-                       </div>
-
-                       <div className="space-y-2">
-                          <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1">Password Baru (Kosongkan jika tidak ganti)</label>
-                          <input type="password" readOnly={!isEditing} placeholder="••••••••" className={`w-full border border-transparent rounded-2xl p-5 text-base font-bold outline-none transition-all ${isEditing ? 'bg-slate-100/50 focus:border-emerald-500 focus:bg-white text-slate-800' : 'bg-slate-50 text-slate-400'}`}
-                            value={profileForm.password} onChange={e => setProfileForm({...profileForm, password: e.target.value})} />
-                       </div>
-
-                       <div className="flex gap-3 mt-8">
-                          <button onClick={() => setIsEditing(false)} className="flex-1 font-black py-6 rounded-3xl bg-slate-100 text-slate-500 shadow-sm active:scale-95 transition-all">BATAL</button>
+                       <div className="flex gap-3 pt-4">
+                          <button onClick={() => setIsEditing(false)} className="flex-1 font-black py-6 rounded-3xl bg-slate-200 text-slate-600 active:scale-95 transition-all">BATAL</button>
                           <button 
                               onClick={handleSaveProfile}
                               disabled={loading}
-                              className={`flex-[2] font-black py-6 rounded-3xl shadow-xl active:scale-[0.98] transition-all flex items-center justify-center gap-3 ${
-                                loading ? 'bg-slate-300 text-slate-500' : 'bg-emerald-600 text-white shadow-emerald-600/20'
-                              }`}
+                              className={`flex-[2] font-black py-6 rounded-3xl text-white shadow-xl active:scale-95 transition-all flex items-center justify-center gap-3 ${loading ? 'bg-slate-400' : 'bg-emerald-600 shadow-emerald-600/20'}`}
                           >
-                              <span className={`material-symbols-rounded ${loading ? 'animate-spin' : ''}`}>
-                                {loading ? 'sync' : 'save'}
-                              </span>
-                              {loading ? 'MENYIMPAN...' : 'SIMPAN PERUBAHAN'}
+                              <span className={`material-symbols-rounded ${loading ? 'animate-spin' : ''}`}>{loading ? 'sync' : 'save'}</span>
+                              {loading ? 'MENYIMPAN...' : 'SIMPAN'}
                           </button>
                        </div>
                     </div>
-                     )}
+                  )}
 
+                  {/* ── COMMON ACTIONS ── */}
+                  {!isEditing && (
+                    <div className="mt-12 space-y-4">
                       {deferredPrompt && (
                         <button 
-                          onClick={async () => {
-                            if (deferredPrompt) {
-                              deferredPrompt.prompt();
-                              const { outcome } = await deferredPrompt.userChoice;
-                              if (outcome === 'accepted') setDeferredPrompt(null);
-                            }
-                          }}
-                          className="w-full bg-blue-600 text-white font-black py-6 rounded-3xl mt-12 shadow-xl shadow-blue-600/20 active:scale-[0.98] transition-all flex items-center justify-center gap-3 animate-bounce"
+                          onClick={() => { deferredPrompt.prompt(); setDeferredPrompt(null); }}
+                          className="w-full bg-blue-600 text-white font-black py-6 rounded-3xl shadow-xl shadow-blue-600/20 active:scale-95 transition-all flex items-center justify-center gap-3 animate-bounce"
                         >
-                          <span className="material-symbols-rounded">download_for_offline</span>
-                          INSTAL APLIKASI RAZIQ DI HP
+                          <span className="material-symbols-rounded">download</span> INSTAL APLIKASI DI HP
                         </button>
                       )}
-
-                     <button onClick={handleLogout} className="w-full bg-red-50 text-red-500 font-black py-6 rounded-3xl mt-4 border border-red-100 active:scale-[0.98] transition-all">
-                        KELUAR APLIKASI
-                     </button>
-                  </div>
+                      <button onClick={handleLogout} className="w-full bg-red-50 text-red-500 font-black py-6 rounded-3xl border border-red-100 active:scale-95 transition-all flex items-center justify-center gap-2">
+                         <span className="material-symbols-rounded">logout</span> KELUAR APLIKASI
+                      </button>
+                    </div>
+                  )}
+               </div>
+               
+               <div className="text-[#020617] mt-10">
+                  <FooterInfo />
+               </div>
+            </div>
+          </div>
+        )}                  </div>
                </div>
                <div className="text-[#020617]">
                   <FooterInfo />
