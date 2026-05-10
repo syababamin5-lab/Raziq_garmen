@@ -31,6 +31,7 @@ export default function PenjualanRetur() {
 
     // REAL-TIME BALANCES
     const [balances, setBalances] = useState({ tunai: 0, bank: 0 });
+    const [helpContext, setHelpContext] = useState('input'); // 'input' | 'retur' | 'history'
     const [showHelp, setShowHelp] = useState(false);
 
     const fetchBalances = async () => {
@@ -230,7 +231,7 @@ export default function PenjualanRetur() {
                             
                             {/* Small "i" Icon Button at Top Right */}
                             <button 
-                                onClick={(e) => { e.stopPropagation(); setShowHelp(true); }}
+                                onClick={(e) => { e.stopPropagation(); setHelpContext(t.id); setShowHelp(true); }}
                                 className={`absolute -top-1 -right-1 w-5 h-5 rounded-full flex items-center justify-center shadow-sm border transition-all z-10 
                                     ${activeTab === t.id ? 'bg-white text-emerald-600 border-emerald-100' : 'bg-slate-200 text-slate-500 border-white hover:bg-emerald-500 hover:text-white'}`}
                                 title={`Panduan ${t.label}`}
@@ -659,19 +660,27 @@ export default function PenjualanRetur() {
                 invoice={invoiceModal.invoice}
             />
 
-            {/* ── HELP / TUTORIAL MODAL ────────────────── */}
+            {/* ── HELP / TUTORIAL MODAL (DYNAMIC CONTENT) ────────────────── */}
             {showHelp && (
                 <div className="fixed inset-0 z-[60] flex items-center justify-center p-4 bg-slate-900/60 backdrop-blur-md animate-in fade-in duration-300">
                     <div className="bg-white rounded-[2.5rem] shadow-2xl w-full max-w-2xl max-h-[85vh] overflow-hidden flex flex-col animate-in zoom-in-95 slide-in-from-bottom-8 duration-300">
                         {/* Header Help */}
-                        <div className="bg-gradient-to-r from-[#064E3B] to-[#10B981] p-8 text-white flex items-center justify-between">
+                        <div className={`p-8 text-white flex items-center justify-between bg-gradient-to-r ${
+                            helpContext === 'input' ? 'from-[#064E3B] to-[#10B981]' : 
+                            helpContext === 'retur' ? 'from-amber-600 to-amber-400' : 
+                            'from-slate-700 to-slate-500'
+                        }`}>
                             <div className="flex items-center gap-4">
                                 <div className="w-12 h-12 bg-white/20 rounded-2xl flex items-center justify-center backdrop-blur-sm">
-                                    <span className="material-symbols-rounded text-2xl">menu_book</span>
+                                    <span className="material-symbols-rounded text-2xl">
+                                        {helpContext === 'input' ? 'shopping_cart' : helpContext === 'retur' ? 'assignment_return' : 'history'}
+                                    </span>
                                 </div>
                                 <div>
-                                    <h2 className="text-xl font-black uppercase tracking-tighter">Panduan Pengisian Form Penjualan</h2>
-                                    <p className="text-emerald-100 text-xs font-medium">Pelajari cara kerja sistem POS & Akuntansi Raziq Garmen</p>
+                                    <h2 className="text-xl font-black uppercase tracking-tighter">
+                                        Panduan {helpContext === 'input' ? 'Penjualan' : helpContext === 'retur' ? 'Retur Barang' : 'Riwayat & Void'}
+                                    </h2>
+                                    <p className="text-white/80 text-xs font-medium">Pelajari alur kerja sistem Raziq Garmen secara mendalam</p>
                                 </div>
                             </div>
                             <button onClick={() => setShowHelp(false)} className="w-10 h-10 rounded-xl bg-black/10 hover:bg-black/20 flex items-center justify-center transition-all">
@@ -681,102 +690,119 @@ export default function PenjualanRetur() {
 
                         {/* Content Help (Scrollable) */}
                         <div className="p-8 overflow-y-auto space-y-8 font-outfit">
-                            {/* Section 1 */}
-                            <section className="space-y-3">
-                                <div className="flex items-center gap-2 text-emerald-700">
-                                    <span className="material-symbols-rounded">edit_document</span>
-                                    <h3 className="font-black text-lg uppercase tracking-tight">1. Apa yang harus diisi?</h3>
-                                </div>
-                                <div className="grid grid-cols-1 md:grid-cols-2 gap-3 text-sm">
-                                    <div className="bg-slate-50 p-4 rounded-2xl border border-slate-100">
-                                        <p className="font-black text-slate-800 mb-1">Produk & Qty</p>
-                                        <p className="text-slate-500 leading-relaxed">Pilih model baju. Input jumlah dalam <b>Lusin</b> (Contoh: 1.5 LS = 18 Pcs). Pastikan stok mencukupi.</p>
-                                    </div>
-                                    <div className="bg-slate-50 p-4 rounded-2xl border border-slate-100">
-                                        <p className="font-black text-slate-800 mb-1">Customer & Tanggal</p>
-                                        <p className="text-slate-500 leading-relaxed">Pilih pembeli dari daftar mitra. Sesuaikan tanggal nota jika terjadi transaksi mundur.</p>
-                                    </div>
-                                    <div className="bg-slate-50 p-4 rounded-2xl border border-slate-100">
-                                        <p className="font-black text-slate-800 mb-1">Metode Pembayaran</p>
-                                        <p className="text-slate-500 leading-relaxed"><b>Tunai/Transfer</b> untuk lunas langsung, <b>Tempo</b> untuk penjualan kredit (piutang).</p>
-                                    </div>
-                                    <div className="bg-slate-50 p-4 rounded-2xl border border-slate-100">
-                                        <p className="font-black text-slate-800 mb-1">DP & Diskon</p>
-                                        <p className="text-slate-500 leading-relaxed">Gunakan DP untuk tanda jadi pada metode Tempo. Diskon akan memotong total tagihan bersih.</p>
-                                    </div>
-                                </div>
-                            </section>
-
-                            {/* Section 2 */}
-                            <section className="space-y-3">
-                                <div className="flex items-center gap-2 text-blue-700">
-                                    <span className="material-symbols-rounded">ads_click</span>
-                                    <h3 className="font-black text-lg uppercase tracking-tight">2. Langkah-Langkah Mengisi</h3>
-                                </div>
-                                <div className="space-y-2">
-                                    {[
-                                        "Pilih Barang & Harga -> Klik <b>Masukkan ke Keranjang</b>.",
-                                        "Ulangi langkah di atas jika ada lebih dari satu item barang.",
-                                        "Lengkapi <b>Informasi Nota</b> (Customer, Tanggal, Metode).",
-                                        "Periksa kembali <b>Ringkasan Nota</b> di panel sebelah kanan.",
-                                        "Klik tombol <b>TERBITKAN INVOICE</b> untuk menyimpan transaksi."
-                                    ].map((step, i) => (
-                                        <div key={i} className="flex gap-4 items-start bg-blue-50/50 p-3 rounded-xl border border-blue-100/50">
-                                            <span className="w-6 h-6 rounded-full bg-blue-600 text-white flex-shrink-0 flex items-center justify-center text-[10px] font-black">{i+1}</span>
-                                            <p className="text-sm text-slate-700" dangerouslySetInnerHTML={{ __html: step }}></p>
+                            {helpContext === 'input' && (
+                                <>
+                                    <section className="space-y-3">
+                                        <div className="flex items-center gap-2 text-emerald-700">
+                                            <span className="material-symbols-rounded">edit_document</span>
+                                            <h3 className="font-black text-lg uppercase tracking-tight">1. Apa yang harus diisi?</h3>
                                         </div>
-                                    ))}
-                                </div>
-                            </section>
-
-                            {/* Section 3 */}
-                            <section className="space-y-3">
-                                <div className="flex items-center gap-2 text-red-700">
-                                    <span className="material-symbols-rounded">warning</span>
-                                    <h3 className="font-black text-lg uppercase tracking-tight">3. Hal yang JANGAN Dilakukan</h3>
-                                </div>
-                                <ul className="space-y-2 list-none">
-                                    <li className="flex gap-2 text-sm text-slate-600 bg-red-50/50 p-3 rounded-xl border border-red-100/50">
-                                        <span className="text-red-500 font-black">✖</span>
-                                        <span><b>Jangan</b> input Qty melebihi stok tersedia. Sistem akan memblokir transaksi otomatis.</span>
-                                    </li>
-                                    <li className="flex gap-2 text-sm text-slate-600 bg-red-50/50 p-3 rounded-xl border border-red-100/50">
-                                        <span className="text-red-500 font-black">✖</span>
-                                        <span><b>Jangan</b> salah pilih metode (Tunai vs Tempo). Ini akan mengacaukan laporan Piutang & Kas.</span>
-                                    </li>
-                                    <li className="flex gap-2 text-sm text-slate-600 bg-red-50/50 p-3 rounded-xl border border-red-100/50">
-                                        <span className="text-red-500 font-black">✖</span>
-                                        <span><b>Jangan</b> menghapus invoice yang sudah lunas tanpa koordinasi. Sebaiknya gunakan fitur Void.</span>
-                                    </li>
-                                </ul>
-                            </section>
-
-                            {/* Section 4 */}
-                            <section className="bg-slate-900 rounded-[2rem] p-6 text-white space-y-4">
-                                <div className="flex items-center gap-2 text-emerald-400">
-                                    <span className="material-symbols-rounded">analytics</span>
-                                    <h3 className="font-black text-lg uppercase tracking-tight">4. Alur & Pengaruh Transaksi</h3>
-                                    <span className="ml-auto px-3 py-1 rounded-full bg-emerald-500/20 text-[10px] font-black border border-emerald-500/30">AUTOMATED JURNAL</span>
-                                </div>
-                                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                                    <div className="space-y-2">
-                                        <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest">Dampak Stok</p>
-                                        <div className="flex items-center gap-3">
-                                            <div className="w-10 h-10 rounded-xl bg-white/10 flex items-center justify-center"><span className="material-symbols-rounded text-emerald-400">inventory_2</span></div>
-                                            <p className="text-xs text-slate-300 leading-relaxed">Stok barang jadi (baju) berkurang sesuai jumlah yang terjual di gudang.</p>
+                                        <div className="grid grid-cols-1 md:grid-cols-2 gap-3 text-sm">
+                                            <div className="bg-slate-50 p-4 rounded-2xl border border-slate-100">
+                                                <p className="font-black text-slate-800 mb-1">Produk & Qty</p>
+                                                <p className="text-slate-500 leading-relaxed">Pilih model baju. Input jumlah dalam <b>Lusin</b>. Pastikan stok mencukupi.</p>
+                                            </div>
+                                            <div className="bg-slate-50 p-4 rounded-2xl border border-slate-100">
+                                                <p className="font-black text-slate-800 mb-1">Metode & Customer</p>
+                                                <p className="text-slate-500 leading-relaxed">Pilih pembeli. Gunakan <b>Tempo</b> untuk piutang atau <b>Tunai/Transfer</b> untuk lunas.</p>
+                                            </div>
                                         </div>
-                                    </div>
-                                    <div className="space-y-2">
-                                        <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest">Dampak Keuangan</p>
-                                        <div className="flex items-center gap-3">
-                                            <div className="w-10 h-10 rounded-xl bg-white/10 flex items-center justify-center"><span className="material-symbols-rounded text-blue-400">account_balance_wallet</span></div>
-                                            <p className="text-xs text-slate-300 leading-relaxed">Mencatat Pendapatan, HPP, serta menambah Saldo Kas/Bank atau Saldo Piutang Customer.</p>
+                                    </section>
+                                    <section className="space-y-3">
+                                        <div className="flex items-center gap-2 text-blue-700">
+                                            <span className="material-symbols-rounded">ads_click</span>
+                                            <h3 className="font-black text-lg uppercase tracking-tight">2. Langkah Pengisian</h3>
                                         </div>
-                                    </div>
-                                </div>
-                                <div className="pt-2">
-                                    <p className="text-[10px] text-center text-slate-500 italic font-medium">Transaksi ini akan muncul di Dashboard (Uang Masuk), Laba Rugi, dan Kartu Piutang.</p>
-                                </div>
+                                        <ul className="space-y-2 text-sm text-slate-600">
+                                            <li className="flex gap-3 items-start"><span className="w-5 h-5 rounded-full bg-blue-100 text-blue-600 flex-shrink-0 flex items-center justify-center text-[10px] font-black">1</span> Pilih barang, isi Qty & Harga, klik <b>Masukkan ke Keranjang</b>.</li>
+                                            <li className="flex gap-3 items-start"><span className="w-5 h-5 rounded-full bg-blue-100 text-blue-600 flex-shrink-0 flex items-center justify-center text-[10px] font-black">2</span> Lengkapi data Nota di bawahnya.</li>
+                                            <li className="flex gap-3 items-start"><span className="w-5 h-5 rounded-full bg-blue-100 text-blue-600 flex-shrink-0 flex items-center justify-center text-[10px] font-black">3</span> Klik <b>TERBITKAN INVOICE</b> untuk memproses transaksi.</li>
+                                        </ul>
+                                    </section>
+                                </>
+                            )}
+
+                            {helpContext === 'retur' && (
+                                <>
+                                    <section className="space-y-3">
+                                        <div className="flex items-center gap-2 text-amber-700">
+                                            <span className="material-symbols-rounded">edit_document</span>
+                                            <h3 className="font-black text-lg uppercase tracking-tight">1. Panduan Input Retur</h3>
+                                        </div>
+                                        <div className="grid grid-cols-1 md:grid-cols-2 gap-3 text-sm">
+                                            <div className="bg-amber-50/50 p-4 rounded-2xl border border-amber-100">
+                                                <p className="font-black text-amber-800 mb-1">Nomor Invoice</p>
+                                                <p className="text-slate-600 leading-relaxed">Cari nomor nota asal barang yang ingin dikembalikan oleh customer.</p>
+                                            </div>
+                                            <div className="bg-amber-50/50 p-4 rounded-2xl border border-amber-100">
+                                                <p className="font-black text-amber-800 mb-1">Validasi Sisa</p>
+                                                <p className="text-slate-600 leading-relaxed">Sistem hanya mengizinkan retur maksimal sejumlah barang yang dibeli sebelumnya.</p>
+                                            </div>
+                                        </div>
+                                    </section>
+                                    <section className="space-y-3">
+                                        <div className="flex items-center gap-2 text-emerald-700">
+                                            <span className="material-symbols-rounded">sync</span>
+                                            <h3 className="font-black text-lg uppercase tracking-tight">2. Apa yang terjadi setelah Retur?</h3>
+                                        </div>
+                                        <div className="space-y-2">
+                                            <div className="flex items-start gap-4 bg-emerald-50/50 p-4 rounded-2xl border border-emerald-100">
+                                                <span className="material-symbols-rounded text-emerald-600">inventory_2</span>
+                                                <p className="text-sm text-slate-700"><b>Stok Kembali</b>: Barang akan otomatis masuk kembali ke stok gudang baju jadi.</p>
+                                            </div>
+                                            <div className="flex items-start gap-4 bg-emerald-50/50 p-4 rounded-2xl border border-emerald-100">
+                                                <span className="material-symbols-rounded text-emerald-600">account_balance_wallet</span>
+                                                <p className="text-sm text-slate-700"><b>Koreksi Piutang</b>: Saldo piutang customer akan berkurang otomatis (jika nota asal Tempo).</p>
+                                            </div>
+                                            <div className="flex items-start gap-4 bg-emerald-50/50 p-4 rounded-2xl border border-emerald-100">
+                                                <span className="material-symbols-rounded text-emerald-600">history_edu</span>
+                                                <p className="text-sm text-slate-700"><b>Jurnal Balik</b>: Sistem mencatat jurnal pembalik untuk HPP & Persediaan.</p>
+                                            </div>
+                                        </div>
+                                    </section>
+                                </>
+                            )}
+
+                            {helpContext === 'history' && (
+                                <>
+                                    <section className="space-y-3">
+                                        <div className="flex items-center gap-2 text-slate-700">
+                                            <span className="material-symbols-rounded">manage_search</span>
+                                            <h3 className="font-black text-lg uppercase tracking-tight">1. Fitur Manajemen Riwayat</h3>
+                                        </div>
+                                        <div className="grid grid-cols-1 md:grid-cols-2 gap-3 text-xs">
+                                            <div className="bg-slate-100 p-4 rounded-2xl flex items-center gap-3">
+                                                <span className="material-symbols-rounded text-sky-500">visibility</span>
+                                                <p className="text-slate-600 font-bold">Detail: Lihat rincian item & status bayar.</p>
+                                            </div>
+                                            <div className="bg-slate-100 p-4 rounded-2xl flex items-center gap-3">
+                                                <span className="material-symbols-rounded text-emerald-500">payments</span>
+                                                <p className="text-slate-600 font-bold">Pelunasan: Terima uang untuk nota Tempo.</p>
+                                            </div>
+                                            <div className="bg-slate-100 p-4 rounded-2xl flex items-center gap-3">
+                                                <span className="material-symbols-rounded text-slate-500">print</span>
+                                                <p className="text-slate-600 font-bold">Cetak: Download PDF Invoice fisik.</p>
+                                            </div>
+                                            <div className="bg-slate-100 p-4 rounded-2xl flex items-center gap-3">
+                                                <span className="material-symbols-rounded text-red-500">delete_sweep</span>
+                                                <p className="text-slate-600 font-bold">Void: Batalkan transaksi & hapus jurnal.</p>
+                                            </div>
+                                        </div>
+                                    </section>
+                                    <section className="bg-red-50 border border-red-100 p-6 rounded-[2rem] space-y-3">
+                                        <div className="flex items-center gap-2 text-red-700">
+                                            <span className="material-symbols-rounded">security</span>
+                                            <h3 className="font-black text-lg uppercase tracking-tight">Aturan Keamanan Void</h3>
+                                        </div>
+                                        <p className="text-sm text-red-800 leading-relaxed">
+                                            Fitur <b>Void</b> hanya tersedia untuk invoice yang <b>BELUM LUNAS</b>. Jika invoice sudah berstatus Lunas (ikon gembok), penghapusan tidak diizinkan untuk melindungi integritas data uang masuk. Hubungi Super Admin jika ada kesalahan fatal.
+                                        </p>
+                                    </section>
+                                </>
+                            )}
+
+                            <section className="bg-slate-900 rounded-[2rem] p-6 text-white text-center">
+                                <p className="text-[10px] text-slate-500 italic font-medium">Semua transaksi di modul ini terintegrasi langsung dengan Laporan Laba Rugi & Neraca secara real-time.</p>
                             </section>
                         </div>
 
