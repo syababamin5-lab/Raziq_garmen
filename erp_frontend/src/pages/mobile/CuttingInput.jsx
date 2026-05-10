@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import api from '../../api/api';
 import { getProduksiOptions, submitCutting, getRekapCutting, getCuttingStats, getCuttingHistory } from '../../api/produksiApi';
 import { updateProfile } from '../../api/userApi';
 import { formatInputNumber, parseNumber, getLocalDate, getLocalTimestamp } from '../../utils/formatters';
