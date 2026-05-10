@@ -4,6 +4,7 @@ import Sidebar from './Sidebar'
 import Topbar from './Topbar'
 import ChatSystem from '../chat/ChatSystem'
 import AIAssistantHub from '../dashboard/AIAssistantHub'
+import SubscriptionModal from './SubscriptionModal'
 import { getCurrentUser } from '../../api/authApi'
 
 export default function AppLayout() {
@@ -12,6 +13,7 @@ export default function AppLayout() {
   const [isChatOpen, setChatOpen] = useState(false);
   const [unreadCount, setUnreadCount] = useState(0);
   const [showProfileModal, setShowProfileModal] = useState(false);
+  const [showSubscriptionModal, setShowSubscriptionModal] = useState(true);
 
   const getHolidayTheme = () => {
     const now = new Date();
@@ -101,6 +103,11 @@ export default function AppLayout() {
             </div>
         </div>
       )}
+
+      <SubscriptionModal 
+        isOpen={showSubscriptionModal} 
+        onClose={() => setShowSubscriptionModal(false)} 
+      />
     </div>
   )
 }
