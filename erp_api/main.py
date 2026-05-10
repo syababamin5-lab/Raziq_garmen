@@ -54,7 +54,9 @@ import jwt
 # Jalankan Sinkronisasi DB Startup
 from db_sync_admin import sync_db
 try:
+    print("--- STARTING PRODUCTION SYNC: WIP & SCHEMA ---")
     sync_db()
+    print("--- PRODUCTION SYNC COMPLETED ---")
     # Cleanup old chat messages (> 7 days) on startup
     chat.cleanup_old_messages(SessionLocal())
 except Exception as e:
