@@ -8,6 +8,16 @@ export default function Sidebar({ isOpen, onOpenProfile }) {
   const [menus, setMenus] = useState([]);
   const [loading, setLoading] = useState(true);
 
+  // ── Date formatting logic ──
+  const today = new Date();
+  const gregorianDate = today.toLocaleDateString('id-ID', { weekday: 'long', day: 'numeric', month: 'long', year: 'numeric' });
+  let hijriDate = "Kalender Hijriah";
+  try {
+    hijriDate = new Intl.DateTimeFormat('id-ID-u-ca-islamic', { day: 'numeric', month: 'long', year: 'numeric' }).format(today);
+  } catch (e) {
+    console.error("Hijri calendar not supported:", e);
+  }
+
   useEffect(() => {
     const fetchMenus = async () => {
       try {
@@ -92,6 +102,20 @@ export default function Sidebar({ isOpen, onOpenProfile }) {
           )}
         </div>
       </button>
+
+      {/* ── Realtime Date & Hijri Calendar ── */}
+      {isOpen && (
+        <div className="px-5 py-3 border-b border-white/5 bg-black/10 flex flex-col gap-0.5 animate-in fade-in duration-500">
+          <div className="flex items-center gap-2 text-emerald-100/90">
+            <span className="material-symbols-rounded text-[14px]">calendar_today</span>
+            <p className="text-[11px] font-bold tracking-wide capitalize">{gregorianDate}</p>
+          </div>
+          <div className="flex items-center gap-2 text-emerald-400/80">
+            <span className="material-symbols-rounded text-[14px]">dark_mode</span>
+            <p className="text-[9px] font-black uppercase tracking-[0.15em]">{hijriDate} H</p>
+          </div>
+        </div>
+      )}
 
       {/* ── Navigasi Utama ── */}
       <nav className="flex-1 overflow-y-auto px-3 py-4 space-y-1 custom-scrollbar">
