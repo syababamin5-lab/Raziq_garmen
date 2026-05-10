@@ -1117,7 +1117,7 @@ export default function PembelianBiaya() {
                         <div className="space-y-6">
                             <section className="bg-purple-50/50 p-6 rounded-2xl border border-purple-100 space-y-2">
                                 <h3 className="font-black text-purple-800 uppercase text-sm tracking-widest">Aset Tetap vs Biaya</h3>
-                                <p className="text-sm leading-relaxed">Aset Tetap adalah barang yang memiliki masa pakai lama (>1 tahun) seperti <b>Mesin Jahit, Komputer, atau Renovasi Gedung</b>.</p>
+                                <p className="text-sm leading-relaxed">Aset Tetap adalah barang yang memiliki masa pakai lama (&gt;1 tahun) seperti <b>Mesin Jahit, Komputer, atau Renovasi Gedung</b>.</p>
                             </section>
                             <section className="bg-slate-900 p-6 rounded-[2rem] text-white">
                                 <p className="text-[10px] font-black uppercase tracking-[0.2em] mb-3 text-slate-400">Logika Depresiasi:</p>

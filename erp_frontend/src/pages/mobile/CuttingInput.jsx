@@ -315,7 +315,18 @@ export default function CuttingInputMobile() {
             <div className="pt-6 space-y-4">
               <h2 className="text-[10px] font-black text-slate-600 uppercase tracking-[0.3em] ml-4">Aktivitas Terakhir</h2>
               {(recentActivity || []).map((h, idx) => (
-                <div key={idx} className="bg-white/5 border border-white/5 p-5 rounded-[2rem] flex justify-between items-center shadow-lg">
+                <div key={idx} 
+                  onClick={() => setSelectedHistory({
+                    karyawan: h.tukang_potong,
+                    tanggal: h.waktu,
+                    kain: h.nama_kain,
+                    kg: h.kg_pakai,
+                    produk: h.nama_baju,
+                    sku: h.nama_baju,
+                    qty: parseInt(h.hasil_potong) || 0,
+                    lusin: (parseInt(h.hasil_potong) || 0) / 12
+                  })}
+                  className="bg-white/5 border border-white/5 p-5 rounded-[2rem] flex justify-between items-center shadow-lg active:scale-95 transition-all cursor-pointer">
                   <div className="flex flex-col">
                     <span className="text-xs font-black uppercase text-white tracking-wide">{h.tukang_potong}</span>
                     <span className="text-[9px] font-bold text-slate-500 mt-1 uppercase">{h.nama_kain} • {h.nama_baju}</span>
