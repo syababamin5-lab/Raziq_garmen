@@ -14,6 +14,8 @@ export default function MasterData() {
   
   const [modal, setModal] = useState({ show: false, type: '', item: null });
   const [loading, setLoading] = useState(false);
+  const [showHelp, setShowHelp] = useState(false);
+  const [helpContext, setHelpContext] = useState('barang');
   const [searchTerm, setSearchTerm] = useState('');
   const [stokHistory, setStokHistory] = useState({ barang: {}, list: [] });
   const [historyLoading, setHistoryLoading] = useState(false);
@@ -182,19 +184,33 @@ export default function MasterData() {
   return (
     <div className="space-y-6">
       {/* Header */}
-      <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center bg-white p-6 rounded-2xl shadow-[0_4px_24px_rgba(0,0,0,0.02)] border border-slate-100">
-        <div>
-          <h1 className="text-2xl font-bold font-outfit text-slate-800 tracking-tight">Master Data & SKU</h1>
-          <p className="text-slate-500 text-sm mt-1">Kelola data dasar Pabrik Atelier Emerald</p>
+      <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center bg-white p-6 rounded-2xl shadow-[0_4px_24px_rgba(0,0,0,0.02)] border border-slate-100 relative overflow-hidden group">
+        <div className="absolute top-0 right-0 p-1 bg-emerald-500 text-[8px] font-black text-white uppercase tracking-[0.3em] rotate-90 translate-x-3 translate-y-4 opacity-20 select-none pointer-events-none">Database Integrated</div>
+        <div className="flex items-center gap-4">
+          <div className="w-12 h-12 bg-emerald-100 rounded-2xl flex items-center justify-center text-emerald-600 shadow-inner group-hover:rotate-6 transition-transform">
+            <span className="material-symbols-rounded text-2xl">database</span>
+          </div>
+          <div>
+            <h1 className="text-2xl font-bold font-outfit text-slate-800 tracking-tight flex items-center gap-2">
+              Master Data & SKU
+              <button 
+                  onClick={() => { setHelpContext(activeTab); setShowHelp(true); }}
+                  className="w-6 h-6 rounded-full flex items-center justify-center bg-slate-100 text-slate-400 hover:bg-slate-900 hover:text-white transition-all shadow-sm"
+              >
+                  <span className="material-symbols-rounded text-[14px]">info</span>
+              </button>
+            </h1>
+            <p className="text-slate-500 text-sm mt-0.5">Kelola data dasar Pabrik Atelier Emerald</p>
+          </div>
         </div>
         <div className="flex mt-4 sm:mt-0 space-x-3">
-            <button onClick={() => openModal('import_excel')} className="flex items-center gap-2 bg-emerald-50 text-emerald-700 px-4 py-2 font-medium rounded-lg hover:bg-emerald-100 transition-colors">
+            <button onClick={() => openModal('import_excel')} className="flex items-center gap-2 bg-emerald-50 text-emerald-700 px-4 py-2 text-sm font-bold rounded-xl hover:bg-emerald-100 transition-colors border border-emerald-100">
               <span className="material-symbols-rounded text-sm">upload_file</span>
               Import Excel
             </button>
-            <button onClick={() => openModal('add_barang')} className="flex items-center gap-2 bg-[#10B981] text-white px-4 py-2 font-medium rounded-lg hover:bg-emerald-600 transition-all shadow-sm hover:shadow-emerald-200">
-              <span className="material-symbols-rounded text-sm">add</span>
-              Tambah Barang Baru
+            <button onClick={() => openModal('add_barang')} className="flex items-center gap-2 bg-[#064E3B] text-white px-5 py-2.5 text-sm font-bold rounded-xl hover:bg-black transition-all shadow-lg shadow-emerald-900/10 active:scale-95">
+              <span className="material-symbols-rounded text-sm">add_circle</span>
+              Tambah SKU Baru
             </button>
         </div>
       </div>
@@ -993,6 +1009,123 @@ export default function MasterData() {
             </form>
             )}
           </div>
+        </div>
+      )}
+      {/* ── HELP / TUTORIAL MODAL (DYNAMIC CONTENT) ────────────────── */}
+      {showHelp && (
+        <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-slate-900/60 backdrop-blur-md animate-in fade-in duration-300">
+            <div className="bg-white rounded-[2.5rem] shadow-2xl w-full max-w-3xl max-h-[90vh] overflow-hidden flex flex-col animate-in zoom-in-95 slide-in-from-bottom-8 duration-300">
+                {/* Header Help */}
+                <div className="p-8 text-white flex items-center justify-between bg-gradient-to-r from-slate-900 to-slate-800">
+                    <div className="flex items-center gap-6">
+                        <div className="w-14 h-14 bg-white/10 rounded-2xl flex items-center justify-center backdrop-blur-sm border border-white/10 shadow-inner">
+                            <span className="material-symbols-rounded text-2xl">
+                                {activeTab.includes('Kartu') ? 'inventory' : activeTab === 'Karyawan' ? 'group' : activeTab === 'Mitra Bisnis' ? 'handshake' : activeTab === 'Chart of Accounts' ? 'account_tree' : 'account_balance'}
+                            </span>
+                        </div>
+                        <div>
+                            <h2 className="text-xl font-black uppercase tracking-tighter">
+                                PANDUAN {activeTab.toUpperCase()}
+                            </h2>
+                            <p className="text-white/70 text-xs font-medium italic">Standard Operating Procedure - Raziq Garmen Master Core</p>
+                        </div>
+                    </div>
+                    <button onClick={() => setShowHelp(false)} className="w-10 h-10 rounded-xl bg-white/10 hover:bg-white/20 flex items-center justify-center transition-all">
+                        <span className="material-symbols-rounded">close</span>
+                    </button>
+                </div>
+
+                {/* Content Help (Scrollable) */}
+                <div className="p-10 overflow-y-auto space-y-8 font-outfit text-slate-700">
+                    
+                    {activeTab.includes('Kartu') && (
+                        <div className="space-y-6">
+                            <section className="bg-emerald-50/50 p-6 rounded-2xl border border-emerald-100 space-y-2">
+                                <h3 className="font-black text-emerald-800 uppercase text-sm tracking-widest">Manajemen Inventori & SKU</h3>
+                                <p className="text-sm leading-relaxed">Ini adalah pusat data barang. <b>Stock Opname</b> dilakukan dengan tombol edit, dan <b>Audit Stok</b> bisa dilihat via ikon histori.</p>
+                            </section>
+                            <div className="grid grid-cols-2 gap-4 text-xs font-medium">
+                                <div className="p-4 bg-slate-50 border border-slate-100 rounded-xl">
+                                    <p className="font-black text-emerald-700 mb-1 uppercase text-[10px]">Barang Jadi:</p>
+                                    <p>Stok dihitung dalam <b>Lusin</b>. Harga modal (HPP) mencakup biaya kain + upah yang diinput saat produksi.</p>
+                                </div>
+                                <div className="p-4 bg-slate-50 border border-slate-100 rounded-xl">
+                                    <p className="font-black text-amber-700 mb-1 uppercase text-[10px]">Bahan Baku:</p>
+                                    <p>Stok dihitung dalam <b>Kg / Meter</b>. Nilai stok berkurang otomatis saat Anda menginput data "Cutting" di menu produksi.</p>
+                                </div>
+                            </div>
+                        </div>
+                    )}
+
+                    {activeTab === 'Karyawan' && (
+                        <div className="space-y-6">
+                            <section className="bg-blue-50/50 p-6 rounded-2xl border border-blue-100 space-y-2">
+                                <h3 className="font-black text-blue-800 uppercase text-sm tracking-widest">SDM & Klasifikasi Gaji</h3>
+                                <p className="text-sm leading-relaxed">Pendaftaran karyawan menentukan hak akses dan perhitungan gaji otomatis di sistem.</p>
+                            </section>
+                            <div className="bg-slate-900 p-6 rounded-3xl text-white space-y-4 shadow-xl">
+                                <p className="text-[10px] font-black text-blue-400 uppercase tracking-widest">Logika Penggajian:</p>
+                                <ul className="text-[11px] space-y-3 list-disc pl-4 text-slate-300 font-medium">
+                                    <li><b>Gaji Tetap:</b> Gaji harian atau bulanan yang tidak tergantung jumlah produksi.</li>
+                                    <li><b>Gaji Borongan (Cutter):</b> Gaji yang muncul otomatis di rekap tagihan berdasarkan hasil pcs yang dipotong.</li>
+                                    <li><b>Saldo Kasbon:</b> Akan terpotong otomatis jika Anda menginput "Bayar Gaji" di menu Keuangan.</li>
+                                </ul>
+                            </div>
+                        </div>
+                    )}
+
+                    {activeTab === 'Mitra Bisnis' && (
+                        <div className="space-y-6">
+                            <section className="bg-indigo-50/50 p-6 rounded-2xl border border-indigo-100 space-y-2">
+                                <h3 className="font-black text-indigo-800 uppercase text-sm tracking-widest">Vendor & Customer Management</h3>
+                                <p className="text-sm leading-relaxed">Pusat data mitra untuk memantau integritas piutang dan hutang usaha.</p>
+                            </section>
+                            <div className="p-5 border-l-4 border-emerald-500 bg-emerald-50 rounded-r-xl">
+                                <p className="text-[11px] leading-relaxed font-medium italic">"Setiap transaksi di menu Penjualan atau Pembelian yang bersifat <b>Tempo</b> akan langsung mengupdate saldo piutang/hutang mitra yang bersangkutan di halaman ini."</p>
+                            </div>
+                        </div>
+                    )}
+
+                    {activeTab === 'Chart of Accounts' && (
+                        <div className="space-y-6">
+                            <section className="bg-slate-50 p-6 rounded-2xl border border-slate-100 space-y-2 text-center">
+                                <h3 className="font-black text-slate-800 uppercase text-sm tracking-widest">Backbone Akuntansi (COA)</h3>
+                                <p className="text-sm leading-relaxed">Struktur bagan akun yang digunakan untuk klasifikasi Jurnal Otomatis. Nomor akun adalah identitas unik yang tidak boleh diubah sembarangan.</p>
+                            </section>
+                            <div className="grid grid-cols-2 gap-2 text-[9px] font-black uppercase tracking-widest">
+                                <div className="p-2 bg-emerald-100 text-emerald-800 rounded">1xxx - ASET (KAS, BANK, STOK)</div>
+                                <div className="p-2 bg-red-100 text-red-800 rounded">2xxx - KEWAJIBAN (UTANG)</div>
+                                <div className="p-2 bg-blue-100 text-blue-800 rounded">3xxx - EKUITAS (MODAL)</div>
+                                <div className="p-2 bg-purple-100 text-purple-800 rounded">4xxx - PENDAPATAN</div>
+                                <div className="p-2 bg-amber-100 text-amber-800 rounded">5xxx - BIAYA OPERASIONAL</div>
+                            </div>
+                        </div>
+                    )}
+
+                    {activeTab === 'Saldo Awal' && (
+                        <div className="space-y-6">
+                            <section className="bg-amber-50/50 p-6 rounded-2xl border border-amber-100 space-y-2">
+                                <h3 className="font-black text-amber-800 uppercase text-sm tracking-widest">Inisialisasi Sistem</h3>
+                                <p className="text-sm leading-relaxed">Digunakan saat pertama kali menggunakan sistem untuk memasukkan saldo riil di rekening bank atau kas tunai perusahaan.</p>
+                            </section>
+                        </div>
+                    )}
+
+                    <div className="pt-6 border-t border-slate-100">
+                        <div className="flex items-center gap-3 bg-slate-50 p-4 rounded-xl justify-center">
+                            <span className="material-symbols-rounded text-slate-400">verified_user</span>
+                            <p className="text-[10px] text-slate-500 font-bold uppercase tracking-tighter text-center">
+                                SUMBER ATURAN: SAK INDONESIA, INTERNAL CONTROL PROCEDURES RAZIQ GARMEN, & DATA INTEGRITY ALGORITHMS
+                            </p>
+                        </div>
+                    </div>
+                </div>
+
+                {/* Footer Help */}
+                <div className="p-8 border-t border-slate-100 flex justify-center bg-slate-50/50">
+                    <button onClick={() => setShowHelp(false)} className="px-16 py-4 bg-slate-900 text-white rounded-2xl font-black hover:bg-black transition-all shadow-xl hover:scale-105 active:scale-95 uppercase tracking-widest text-xs">SAYA MENGERTI, LANJUTKAN KERJA</button>
+                </div>
+            </div>
         </div>
       )}
     </div>
