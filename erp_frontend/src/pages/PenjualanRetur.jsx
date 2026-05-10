@@ -229,14 +229,14 @@ export default function PenjualanRetur() {
                                 {t.label}
                             </button>
                             
-                            {/* Small "i" Icon Button at Top Right */}
+                            {/* Small "i" Icon Button at Top Right - Improved Visibility */}
                             <button 
                                 onClick={(e) => { e.stopPropagation(); setHelpContext(t.id); setShowHelp(true); }}
-                                className={`absolute -top-1 -right-1 w-5 h-5 rounded-full flex items-center justify-center shadow-sm border transition-all z-10 
-                                    ${activeTab === t.id ? 'bg-white text-emerald-600 border-emerald-100' : 'bg-slate-200 text-slate-500 border-white hover:bg-emerald-500 hover:text-white'}`}
+                                className={`absolute -top-2 -right-2 w-7 h-7 rounded-full flex items-center justify-center shadow-lg border-2 transition-all z-10 hover:scale-110 active:scale-95
+                                    ${activeTab === t.id ? 'bg-white text-emerald-600 border-emerald-500' : 'bg-slate-800 text-white border-white hover:bg-emerald-500'}`}
                                 title={`Panduan ${t.label}`}
                             >
-                                <span className="material-symbols-rounded text-[14px] font-black">info</span>
+                                <span className="material-symbols-rounded text-[18px] select-none">info</span>
                             </button>
                         </div>
                     ))}
