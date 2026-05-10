@@ -648,13 +648,6 @@ export default function CuttingInputMobile() {
                </div>
             </div>
           </div>
-        )}                  </div>
-               </div>
-               <div className="text-[#020617]">
-                  <FooterInfo />
-               </div>
-            </div>
-          </div>
         )}
       </div>
 
