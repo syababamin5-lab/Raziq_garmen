@@ -82,36 +82,63 @@ def sync_db():
             except Exception as e:
                 print(f"ℹ️ Info on production_logs.{col_name}: {e}")
 
-        # 3. DATA REPAIR: Restore SKU OVS-08-JB & Cleanup Bad Journals
+        # 4. WIP SYNC: Pindahkan nilai barang yang sedang antre jahit ke akun 12130 (WIP)
         try:
-            sku = "OVS-08-JB"
-            print(f"--- Running Data Repair for {sku} ---")
-            
-            # Check if SKU exists (case insensitive for safety)
-            res = conn.execute(text("SELECT id, is_active FROM barang WHERE UPPER(kode_sku) = :sku"), {"sku": sku.upper()}).first()
-            
-            if res:
-                if res.is_active == 0:
-                    conn.execute(text("UPDATE barang SET is_active = 1 WHERE id = :id"), {"id": res.id})
-                    conn.commit()
-                    print(f"✅ Reactivated SKU {sku}")
-            else:
-                # Re-create if missing
-                conn.execute(text("""
-                    INSERT INTO barang (model_code, nama_barang, kode_sku, kategori, satuan, stok_saat_ini, harga_jual, harga_modal, is_active) 
-                    VALUES ('OVS-08', 'Oversize 08 Jet black', :sku, 'Barang Jadi (Baju)', 'Pcs', 0, 520000, 39405, 1)
-                """), {"sku": sku})
-                conn.commit()
-                print(f"✅ Re-created missing SKU {sku}")
+            print("--- Menjalankan Sinkronisasi WIP ke Buku Besar ---")
+            # Ambil sisa WIP fisik (Potong - Jahit)
+            res_wip = conn.execute(text("""
+                SELECT kode_sku, 
+                       SUM(CASE WHEN divisi = 'Cutting' THEN qty_hasil ELSE 0 END) - 
+                       SUM(CASE WHEN divisi = 'Jahit' THEN qty_hasil ELSE 0 END) as sisa_wip
+                FROM production_logs 
+                GROUP BY kode_sku
+                HAVING SUM(CASE WHEN divisi = 'Cutting' THEN qty_hasil ELSE 0 END) > 
+                       SUM(CASE WHEN divisi = 'Jahit' THEN qty_hasil ELSE 0 END)
+            """)).fetchall()
+
+            for sku, sisa_qty in res_wip:
+                if not sku: continue
                 
-            # Cleanup problematic VOID journals that doubled the WIP minus
-            # This will allow the new get_wip logic to work with clean data
-            conn.execute(text("DELETE FROM jurnal_umum WHERE keterangan LIKE '%VOID%' AND keterangan LIKE :sku_p"), {"sku_p": f"%{sku}%"})
-            conn.commit()
-            print(f"✅ Cleaned up problematic VOID journals for {sku}")
-            
+                # Cek apakah sudah pernah dimigrasi
+                migrated = conn.execute(text("SELECT id FROM jurnal_umum WHERE kode_akun = '12130' AND keterangan LIKE :m"), {"m": f"%[MIGRASI_WIP:{sku}]%"}).first()
+                if migrated: continue
+
+                # Estimasi nilai per pcs dari jurnal lama (Bahan 51110 & Upah 51210)
+                # Ambil rata-rata dari 10 jurnal terakhir untuk SKU ini
+                row_val = conn.execute(text("""
+                    SELECT 
+                        COAL_B / NULLIF(QTY_B, 0) as avg_bahan,
+                        COAL_U / NULLIF(QTY_B, 0) as avg_upah
+                    FROM (
+                        SELECT 
+                            SUM(debit) as COAL_B,
+                            (SELECT SUM(debit) FROM jurnal_umum WHERE kode_akun = '51210' AND keterangan LIKE :sk_p) as COAL_U,
+                            (SELECT SUM(qty_hasil) FROM production_logs WHERE kode_sku = :sku AND divisi = 'Cutting') as QTY_B
+                        FROM jurnal_umum 
+                        WHERE kode_akun = '51110' AND keterangan LIKE :sk_p
+                    ) t
+                """), {"sku": sku, "sk_p": f"%{sku}%"}).first()
+
+                val_bahan = (row_val[0] or 0) * sisa_qty if row_val else 0
+                val_upah = (row_val[1] or 0) * sisa_qty if row_val else 0
+
+                if val_bahan > 0 or val_upah > 0:
+                    print(f"Menyuntikkan WIP untuk {sku}: {sisa_qty} pcs (Rp{int(val_bahan+val_upah):,})")
+                    tgl = datetime.datetime.now()
+                    
+                    if val_bahan > 0:
+                        conn.execute(text("INSERT INTO jurnal_umum (tanggal, kode_akun, nama_akun, keterangan, debit, kredit) VALUES (:t, '12130', 'Persediaan Barang Dalam Proses (WIP)', :k, :d, 0)"), {"t": tgl, "k": f"Migrasi WIP (Bahan): {sisa_qty} pcs [MIGRASI_WIP:{sku}]", "d": val_bahan})
+                        conn.execute(text("INSERT INTO jurnal_umum (tanggal, kode_akun, nama_akun, keterangan, debit, kredit) VALUES (:t, '51110', 'Pemakaian Bahan Baku', :k, 0, :c)"), {"t": tgl, "k": f"Migrasi WIP (Bahan): {sisa_qty} pcs [MIGRASI_WIP:{sku}]", "c": val_bahan})
+                    
+                    if val_upah > 0:
+                        conn.execute(text("INSERT INTO jurnal_umum (tanggal, kode_akun, nama_akun, keterangan, debit, kredit) VALUES (:t, '12130', 'Persediaan Barang Dalam Proses (WIP)', :k, :d, 0)"), {"t": tgl, "k": f"Migrasi WIP (Upah): {sisa_qty} pcs [MIGRASI_WIP:{sku}]", "d": val_upah})
+                        conn.execute(text("INSERT INTO jurnal_umum (tanggal, kode_akun, nama_akun, keterangan, debit, kredit) VALUES (:t, '51210', 'BTKL - Upah Cutting', :k, 0, :c)"), {"t": tgl, "k": f"Migrasi WIP (Upah): {sisa_qty} pcs [MIGRASI_WIP:{sku}]", "c": val_upah})
+                    
+                    conn.commit()
+
         except Exception as e:
-            print(f"ℹ️ Data Repair Info: {e}")
+            print(f"ℹ️ WIP Sync Info: {e}")
+
 
 if __name__ == "__main__":
     sync_db()
