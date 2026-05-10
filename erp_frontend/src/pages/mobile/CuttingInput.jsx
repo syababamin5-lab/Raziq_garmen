@@ -63,7 +63,7 @@ export default function CuttingInputMobile() {
     kg_pakai: '',
     hasil_pcs: '',
     tukang_potong_id: '',
-    ongkos_per_pcs: '1500',
+    ongkos_per_pcs: '',
   });
 
   const fetchData = async () => {
@@ -77,10 +77,6 @@ export default function CuttingInputMobile() {
       if (optRes?.data) setOptions(optRes.data);
       if (histRes?.data?.rincian_harian) setRecentActivity(histRes.data.rincian_harian.slice(0, 10));
       if (statRes?.success && statRes?.data) setStats(statRes.data);
-
-      if (optRes?.data?.kain_list?.length > 0 && !form.kain_id) setForm(s => ({ ...s, kain_id: optRes.data.kain_list[0].id }));
-      if (optRes?.data?.baju_list?.length > 0 && !form.produk_id) setForm(s => ({ ...s, produk_id: optRes.data.baju_list[0].id }));
-      if (optRes?.data?.karyawan_list?.length > 0 && !form.tukang_potong_id) setForm(s => ({ ...s, tukang_potong_id: optRes.data.karyawan_list[0].id }));
     } catch (err) {
       setMsg({ text: 'Koneksi terganggu.', type: 'error' });
     }
@@ -292,14 +288,16 @@ export default function CuttingInputMobile() {
                 <div className="space-y-2">
                   <label className="text-[10px] font-bold text-slate-500 uppercase ml-4">Material Kain</label>
                   <select className="w-full bg-white/5 border-2 border-white/5 rounded-2xl p-4 text-sm font-black text-white focus:border-emerald-500 outline-none appearance-none"
-                    value={form.kain_id} onChange={e => setForm({...form, kain_id: e.target.value})}>
+                    value={form.kain_id} onChange={e => setForm({...form, kain_id: e.target.value})} required>
+                    <option value="" className="bg-slate-900 text-slate-500">-- Pilih Material --</option>
                     {(options.kain_list || []).map(k => <option key={k.id} value={k.id} className="bg-slate-900">{k.label}</option>)}
                   </select>
                 </div>
                 <div className="space-y-2">
                   <label className="text-[10px] font-bold text-slate-500 uppercase ml-4">SKU Produk</label>
                   <select className="w-full bg-white/5 border-2 border-white/5 rounded-2xl p-4 text-sm font-black text-white focus:border-emerald-500 outline-none appearance-none"
-                    value={form.produk_id} onChange={e => setForm({...form, produk_id: e.target.value})}>
+                    value={form.produk_id} onChange={e => setForm({...form, produk_id: e.target.value})} required>
+                    <option value="" className="bg-slate-900 text-slate-500">-- Pilih SKU Produk --</option>
                     {(options.baju_list || []).map(b => <option key={b.id} value={b.id} className="bg-slate-900">{b.label}</option>)}
                   </select>
                 </div>
@@ -308,12 +306,12 @@ export default function CuttingInputMobile() {
               <div className="bg-black/20 border border-white/5 p-6 rounded-[2.5rem] grid grid-cols-2 gap-4 shadow-2xl">
                 <div className="space-y-2">
                   <label className="text-[10px] font-bold text-slate-500 uppercase text-center block">Berat (Kg)</label>
-                  <input type="number" step="0.1" className={`w-full bg-white/5 border-2 border-white/5 rounded-2xl p-5 text-2xl font-black ${theme.text} outline-none text-center shadow-inner`}
+                  <input type="number" step="0.1" className={`w-full bg-white/5 border-2 border-white/5 rounded-2xl p-5 text-2xl font-black ${theme.text} outline-none text-center shadow-inner placeholder:text-slate-700`}
                     placeholder="0.0" value={form.kg_pakai} onChange={e => setForm({...form, kg_pakai: e.target.value})} required />
                 </div>
                 <div className="space-y-2">
                   <label className="text-[10px] font-bold text-slate-500 uppercase text-center block">Hasil (Pcs)</label>
-                  <input type="number" className={`w-full bg-white/5 border-2 border-white/5 rounded-2xl p-5 text-2xl font-black ${theme.text} outline-none text-center shadow-inner`}
+                  <input type="number" className={`w-full bg-white/5 border-2 border-white/5 rounded-2xl p-5 text-2xl font-black ${theme.text} outline-none text-center shadow-inner placeholder:text-slate-700`}
                     placeholder="0" value={form.hasil_pcs} onChange={e => setForm({...form, hasil_pcs: e.target.value})} required />
                 </div>
               </div>
@@ -321,15 +319,16 @@ export default function CuttingInputMobile() {
               <div className="bg-black/20 border border-white/5 p-6 rounded-[2.5rem] space-y-4">
                 <div className="space-y-2">
                   <label className="text-[10px] font-bold text-slate-600 uppercase ml-4">Petugas Cutting</label>
-                  <select className="w-full bg-white/5 border-2 border-white/5 rounded-2xl p-4 text-sm font-black outline-none appearance-none"
-                    value={form.tukang_potong_id} onChange={e => setForm({...form, tukang_potong_id: e.target.value})}>
+                  <select className="w-full bg-white/5 border-2 border-white/5 rounded-2xl p-4 text-sm font-black outline-none appearance-none text-white focus:border-blue-500"
+                    value={form.tukang_potong_id} onChange={e => setForm({...form, tukang_potong_id: e.target.value})} required>
+                    <option value="" className="bg-slate-900 text-slate-500">-- Pilih Petugas --</option>
                     {(options.karyawan_list || []).map(k => <option key={k.id} value={k.id} className="bg-slate-900">{k.label}</option>)}
                   </select>
                 </div>
                 <div className="space-y-2">
                   <label className="text-[10px] font-bold text-slate-600 uppercase ml-4 text-center block">Upah per Pcs (Rp)</label>
-                  <input type="text" className="w-full bg-white/5 border-2 border-white/5 rounded-2xl p-4 text-lg font-black text-blue-300 text-center outline-none"
-                    value={formatInputNumber(form.ongkos_per_pcs)} onChange={e => setForm({...form, ongkos_per_pcs: parseNumber(e.target.value)})} required />
+                  <input type="text" className="w-full bg-white/5 border-2 border-white/5 rounded-2xl p-4 text-lg font-black text-blue-300 text-center outline-none placeholder:text-slate-700"
+                    placeholder="Contoh: 1.500" value={formatInputNumber(form.ongkos_per_pcs)} onChange={e => setForm({...form, ongkos_per_pcs: parseNumber(e.target.value)})} required />
                 </div>
               </div>
 
