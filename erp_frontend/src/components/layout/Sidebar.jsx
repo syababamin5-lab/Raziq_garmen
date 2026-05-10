@@ -60,7 +60,7 @@ export default function Sidebar({ isOpen, onOpenProfile }) {
     `}>
       {/* ── User Profile (Clickable) ── */}
       <button 
-        onClick={() => setShowProfileModal(true)}
+        onClick={onOpenProfile}
         className={`px-5 py-6 border-b border-white/10 transition-all duration-300 hover:bg-white/5 active:scale-95 text-left w-full group ${isOpen ? 'opacity-100' : 'opacity-0 md:opacity-100'}`}
       >
         <div className="flex items-center gap-3 overflow-hidden">
