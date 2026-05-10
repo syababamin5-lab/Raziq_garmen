@@ -192,6 +192,33 @@ async def startup_event():
             db.commit()
         except:
             db.rollback()
+
+        # AUTO-RECOVERY PASSWORD LAMA (Mencoba menebak password default agar Super Admin bisa melihatnya)
+        try:
+            users_null_pw = db.query(models.User).filter(models.User.password_plain == None).all()
+            common_passwords = ["admin123", "user123", "123456", "12345678", "admin", "password", "raziq123", "staff123", "cutting123"]
+            
+            recovered_count = 0
+            for u in users_null_pw:
+                # Jika hash-nya ternyata plain text dari awal
+                if not u.password_hash.startswith("$"):
+                    u.password_plain = u.password_hash
+                    recovered_count += 1
+                    continue
+                    
+                # Coba tebak dengan password umum
+                for cp in common_passwords:
+                    if verify_password(cp, u.password_hash):
+                        u.password_plain = cp
+                        recovered_count += 1
+                        break
+            
+            if recovered_count > 0:
+                db.commit()
+                print(f"✅ Berhasil memulihkan {recovered_count} password lama untuk Super Admin oversight.")
+        except Exception as e:
+            db.rollback()
+            print(f"⚠️ Gagal auto-recovery password: {e}")
         
         # 1. AUTO-SEED USERS (HANYA UNTUK LOCALHOST / SQLITE)
         # JANGAN PERNAH JALANKAN DI PRODUCTION (WEB/POSTGRES)
