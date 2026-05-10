@@ -21,6 +21,8 @@ export default function PembelianBiaya() {
   const [loading, setLoading] = useState(false);
   const [msg, setMsg] = useState({ text: '', type: '' });
   const [balance, setBalance] = useState({ tunai: 0, bca: 0 });
+  const [showHelp, setShowHelp] = useState(false);
+  const [helpContext, setHelpContext] = useState('bahan');
 
   // Data for Selects
   const [suppliers, setSuppliers] = useState([]);
@@ -340,7 +342,15 @@ export default function PembelianBiaya() {
           <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
             <div className="lg:col-span-1 space-y-6">
               <div className="bg-slate-50 p-6 rounded-2xl border border-slate-200">
-                <h3 className="text-sm font-black text-slate-800 uppercase tracking-widest mb-4">Input Barang</h3>
+                <div className="flex items-center justify-between mb-4">
+                  <h3 className="text-sm font-black text-slate-800 uppercase tracking-widest">Input Barang</h3>
+                  <button 
+                      onClick={() => { setHelpContext('bahan'); setShowHelp(true); }}
+                      className="w-6 h-6 rounded-full flex items-center justify-center bg-emerald-500/10 backdrop-blur-md text-emerald-600 hover:bg-emerald-600 hover:text-white transition-all shadow-sm border border-emerald-100"
+                  >
+                      <span className="material-symbols-rounded text-[14px]">info</span>
+                  </button>
+                </div>
                 
                 <div className="space-y-4">
                   <div>
@@ -492,12 +502,20 @@ export default function PembelianBiaya() {
         {/* OPEX */}
         {activeTab === 'opex' && (
           <div className="max-w-2xl mx-auto space-y-8">
-            <div className="bg-slate-50 p-6 rounded-3xl border border-slate-100">
-                <h2 className="text-xl font-black text-slate-800 mb-2 flex items-center gap-2">
-                    <span className="material-symbols-rounded text-emerald-600 text-3xl">precision_manufacturing</span>
-                    Pencatatan Biaya Pabrik
-                </h2>
-                <p className="text-slate-500 text-sm">Input pengeluaran rutin seperti BTKL (Gaji), Tagihan Listrik, atau Jasa Sablon.</p>
+            <div className="bg-slate-50 p-6 rounded-3xl border border-slate-100 flex items-center justify-between">
+                <div>
+                    <h2 className="text-xl font-black text-slate-800 mb-2 flex items-center gap-2">
+                        <span className="material-symbols-rounded text-emerald-600 text-3xl">precision_manufacturing</span>
+                        Pencatatan Biaya Pabrik
+                    </h2>
+                    <p className="text-slate-500 text-sm">Input pengeluaran rutin seperti BTKL (Gaji), Tagihan Listrik, atau Jasa Sablon.</p>
+                </div>
+                <button 
+                    onClick={() => { setHelpContext('opex'); setShowHelp(true); }}
+                    className="w-8 h-8 rounded-full flex items-center justify-center bg-slate-500/10 backdrop-blur-md text-slate-500 hover:bg-slate-800 hover:text-white transition-all shadow-sm border border-slate-200"
+                >
+                    <span className="material-symbols-rounded text-[18px]">info</span>
+                </button>
             </div>
 
             <form onSubmit={handleOpexSubmit} className="space-y-6">
@@ -545,12 +563,20 @@ export default function PembelianBiaya() {
         {/* RETUR */}
         {activeTab === 'retur' && (
           <div className="max-w-2xl mx-auto">
-             <div className="bg-amber-50 p-6 rounded-3xl border border-amber-100 mb-8 flex items-center gap-4">
-                <span className="material-symbols-rounded text-amber-600 text-3xl">keyboard_return</span>
-                <div>
-                    <h2 className="text-xl font-black text-amber-900">Retur Pembelian (Bahan Baku)</h2>
-                    <p className="text-amber-700 text-sm">Kembalikan bahan ke supplier dan kurangi utang atau terima kembali dana.</p>
+             <div className="bg-amber-50 p-6 rounded-3xl border border-amber-100 mb-8 flex items-center justify-between">
+                <div className="flex items-center gap-4">
+                    <span className="material-symbols-rounded text-amber-600 text-3xl">keyboard_return</span>
+                    <div>
+                        <h2 className="text-xl font-black text-amber-900">Retur Pembelian (Bahan Baku)</h2>
+                        <p className="text-amber-700 text-sm">Kembalikan bahan ke supplier dan kurangi utang atau terima kembali dana.</p>
+                    </div>
                 </div>
+                <button 
+                    onClick={() => { setHelpContext('retur'); setShowHelp(true); }}
+                    className="w-8 h-8 rounded-full flex items-center justify-center bg-amber-600/10 backdrop-blur-md text-amber-600 hover:bg-amber-600 hover:text-white transition-all shadow-sm border border-amber-200"
+                >
+                    <span className="material-symbols-rounded text-[18px]">info</span>
+                </button>
              </div>
 
              <form onSubmit={handleReturSubmit} className="space-y-6">
@@ -642,9 +668,17 @@ export default function PembelianBiaya() {
         {/* HISTORY */}
         {activeTab === 'history' && (
             <div className="space-y-6">
-                <div className="flex justify-between items-center mb-6">
-                    <h3 className="text-xl font-black text-slate-800">Riwayat 50 Pembelian Terakhir</h3>
-                    <button onClick={loadPoList} className="p-2 border rounded-full hover:bg-slate-50"><span className="material-symbols-rounded">sync</span></button>
+                <div className="flex justify-between items-center mb-6 bg-slate-50 p-4 rounded-2xl border border-slate-100">
+                    <div className="flex items-center gap-3">
+                        <h3 className="text-xl font-black text-slate-800 tracking-tight uppercase">Riwayat 50 Pembelian Terakhir</h3>
+                        <button 
+                            onClick={() => { setHelpContext('history'); setShowHelp(true); }}
+                            className="w-7 h-7 rounded-full flex items-center justify-center bg-slate-500/10 backdrop-blur-md text-slate-400 hover:bg-slate-800 hover:text-white transition-all shadow-sm border border-white"
+                        >
+                            <span className="material-symbols-rounded text-[16px]">info</span>
+                        </button>
+                    </div>
+                    <button onClick={loadPoList} className="p-2 border rounded-full hover:bg-slate-200 bg-white transition-all shadow-sm"><span className="material-symbols-rounded">sync</span></button>
                 </div>
 
                 <div className="overflow-x-auto border border-slate-100 rounded-[2rem]">
@@ -761,8 +795,14 @@ export default function PembelianBiaya() {
           <div className="space-y-10">
             <div className="grid grid-cols-1 md:grid-cols-2 gap-10">
                 <div className="space-y-6">
-                    <div className="bg-emerald-100/30 p-5 rounded-2xl border border-emerald-100">
+                    <div className="bg-emerald-100/30 p-5 rounded-2xl border border-emerald-100 flex items-center justify-between">
                         <h3 className="text-emerald-800 font-black flex items-center gap-2 uppercase text-xs tracking-widest"><span className="material-symbols-rounded">add_circle</span> Beli Aset Baru</h3>
+                        <button 
+                            onClick={() => { setHelpContext('aset'); setShowHelp(true); }}
+                            className="w-6 h-6 rounded-full flex items-center justify-center bg-emerald-500/10 backdrop-blur-md text-emerald-600 hover:bg-emerald-600 hover:text-white transition-all shadow-sm border border-emerald-100"
+                        >
+                            <span className="material-symbols-rounded text-[14px]">info</span>
+                        </button>
                     </div>
                     <div className="space-y-4">
                         <div>
@@ -975,6 +1015,131 @@ export default function PembelianBiaya() {
         po={purchaseModal.po}
       />
 
+      </div>
+
+      {/* ── HELP / TUTORIAL MODAL (DYNAMIC CONTENT) ────────────────── */}
+      {showHelp && (
+        <div className="fixed inset-0 z-[60] flex items-center justify-center p-4 bg-slate-900/60 backdrop-blur-md animate-in fade-in duration-300">
+            <div className="bg-white rounded-[2.5rem] shadow-2xl w-full max-w-3xl max-h-[90vh] overflow-hidden flex flex-col animate-in zoom-in-95 slide-in-from-bottom-8 duration-300">
+                {/* Header Help */}
+                <div className={`p-8 text-white flex items-center justify-between bg-gradient-to-r ${
+                    helpContext === 'bahan' ? 'from-blue-700 to-blue-500' : 
+                    helpContext === 'opex' ? 'from-emerald-700 to-emerald-500' : 
+                    helpContext === 'retur' ? 'from-amber-700 to-amber-500' :
+                    helpContext === 'aset' ? 'from-purple-700 to-purple-500' :
+                    'from-slate-700 to-slate-500'
+                }`}>
+                    <div className="flex items-center gap-6">
+                        <div className="w-14 h-14 bg-white/20 rounded-2xl flex items-center justify-center backdrop-blur-sm border border-white/20 shadow-inner">
+                            <span className="material-symbols-rounded text-2xl">
+                                {helpContext === 'bahan' ? 'package' : helpContext === 'opex' ? 'account_balance_wallet' : helpContext === 'retur' ? 'keyboard_return' : helpContext === 'aset' ? 'computer' : 'history'}
+                            </span>
+                        </div>
+                        <div>
+                            <h2 className="text-xl font-black uppercase tracking-tighter">
+                                PANDUAN {helpContext === 'bahan' ? 'BELI BAHAN' : helpContext === 'opex' ? 'BIAYA / OPEX' : helpContext === 'retur' ? 'RETUR PEMBELIAN' : helpContext === 'aset' ? 'ASET TETAP' : 'RIWAYAT PEMBELIAN'}
+                            </h2>
+                            <p className="text-white/70 text-xs font-medium italic">Standard Operating Procedure - Raziq Garmen Procurement</p>
+                        </div>
+                    </div>
+                    <button onClick={() => setShowHelp(false)} className="w-10 h-10 rounded-xl bg-black/10 hover:bg-black/20 flex items-center justify-center transition-all">
+                        <span className="material-symbols-rounded">close</span>
+                    </button>
+                </div>
+
+                {/* Content Help (Scrollable) */}
+                <div className="p-10 overflow-y-auto space-y-8 font-outfit text-slate-700">
+                    
+                    {helpContext === 'bahan' && (
+                        <div className="space-y-6">
+                            <section className="bg-blue-50/50 p-6 rounded-2xl border border-blue-100 space-y-2">
+                                <h3 className="font-black text-blue-800 uppercase text-sm tracking-widest">Alur Pembelian Material</h3>
+                                <p className="text-sm leading-relaxed">Gunakan modul ini untuk belanja <b>Kain, Aksesoris, atau Perlengkapan Pabrik</b>. Barang yang diinput akan otomatis menambah stok di gudang setelah nota disimpan.</p>
+                            </section>
+                            <div className="grid grid-cols-2 gap-4 text-[11px]">
+                                <div className="p-4 border rounded-xl bg-slate-50">
+                                    <p className="font-black mb-1 uppercase tracking-tighter">Metode Tunai / Bank</p>
+                                    <p className="font-medium text-slate-500">Saldo kas/bank langsung terpotong. Status PO langsung "Lunas".</p>
+                                </div>
+                                <div className="p-4 border rounded-xl bg-amber-50 border-amber-100">
+                                    <p className="font-black mb-1 uppercase tracking-tighter text-amber-700">Metode Utang Dagang</p>
+                                    <p className="font-medium text-amber-600">Saldo kas tidak terpotong (kecuali ada DP). Status PO menjadi "Tempo" (Hutang).</p>
+                                </div>
+                            </div>
+                        </div>
+                    )}
+
+                    {helpContext === 'opex' && (
+                        <div className="space-y-6">
+                            <section className="bg-emerald-50/50 p-6 rounded-2xl border border-emerald-100 space-y-2">
+                                <h3 className="font-black text-emerald-800 uppercase text-sm tracking-widest">Biaya Operasional (OPEX)</h3>
+                                <p className="text-sm leading-relaxed">Digunakan untuk pengeluaran yang tidak menghasilkan stok barang, seperti: <b>Listrik, Gaji Karyawan, Makan Siang, Biaya Keamanan, dll.</b></p>
+                            </section>
+                            <section className="space-y-3">
+                                <h3 className="font-black text-slate-800 uppercase text-[10px] tracking-widest pl-2">Aturan Akuntansi</h3>
+                                <ul className="text-xs space-y-3 font-medium">
+                                    <li className="flex items-start gap-4 bg-slate-50 p-4 rounded-xl border border-slate-100">
+                                        <span className="material-symbols-rounded text-emerald-600">trending_down</span>
+                                        <p>Setiap input biaya akan <b>langsung memotong laba bersih</b> perusahaan di Laporan Laba Rugi periode berjalan.</p>
+                                    </li>
+                                    <li className="flex items-start gap-4 bg-slate-50 p-4 rounded-xl border border-slate-100">
+                                        <span className="material-symbols-rounded text-emerald-600">account_tree</span>
+                                        <p>Pilih kode akun (COA) yang tepat agar analisis pengeluaran bulanan tidak tercampur (misal: Biaya Listrik jangan masuk ke Biaya ATK).</p>
+                                    </li>
+                                </ul>
+                            </section>
+                        </div>
+                    )}
+
+                    {helpContext === 'retur' && (
+                        <div className="space-y-6">
+                            <section className="bg-amber-50/50 p-6 rounded-2xl border border-amber-100 space-y-2">
+                                <h3 className="font-black text-amber-800 uppercase text-sm tracking-widest">Retur Pembelian</h3>
+                                <p className="text-sm leading-relaxed">Gunakan fitur ini jika bahan yang diterima dari supplier <b>Cacat, Rusak, atau Tidak Sesuai Spesifikasi</b>.</p>
+                            </section>
+                            <div className="bg-red-900 text-white p-6 rounded-3xl space-y-3 shadow-xl">
+                                <p className="text-[10px] font-black uppercase tracking-widest text-red-300">Dampak Sistem Otomatis:</p>
+                                <ul className="text-xs space-y-2 font-medium">
+                                    <li className="flex gap-2"><span>-</span> Stok barang di gudang akan berkurang sesuai jumlah retur.</li>
+                                    <li className="flex gap-2"><span>-</span> Jika transaksi awal adalah <b>Tempo</b>, maka saldo utang ke supplier tersebut akan berkurang otomatis.</li>
+                                    <li className="flex gap-2"><span>-</span> Jika transaksi awal adalah <b>Tunai</b>, pastikan Anda menerima kembali uang dari supplier (dicatat via Mutasi Kas).</li>
+                                </ul>
+                            </div>
+                        </div>
+                    )}
+
+                    {helpContext === 'aset' && (
+                        <div className="space-y-6">
+                            <section className="bg-purple-50/50 p-6 rounded-2xl border border-purple-100 space-y-2">
+                                <h3 className="font-black text-purple-800 uppercase text-sm tracking-widest">Aset Tetap vs Biaya</h3>
+                                <p className="text-sm leading-relaxed">Aset Tetap adalah barang yang memiliki masa pakai lama (>1 tahun) seperti <b>Mesin Jahit, Komputer, atau Renovasi Gedung</b>.</p>
+                            </section>
+                            <section className="bg-slate-900 p-6 rounded-[2rem] text-white">
+                                <p className="text-[10px] font-black uppercase tracking-[0.2em] mb-3 text-slate-400">Logika Depresiasi:</p>
+                                <p className="text-[11px] leading-relaxed italic text-slate-300 font-medium">
+                                    "Aset tidak langsung mengurangi laba perusahaan secara utuh di bulan pembelian. Nilainya akan dialokasikan menjadi biaya secara bertahap setiap bulan melalui fitur <b>Jalankan Penyusutan</b> di tab ini."
+                                </p>
+                            </section>
+                        </div>
+                    )}
+
+                    <div className="pt-6 border-t border-slate-100">
+                        <div className="flex items-center gap-3 bg-slate-50 p-4 rounded-xl justify-center">
+                            <span className="material-symbols-rounded text-slate-400">verified_user</span>
+                            <p className="text-[10px] text-slate-500 font-bold uppercase tracking-tighter">
+                                SUMBER ATURAN: SAK INDONESIA, PRINSIP PRUDENCE, & ALGORITMA JURNAL OTOMATIS RAZIQ GARMEN v2
+                            </p>
+                        </div>
+                    </div>
+                </div>
+
+                {/* Footer Help */}
+                <div className="p-8 border-t border-slate-100 flex justify-center bg-slate-50/50">
+                    <button onClick={() => setShowHelp(false)} className="px-16 py-4 bg-slate-900 text-white rounded-2xl font-black hover:bg-black transition-all shadow-xl hover:scale-105 active:scale-95 uppercase tracking-widest text-xs">SAYA MENGERTI, LANJUTKAN KERJA</button>
+                </div>
+            </div>
+        </div>
+      )}
     </div>
   );
 }
