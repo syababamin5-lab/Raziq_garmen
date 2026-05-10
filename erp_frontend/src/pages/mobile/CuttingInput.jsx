@@ -510,7 +510,14 @@ export default function CuttingInputMobile() {
                 {(!stats?.top_penghasilan || stats.top_penghasilan.length === 0) && (
                   <p className="text-center text-[10px] text-slate-600 font-bold uppercase tracking-widest py-4">Belum ada data bulan ini</p>
                 )}
-              </        {activeTab === 'profile' && (
+              </div>
+            </div>
+            <FooterInfo />
+          </div>
+        )}
+
+        {/* ── TAB 4: PROFIL SAYA ────────────────── */}
+        {activeTab === 'profile' && (
           <div className="animate-in fade-in duration-500 bg-white min-h-screen">
             <div className="p-6 pt-10">
                {/* ── PROFILE HEADER ── */}
