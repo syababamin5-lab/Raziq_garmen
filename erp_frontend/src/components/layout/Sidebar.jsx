@@ -111,21 +111,26 @@ export default function Sidebar({ isOpen, onOpenProfile }) {
 
       {/* ── Realtime Date, Clock & Hijri Calendar ── */}
       {isOpen && (
-        <div className="px-5 py-3 border-b border-white/5 bg-black/10 flex flex-col gap-1.5 animate-in fade-in duration-500">
-          <div className="flex items-center justify-between">
-            <div className="flex items-center gap-2 text-emerald-100/90">
-              <span className="material-symbols-rounded text-[14px]">calendar_today</span>
-              <p className="text-[11px] font-bold tracking-wide capitalize">{gregorianDate}</p>
+        <div className="px-5 py-4 border-b border-white/5 bg-black/10 flex flex-col gap-3 animate-in fade-in duration-500">
+          
+          {/* Live Clock Badge */}
+          <div className="flex items-center justify-center gap-2 bg-emerald-950/50 py-2 rounded-xl border border-emerald-500/20 shadow-inner">
+             <span className="material-symbols-rounded text-[16px] text-emerald-400 animate-pulse">schedule</span>
+             <p className="text-sm font-mono font-black text-emerald-300 tracking-[0.15em]">{timeString}</p>
+          </div>
+
+          {/* Date Info */}
+          <div className="flex flex-col gap-1.5 px-1">
+            <div className="flex items-center gap-2.5 text-emerald-100/90">
+              <span className="material-symbols-rounded text-[14px] opacity-70">calendar_today</span>
+              <p className="text-[11px] font-bold tracking-wide capitalize truncate">{gregorianDate}</p>
             </div>
-            <div className="flex items-center gap-1.5 bg-emerald-500/20 px-2 py-0.5 rounded border border-emerald-500/20 shadow-inner">
-              <span className="material-symbols-rounded text-[11px] text-emerald-400 animate-pulse">schedule</span>
-              <p className="text-[10px] font-mono font-black text-emerald-300 tracking-wider">{timeString}</p>
+            <div className="flex items-center gap-2.5 text-emerald-400/80">
+              <span className="material-symbols-rounded text-[14px] opacity-70">dark_mode</span>
+              <p className="text-[10px] font-black uppercase tracking-[0.15em] truncate">{hijriDate.replace(/ AH| H/gi, '')} H</p>
             </div>
           </div>
-          <div className="flex items-center gap-2 text-emerald-400/80">
-            <span className="material-symbols-rounded text-[14px]">dark_mode</span>
-            <p className="text-[9px] font-black uppercase tracking-[0.15em]">{hijriDate} H</p>
-          </div>
+          
         </div>
       )}
 
