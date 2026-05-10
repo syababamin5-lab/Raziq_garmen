@@ -237,7 +237,7 @@ export default function SettingsUsers() {
                           <div className="w-12 h-12 rounded-2xl bg-emerald-50 border border-emerald-100 flex items-center justify-center text-emerald-600 font-black overflow-hidden">
                             {u.foto_url ? (
                                 <img src={getFileUrl(u.foto_url)} className="w-full h-full object-cover" alt="" />
-                            ) : u.nama_lengkap.charAt(0).toUpperCase()}
+                            ) : (u.nama_lengkap || 'U').charAt(0).toUpperCase()}
                           </div>
                           <div>
                             <p className="font-black text-slate-800">{u.nama_lengkap}</p>

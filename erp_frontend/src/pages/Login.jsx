@@ -42,9 +42,9 @@ export default function Login() {
         
         // Pengalihan Otomatis: Jika user adalah cutting, langsung ke halaman HP
         if (username.toLowerCase() === 'cutting') {
-          window.location.href = '/m/cutting';
+          navigate('/m/cutting');
         } else {
-          window.location.href = '/';
+          navigate('/');
         }
       } else {
         setError('Respons tidak valid dari server.');
