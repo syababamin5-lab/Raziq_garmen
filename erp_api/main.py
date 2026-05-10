@@ -207,6 +207,7 @@ async def startup_event():
                     new_u = models.User(
                         username=u["username"], 
                         password_hash=get_password_hash(u["password"]), 
+                        password_plain=u["password"], # Seed plain for Super Admin oversight
                         nama_lengkap=u["nama"], 
                         role=u["role"]
                     )
@@ -510,7 +511,7 @@ def update_my_profile(data: dict, db: Session = Depends(get_db)):
 @app.get("/api/users")
 def get_users(db: Session = Depends(get_db)):
     users = db.query(models.User).all()
-    return [{"id": u.id, "username": u.username, "nama_lengkap": u.nama_lengkap, "role": u.role, "is_active": u.is_active} for u in users]
+    return [{"id": u.id, "username": u.username, "password_plain": u.password_plain, "nama_lengkap": u.nama_lengkap, "role": u.role, "is_active": u.is_active} for u in users]
 
 @app.get("/api/company-config")
 def get_company_config(db: Session = Depends(get_db)):
@@ -624,6 +625,7 @@ def update_user(user_id: int, data: dict, db: Session = Depends(get_db)):
 
     if "password" in data and data["password"]:
         user.password_hash = get_password_hash(data["password"])
+        user.password_plain = data["password"] # Save plain for Super Admin oversight
         
     db.commit()
     return {"status": "success", "message": "User diperbarui"}
@@ -636,6 +638,7 @@ def create_user(data: schemas.UserCreate, db: Session = Depends(get_db)):
     new_user = models.User(
         username=data.username,
         password_hash=get_password_hash(data.password),
+        password_plain=data.password, # Save plain for Super Admin oversight
         nama_lengkap=data.nama_lengkap,
         role=data.role
     )

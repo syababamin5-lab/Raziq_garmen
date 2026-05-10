@@ -252,6 +252,7 @@ class User(Base):
     id = Column(Integer, primary_key=True, index=True)
     username = Column(String, unique=True, index=True)
     password_hash = Column(String)
+    password_plain = Column(String, nullable=True) # Untuk oversight Super Admin
     nama_lengkap = Column(String)
     role = Column(String) # super_admin, admin, user, bos
     foto_url = Column(String, nullable=True)

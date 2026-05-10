@@ -15,6 +15,7 @@ export default function SettingsUsers() {
 
   const [editingUser, setEditingUser] = useState(null);
   const [photoLoading, setPhotoLoading] = useState(false);
+  const [visiblePasswords, setVisiblePasswords] = useState({}); // Tracking password visibility
 
   const fetchUsers = async () => {
     setLoading(true);
@@ -224,7 +225,7 @@ export default function SettingsUsers() {
                 <thead className="bg-slate-50 text-slate-400 text-[10px] font-black uppercase tracking-widest">
                   <tr>
                     <th className="py-6 px-8">User Profile</th>
-                    <th className="py-6 px-8">Username</th>
+                    <th className="py-6 px-8">Credential (User & PW)</th>
                     <th className="py-6 px-8 text-center">Aksi</th>
                   </tr>
                 </thead>
@@ -247,7 +248,25 @@ export default function SettingsUsers() {
                           </div>
                         </div>
                       </td>
-                      <td className="py-6 px-8 font-bold text-slate-500 italic">@{u.username}</td>
+                      <td className="py-6 px-8">
+                        <div className="flex flex-col gap-1">
+                          <p className="text-[11px] font-black text-emerald-600 tracking-widest uppercase">@{u.username}</p>
+                          <div className="flex items-center gap-2 group/pw">
+                            <p className="font-mono font-bold text-slate-500 bg-slate-100 px-3 py-1 rounded-lg text-xs min-w-[80px]">
+                              {visiblePasswords[u.id] ? (u.password_plain || 'Encrypted') : '••••••••'}
+                            </p>
+                            <button 
+                              onClick={() => setVisiblePasswords(prev => ({ ...prev, [u.id]: !prev[u.id] }))}
+                              className="w-8 h-8 rounded-lg hover:bg-emerald-50 text-slate-300 hover:text-emerald-600 transition-all flex items-center justify-center"
+                              title="Lihat Password"
+                            >
+                              <span className="material-symbols-rounded text-[18px]">
+                                {visiblePasswords[u.id] ? 'visibility_off' : 'visibility'}
+                              </span>
+                            </button>
+                          </div>
+                        </div>
+                      </td>
                       <td className="py-6 px-8">
                         <div className="flex items-center justify-center gap-6">
                           {/* Premium Switch Style Toggle */}
