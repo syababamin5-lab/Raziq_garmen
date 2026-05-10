@@ -182,7 +182,8 @@ def get_cutting_history(periode: str = "hari_ini", db: Session = Depends(get_db)
 @router.get("/options", response_model=APIResponse)
 def get_produksi_options(db: Session = Depends(get_db)):
     try:
-        karyawans = db.query(models.Karyawan).all()
+        # Hanya ambil karyawan yang divisinya Cutting untuk modul ini
+        karyawans = db.query(models.Karyawan).filter(models.Karyawan.divisi.ilike("Cutting")).all()
         barangs = db.query(models.Barang).all()
 
         k_list = [SelectOption(id=k.id, label=k.nama_karyawan) for k in karyawans]
@@ -213,6 +214,10 @@ def submit_cutting(payload: CuttingRequest, db: Session = Depends(get_db)):
 
         if not kain or not produk or not karyawan:
             return APIResponse(success=False, message="Data referensi tidak ditemukan.")
+
+        # Validasi Divisi Karyawan (Hanya untuk transaksi baru mulai sekarang)
+        if str(karyawan.divisi).lower() != "cutting":
+            return APIResponse(success=False, message=f"Gagal! {karyawan.nama_karyawan} bukan dari divisi Cutting (Divisi saat ini: {karyawan.divisi}).")
 
         if payload.kg_pakai > (kain.stok_saat_ini):
             return APIResponse(success=False, message=f"Stok kain tidak cukup! Sisa: {kain.stok_saat_ini:g} Kg")
