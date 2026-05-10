@@ -589,7 +589,11 @@ export default function CuttingInputMobile() {
                           <span className="material-symbols-rounded text-sm">edit</span> EDIT PROFIL SAYA
                         </button>
                      ) : (
-                        <p classNam                  {isEditing && (
+                        <p className="text-[9px] font-black text-slate-400 uppercase tracking-widest text-center">Mode Edit Aktif - Klik gambar untuk ganti foto</p>
+                     )}
+                   </div>
+
+                   {isEditing && (
                     <div className="space-y-6 animate-in slide-in-from-top-4 duration-500">
                        <div className="space-y-2">
                           <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1">Username Login</label>
