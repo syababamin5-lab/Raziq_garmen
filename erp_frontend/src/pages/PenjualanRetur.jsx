@@ -939,9 +939,15 @@ export default function PenjualanRetur() {
 
                             <div className="bg-slate-50 p-6 rounded-[2rem] border border-slate-200 text-center">
                                 <p className="text-[10px] font-black text-slate-400 uppercase tracking-[0.3em] mb-2">Integritas Data Penjualan</p>
-                                <p className="text-xs text-slate-500 italic font-medium leading-relaxed">
+                                <p className="text-xs text-slate-500 italic font-medium leading-relaxed mb-4">
                                     "Setiap klik simpan di modul ini diawasi oleh sistem audit internal untuk memastikan kecocokan antara stok gudang fisik dan laporan laba rugi perusahaan."
                                 </p>
+                                <div className="flex items-center gap-3 bg-white p-3 rounded-xl border border-slate-100 justify-center">
+                                    <span className="material-symbols-rounded text-slate-400 text-sm">menu_book</span>
+                                    <p className="text-[9px] text-slate-500 font-bold uppercase tracking-tighter">
+                                        Sumber Aturan: SAK Indonesia & Algoritma Jurnal Otomatis Raziq Garmen v2
+                                    </p>
+                                </div>
                             </div>
                         </div>
 
