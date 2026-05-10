@@ -21,14 +21,18 @@ export default function CuttingInputMobile() {
   const [historyPeriode, setHistoryPeriode] = useState('hari_ini');
   const [selectedHistory, setSelectedHistory] = useState(null);
 
+  // Load User Data from LocalStorage
+  const userStr = localStorage.getItem('user');
+  const userData = userStr ? JSON.parse(userStr) : {};
+
   // Profile Form State
   const [profileForm, setProfileForm] = useState({
-    username: localStorage.getItem('username') || 'admin',
-    name: localStorage.getItem('user_name') || 'Humam Abdul Azis',
-    email: localStorage.getItem('email') || '',
-    hp: localStorage.getItem('no_hp') || '',
-    foto_url: localStorage.getItem('foto_url') || '',
-    foto_base64: localStorage.getItem('foto_base64') || '',
+    username: userData.username || 'cutting',
+    name: userData.nama_lengkap || 'Cutter',
+    email: userData.email || '',
+    hp: userData.no_hp || '',
+    foto_url: userData.foto_url || '',
+    foto_base64: userData.foto_base64 || '',
     password: ''
   });
   
@@ -144,32 +148,37 @@ export default function CuttingInputMobile() {
     setMsg({ text: '', type: '' });
     try {
       const res = await updateProfile({
-        id: localStorage.getItem('user_id'),
-        username: localStorage.getItem('username'),
+        id: userData.id, // Ambil dari object user yang sudah di-parse
+        username: userData.username,
         new_username: profileForm.username,
         nama_lengkap: profileForm.name,
         email: profileForm.email,
         no_hp: profileForm.hp,
-        foto_base64: profileForm.foto_base64, // Kirim foto baru
+        foto_base64: profileForm.foto_base64, 
         password: profileForm.password
       });
 
       if (res.status === 'success') {
         setMsg({ text: '✅ Profil Berhasil Disinkronkan!', type: 'success' });
-        // Update LocalStorage agar UI web/mobile lain ikut berubah
-        localStorage.setItem('username', res.user.username);
-        localStorage.setItem('user_name', res.user.nama_lengkap);
-        localStorage.setItem('email', res.user.email || '');
-        localStorage.setItem('no_hp', res.user.no_hp || '');
-        localStorage.setItem('foto_url', res.user.foto_url || '');
-        localStorage.setItem('foto_base64', res.user.foto_base64 || '');
         
-        // Jika token baru dikirim (karena ganti username), simpan
+        // Update Object User di LocalStorage (Standard App)
+        const updatedUser = {
+          ...userData,
+          username: res.user.username,
+          nama_lengkap: res.user.nama_lengkap,
+          email: res.user.email,
+          no_hp: res.user.no_hp,
+          foto_url: res.user.foto_url,
+          foto_base64: res.user.foto_base64
+        };
+        localStorage.setItem('user', JSON.stringify(updatedUser));
+        
+        // Update Token jika ada
         if (res.access_token) {
-          localStorage.setItem('access_token', res.access_token);
+          localStorage.setItem('token', res.access_token);
         }
         
-        setProfileForm(prev => ({ ...prev, password: '' })); // Kosongkan password field
+        setProfileForm(prev => ({ ...prev, password: '' })); 
       } else {
         setMsg({ text: `Gagal: ${res.message}`, type: 'error' });
       }
