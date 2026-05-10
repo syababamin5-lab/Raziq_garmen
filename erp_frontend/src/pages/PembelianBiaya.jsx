@@ -672,7 +672,12 @@ export default function PembelianBiaya() {
                                             {h.status === 'Lunas' ? (
                                                 <span className="px-2 py-1 rounded-md text-[10px] font-black bg-emerald-100 text-emerald-700">✅ LUNAS</span>
                                             ) : (
-                                                <span className="px-2 py-1 rounded-md text-[10px] font-black bg-amber-100 text-amber-700">⏳ TEMPO</span>
+                                                <>
+                                                    <span className="px-2 py-1 rounded-md text-[10px] font-black bg-amber-100 text-amber-700">⏳ TEMPO</span>
+                                                    <span className="text-[10px] font-black text-red-500">
+                                                        Sisa: {formatRp(h.total_tagihan - (h.uang_muka || 0))}
+                                                    </span>
+                                                </>
                                             )}
                                             <span className="text-[10px] font-bold text-slate-400 uppercase">{h.metode_bayar}</span>
                                         </div>
@@ -702,7 +707,7 @@ export default function PembelianBiaya() {
                                             {/* 💸 Bayar Utang */}
                                             {h.status !== 'Lunas' && !isBos && (
                                                 <button 
-                                                    onClick={() => setPayModal({ open: false, no_po: h.no_po, nama_supplier: h.nama_supplier, nominal: h.total_tagihan - (h.uang_muka || 0), sumber_dana: 'Kas Tunai' })}
+                                                    onClick={() => setPayModal({ open: true, no_po: h.no_po, nama_supplier: h.nama_supplier, nominal: h.total_tagihan - (h.uang_muka || 0), sumber_dana: 'Kas Tunai' })}
                                                     className="p-2 bg-emerald-50 text-emerald-600 rounded-xl hover:bg-emerald-500 hover:text-white transition-all flex items-center gap-1"
                                                     title="Bayar Utang PO"
                                                 >
@@ -724,9 +729,22 @@ export default function PembelianBiaya() {
 
                                             {/* 🗑️ Void */}
                                             {!isBos && (
-                                              <button onClick={() => handleVoid(h.no_po)} className="p-2 bg-red-50 text-red-500 rounded-xl hover:bg-red-500 hover:text-white transition-all" title="Void PO (Hapus)">
-                                                  <span className="material-symbols-rounded text-lg">delete_sweep</span>
-                                              </button>
+                                              h.status !== 'Lunas' ? (
+                                                <button 
+                                                    onClick={() => handleVoid(h.no_po)} 
+                                                    className="p-2 bg-red-50 text-red-500 rounded-xl hover:bg-red-500 hover:text-white transition-all" 
+                                                    title="Void PO (Hapus)"
+                                                >
+                                                    <span className="material-symbols-rounded text-lg">delete_sweep</span>
+                                                </button>
+                                              ) : (
+                                                <div 
+                                                    className="p-2 bg-slate-100 text-slate-300 rounded-xl cursor-not-allowed"
+                                                    title="PO Lunas tidak dapat dihapus. Hubungi Super Admin jika ada kesalahan data."
+                                                >
+                                                    <span className="material-symbols-rounded text-lg">lock</span>
+                                                </div>
+                                              )
                                             )}
                                         </div>
                                     </td>

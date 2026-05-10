@@ -440,6 +440,9 @@ def void_pembelian(no_po: str, db: Session = Depends(get_db)):
         po = db.query(models.HeaderPembelian).filter(models.HeaderPembelian.no_po == no_po).first()
         if not po: raise Exception("PO tidak ditemukan")
 
+        if po.status == "Lunas":
+            raise Exception(f"DITOLAK! PO {no_po} sudah berstatus LUNAS dan tidak dapat dihapus langsung. Hubungi Super Admin jika ada kesalahan data.")
+
         items = db.query(models.DetailPembelian).filter(models.DetailPembelian.no_po == no_po).all()
 
         # 1. Kurangi Stok
