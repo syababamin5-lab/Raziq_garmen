@@ -16,42 +16,10 @@
   html, body, #root {
     height: 100%;
     font-family: 'Inter', system-ui, sans-serif;
-    /* ── Midnight Emerald Luxury Theme ────────────────── */
-    background-color: #022C22; /* Darker than menu for depth */
-    background-image: 
-      radial-gradient(at 0% 0%, hsla(161, 84%, 35%, 0.15) 0px, transparent 50%),
-      radial-gradient(at 100% 0%, hsla(199, 89%, 35%, 0.15) 0px, transparent 50%),
-      radial-gradient(at 100% 100%, hsla(161, 84%, 35%, 0.1) 0px, transparent 50%),
-      radial-gradient(at 0% 100%, hsla(199, 89%, 35%, 0.1) 0px, transparent 50%);
-    color: #F8FAFC;
+    background-color: #F8FAFC; /* Light Mode Background */
+    color: #1E293B; /* Slate 800 */
     -webkit-font-smoothing: antialiased;
     overflow-x: hidden;
-  }
-
-  /* Stronger Texture Overlay */
-  body::before {
-    content: "";
-    position: fixed;
-    top: 0; left: 0; width: 100%; height: 100%;
-    background-image: url("https://www.transparenttextures.com/patterns/cubes.png");
-    opacity: 0.04;
-    pointer-events: none;
-    z-index: -1;
-  }
-
-  /* ── Background Moving Spotlight ────────────────── */
-  body::after {
-    content: "";
-    position: fixed;
-    top: var(--y, 0);
-    left: var(--x, 0);
-    width: 800px;
-    height: 800px;
-    background: radial-gradient(circle, rgba(16, 185, 129, 0.08) 0%, transparent 70%);
-    transform: translate(-50%, -50%);
-    pointer-events: none;
-    z-index: -1;
-    transition: width 0.5s, height 0.5s;
   }
 
   /* Scrollbar tipis elegan */
@@ -65,35 +33,34 @@
 @layer components {
   .font-outfit { font-family: 'Outfit', sans-serif; }
 
-  /* Card dengan Glassmorphism Luxury */
+  /* Card Klasik (Original) */
   .card {
-    @apply bg-emerald-900/20 backdrop-blur-3xl rounded-[2rem] shadow-[0_8px_32px_rgba(0,0,0,0.2)] border border-white/5 p-6;
-    transition: all 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+    @apply bg-white rounded-[2rem] shadow-sm border border-slate-100 p-8;
+    transition: all 0.3s ease;
   }
   .card:hover {
-    @apply shadow-[0_25px_60px_rgba(16,185,129,0.15)] border-emerald-500/20 bg-emerald-800/30;
-    transform: translateY(-6px) scale(1.005);
+    @apply shadow-md border-slate-200;
   }
 
   /* Badge status transaksi */
   .badge {
     @apply inline-flex items-center px-3 py-1 rounded-full text-[10px] font-black tracking-[0.15em] uppercase;
   }
-  .badge-success { @apply badge bg-emerald-500/10 text-emerald-700 border border-emerald-500/20; }
-  .badge-warning { @apply badge bg-amber-500/10 text-amber-700 border border-amber-500/20; }
-  .badge-info    { @apply badge bg-blue-500/10 text-blue-700 border border-blue-500/20; }
-  .badge-danger  { @apply badge bg-red-500/10 text-red-700 border border-red-500/20; }
+  .badge-success { @apply badge bg-emerald-50 text-emerald-700 border border-emerald-100; }
+  .badge-warning { @apply badge bg-amber-50 text-amber-700 border border-amber-100; }
+  .badge-info    { @apply badge bg-blue-50 text-blue-700 border border-blue-100; }
+  .badge-danger  { @apply badge bg-red-50 text-red-700 border border-red-100; }
 
   .btn-primary {
-    @apply bg-emerald-600 hover:bg-black text-white font-black px-6 py-3 
-           rounded-2xl transition-all duration-300 hover:shadow-xl hover:shadow-emerald-900/10 active:scale-95;
+    @apply bg-slate-900 hover:bg-black text-white font-black px-6 py-3 
+           rounded-2xl transition-all duration-300 hover:shadow-xl active:scale-95;
   }
 
   .fin-value {
-    @apply text-2xl font-black text-white leading-tight tracking-tighter font-outfit;
+    @apply text-2xl font-black text-slate-900 leading-tight tracking-tighter font-outfit;
   }
   .fin-label {
-    @apply text-[10px] font-bold text-emerald-400/60 uppercase tracking-[0.25em];
+    @apply text-[10px] font-bold text-slate-400 uppercase tracking-[0.25em];
   }
 }
 

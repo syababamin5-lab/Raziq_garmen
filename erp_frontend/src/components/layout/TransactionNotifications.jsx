@@ -55,8 +55,8 @@ export default function TransactionNotifications({ userRole }) {
                 onClick={toggleDropdown}
                 className={`relative w-10 h-10 rounded-2xl border flex items-center justify-center transition-all ${
                     isOpen 
-                    ? 'bg-emerald-500/20 border-emerald-500/30 text-emerald-300' 
-                    : 'bg-white/5 border-white/5 text-emerald-100/30 hover:bg-emerald-500/20 hover:border-emerald-500/30 hover:text-emerald-300'
+                    ? 'bg-slate-100 border-slate-300 text-slate-800 shadow-inner' 
+                    : 'bg-slate-50 border-slate-100 text-slate-400 hover:bg-slate-100 hover:border-slate-300 hover:text-slate-800'
                 }`}
                 title="Notifikasi Transaksi"
             >
@@ -67,11 +67,11 @@ export default function TransactionNotifications({ userRole }) {
             </button>
 
             {isOpen && (
-                <div className="absolute right-0 mt-3 w-80 md:w-96 bg-emerald-950/90 backdrop-blur-3xl rounded-3xl shadow-2xl border border-white/10 overflow-hidden z-50 animate-in fade-in zoom-in duration-200 origin-top-right">
-                    <div className="p-5 bg-white/5 border-b border-white/5 flex items-center justify-between">
+                <div className="absolute right-0 mt-3 w-80 md:w-96 bg-white rounded-3xl shadow-2xl border border-slate-200 overflow-hidden z-50 animate-in fade-in zoom-in duration-200 origin-top-right">
+                    <div className="p-5 bg-slate-50 border-b border-slate-100 flex items-center justify-between">
                         <div>
-                            <h3 className="text-white font-black text-sm uppercase tracking-tight">Notifikasi Transaksi</h3>
-                            <p className="text-[10px] text-emerald-400 font-bold uppercase tracking-widest">Aktivitas Keuangan Terbaru</p>
+                            <h3 className="text-slate-800 font-black text-sm uppercase tracking-tight">Notifikasi Transaksi</h3>
+                            <p className="text-[10px] text-slate-400 font-bold uppercase tracking-widest">Aktivitas Keuangan Terbaru</p>
                         </div>
                         <button onClick={fetchNotifications} className="p-1.5 hover:bg-white/10 rounded-lg text-emerald-100/50 hover:text-emerald-400 transition-all">
                             <span className={`material-symbols-rounded text-sm ${loading ? 'animate-spin' : ''}`}>refresh</span>
@@ -94,10 +94,10 @@ export default function TransactionNotifications({ userRole }) {
                                             <span className="material-symbols-rounded text-[20px]">{notif.icon}</span>
                                         </div>
                                         <div className="flex-1">
-                                            <p className="text-emerald-100 font-semibold leading-relaxed mb-1 group-hover:text-white transition-colors">
+                                            <p className="text-slate-700 font-semibold leading-relaxed mb-1 group-hover:text-black transition-colors">
                                                 {notif.message}
                                             </p>
-                                            <p className="text-[9px] font-black text-emerald-400/30 uppercase tracking-tighter group-hover:text-emerald-400/60 transition-colors">
+                                            <p className="text-[9px] font-black text-slate-300 uppercase tracking-tighter group-hover:text-slate-500 transition-colors">
                                                 {new Date(notif.tanggal).toLocaleTimeString('id-ID', { hour: '2-digit', minute: '2-digit' })} • {new Date(notif.tanggal).toLocaleDateString('id-ID', { day: 'numeric', month: 'short' })}
                                             </p>
                                         </div>

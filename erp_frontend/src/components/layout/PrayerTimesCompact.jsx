@@ -131,8 +131,8 @@ const PrayerTimesCompact = () => {
           className={`
             flex items-center gap-3 px-4 py-1.5 rounded-full border transition-all duration-500 cursor-pointer group
             ${isWarning 
-              ? 'bg-red-500/20 border-red-500/30 animate-pulse scale-105 shadow-lg shadow-red-500/20' 
-              : 'bg-white/5 border-white/10 shadow-sm hover:bg-white/10'}
+              ? 'bg-red-50 border-red-200 animate-pulse scale-105 shadow-lg' 
+              : 'bg-slate-50 border-slate-100 shadow-sm hover:bg-slate-100'}
           `}
           title="Klik untuk Simulasi Pop-up"
         >
@@ -151,10 +151,10 @@ const PrayerTimesCompact = () => {
               {isWarning && <span className="w-1.5 h-1.5 rounded-full bg-red-500 animate-ping"></span>}
             </div>
             <div className="flex items-center gap-2 -mt-1">
-              <span className={`text-xs font-black tabular-nums ${isWarning ? 'text-red-200' : 'text-white'}`}>
+              <span className={`text-xs font-black tabular-nums ${isWarning ? 'text-red-700' : 'text-slate-800'}`}>
                 {timeLeft}
               </span>
-              <span className="text-[10px] font-bold text-emerald-100/30">Lagi</span>
+              <span className="text-[10px] font-bold text-slate-400">Lagi</span>
             </div>
         </div>
       </div>

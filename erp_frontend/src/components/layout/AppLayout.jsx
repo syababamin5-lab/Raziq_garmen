@@ -42,12 +42,12 @@ export default function AppLayout() {
         <ChatSystem isOpen={isChatOpen} onClose={() => setChatOpen(false)} onUnreadUpdate={setUnreadCount} />
         {!isChatOpen && <AIAssistantHub userRole={user?.role} />}
         <main className="flex-1 mt-14 p-10 overflow-auto"><Outlet /></main>
-        <footer className="px-10 py-6 border-t border-white/5 bg-emerald-950/20 backdrop-blur-sm flex flex-col md:flex-row justify-between items-center gap-4">
+        <footer className="px-10 py-6 border-t border-slate-100 bg-white flex flex-col md:flex-row justify-between items-center gap-4">
           <div className="flex items-center gap-3 group">
-            <div className="w-8 h-8 rounded-lg bg-emerald-500/10 flex items-center justify-center border border-emerald-500/20 group-hover:bg-emerald-500/20 transition-colors"><img src="/logo_ansa.png" alt="ANSA Logo" className="h-5 w-5 object-contain" /></div>
-            <div className="flex flex-col"><p className="text-emerald-500/40 text-[9px] font-black uppercase tracking-[0.2em] leading-none">Developed by</p><p className="text-emerald-400 text-xs font-black tracking-tighter">ANSA <span className="text-white">ENTERPRISE</span></p></div>
+            <div className="w-8 h-8 rounded-lg bg-slate-50 flex items-center justify-center border border-slate-200 group-hover:bg-emerald-50 transition-colors"><img src="/logo_ansa.png" alt="ANSA Logo" className="h-5 w-5 object-contain" /></div>
+            <div className="flex flex-col"><p className="text-slate-400 text-[9px] font-black uppercase tracking-[0.2em] leading-none">Developed by</p><p className="text-slate-900 text-xs font-black tracking-tighter">ANSA <span className="text-emerald-600">ENTERPRISE</span></p></div>
           </div>
-          <div className="flex flex-col items-end gap-1"><p className="text-emerald-500/30 text-[10px] font-bold tracking-widest uppercase">&copy; {new Date().getFullYear()} Raziq Garmen</p><p className="text-emerald-500/20 text-[8px] font-medium tracking-tight">Sistem Informasi Manajemen Produksi & Keuangan Terintegrasi</p></div>
+          <div className="flex flex-col items-end gap-1"><p className="text-slate-400 text-[10px] font-bold tracking-widest uppercase">&copy; {new Date().getFullYear()} Raziq Garmen</p><p className="text-slate-300 text-[8px] font-medium tracking-tight">Sistem Informasi Manajemen Produksi & Keuangan Terintegrasi</p></div>
         </footer>
       </div>
 

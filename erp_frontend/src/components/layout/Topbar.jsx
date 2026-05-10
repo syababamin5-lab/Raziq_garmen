@@ -14,7 +14,7 @@ export default function Topbar({ title, onToggleSidebar, isSidebarOpen, onOpenCh
   return (
     <header className="
       fixed top-0 right-0 h-14 
-      bg-emerald-950/40 backdrop-blur-xl border-b border-white/5
+      bg-white/80 backdrop-blur-md border-b border-slate-200
       flex items-center justify-between px-6 z-40
       transition-all duration-300 ease-in-out
     " style={{ left: isSidebarOpen ? '256px' : '80px' }}>
@@ -30,7 +30,7 @@ export default function Topbar({ title, onToggleSidebar, isSidebarOpen, onOpenCh
             </span>
         </button>
 
-        <h2 className="text-white font-extrabold text-lg tracking-tight uppercase">
+        <h2 className="text-slate-800 font-extrabold text-lg tracking-tight uppercase">
           {title}
         </h2>
       </div>
@@ -45,7 +45,7 @@ export default function Topbar({ title, onToggleSidebar, isSidebarOpen, onOpenCh
           onClick={onOpenProfile}
           className="flex items-center gap-3 cursor-pointer hover:bg-white/5 p-1.5 rounded-2xl transition-all active:scale-95 group"
         >
-          <div className="w-9 h-9 rounded-xl bg-emerald-500/20 border border-white/10 flex items-center justify-center text-emerald-300 font-black text-sm overflow-hidden shadow-sm group-hover:border-emerald-400 transition-colors">
+          <div className="w-9 h-9 rounded-xl bg-slate-100 border border-slate-200 flex items-center justify-center text-slate-500 font-black text-sm overflow-hidden shadow-sm group-hover:border-emerald-400 transition-colors">
             {user?.foto_base64 || user?.foto_url ? (
               <img src={user.foto_base64 || getFileUrl(user.foto_url)} className="w-full h-full object-cover" alt="" />
             ) : (
@@ -53,8 +53,8 @@ export default function Topbar({ title, onToggleSidebar, isSidebarOpen, onOpenCh
             )}
           </div>
           <div className="hidden md:flex flex-col items-end">
-            <p className="text-white font-bold text-xs uppercase tracking-tighter group-hover:text-emerald-400 transition-colors">{user?.nama_lengkap || 'Syabab Amin'}</p>
-            <p className="text-emerald-500 font-black text-[9px] uppercase tracking-widest">{user?.role?.replace('_', ' ') || 'Administrator'}</p>
+            <p className="text-slate-800 font-bold text-xs uppercase tracking-tighter group-hover:text-emerald-600 transition-colors">{user?.nama_lengkap || 'Syabab Amin'}</p>
+            <p className="text-slate-400 font-black text-[9px] uppercase tracking-widest">{user?.role?.replace('_', ' ') || 'Administrator'}</p>
           </div>
         </div>
 
@@ -77,10 +77,10 @@ export default function Topbar({ title, onToggleSidebar, isSidebarOpen, onOpenCh
         
         <div 
           onClick={logout}
-          className="w-10 h-10 rounded-2xl bg-white/5 border border-white/5 flex items-center justify-center text-emerald-100/30 group cursor-pointer hover:bg-red-500/20 hover:border-red-500/30 transition-all"
+          className="w-10 h-10 rounded-2xl bg-slate-50 border border-slate-100 flex items-center justify-center text-slate-400 group cursor-pointer hover:bg-red-50 hover:text-red-600 transition-all"
           title="Logout"
         >
-          <span className="material-symbols-rounded group-hover:text-red-400 transition-colors">logout</span>
+          <span className="material-symbols-rounded group-hover:text-red-500 transition-colors">logout</span>
         </div>
       </div>
     </header>
