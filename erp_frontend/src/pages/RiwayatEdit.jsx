@@ -76,7 +76,7 @@ export default function RiwayatEdit() {
   };
 
   return (
-    <div className="max-w-6xl mx-auto space-y-6 pb-20 font-outfit">
+    <div className="w-full px-4 md:px-10 space-y-6 pb-20 font-outfit">
       {/* Header */}
       <div className="bg-white p-8 rounded-[2rem] shadow-sm border border-slate-100 flex items-center justify-between">
         <div className="flex items-center gap-4">
