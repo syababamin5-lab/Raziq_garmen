@@ -680,6 +680,26 @@ export default function CuttingInputMobile() {
         </div>
       </div>
 
+      {/* ── ZOOM PHOTO MODAL ── */}
+      {showZoom && (
+        <div 
+          className="fixed inset-0 z-[100] bg-black/95 backdrop-blur-2xl flex flex-col items-center justify-center p-0 animate-in fade-in duration-300"
+          onClick={() => setShowZoom(false)}
+        >
+          <div className="relative w-full h-[80vh] flex items-center justify-center animate-in zoom-in-90 duration-500">
+            <img 
+              src={profileForm.foto_base64 || profileForm.foto_url || "https://images.unsplash.com/photo-1539571696357-5a69c17a67c6?w=1000&h=1000&fit=crop"} 
+              alt="zoom profile" 
+              className="w-full h-full object-contain shadow-2xl shadow-white/5"
+            />
+            <button className="absolute top-10 right-6 w-14 h-14 rounded-full bg-white/10 backdrop-blur-xl text-white flex items-center justify-center border border-white/20 active:scale-90 transition-all">
+              <span className="material-symbols-rounded text-3xl">close</span>
+            </button>
+          </div>
+          <div className="mt-8 text-white/40 text-[10px] font-black uppercase tracking-[0.5em] animate-pulse">Ketuk di mana saja untuk menutup</div>
+        </div>
+      )}
+
       {/* ── DETAIL MODAL (BOTTOM SHEET) ── */}
       {selectedHistory && (
         <div className="fixed inset-0 z-[100] flex items-end justify-center bg-black/60 backdrop-blur-sm p-4 animate-in fade-in duration-300" 
