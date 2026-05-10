@@ -46,7 +46,7 @@ export default function Sidebar({ isOpen, onOpenProfile }) {
   } catch (e) {
     console.error("Hijri calendar not supported:", e);
   }
-
+  useEffect(() => {
     fetchMenus();
   }, [user]);
 
