@@ -287,8 +287,15 @@ def ai_executive_assistant(req: AskRequest, db: Session = Depends(get_db)):
             formatted_row = {}
             for k, v in row.items():
                 # Formatting sederhana untuk nominal uang
-                if isinstance(v, (int, float)) and any(x in k.lower() for x in ['total', 'nominal', 'saldo', 'harga', 'tagihan', 'debit', 'kredit']):
-                    formatted_row[k.replace('_', ' ').title()] = f"Rp {v:,.0f}".replace(',', '.')
+                # Formatting cerdas: Rp untuk uang, Angka murni untuk qty/lusin/pcs
+                is_money = any(x in k.lower() for x in ['total', 'nominal', 'saldo', 'harga', 'tagihan', 'debit', 'kredit', 'nilai'])
+                is_qty = any(x in k.lower() for x in ['qty', 'lusin', 'pcs', 'hasil', 'jumlah'])
+                
+                if isinstance(v, (int, float)) and is_money and not is_qty:
+                    formatted_row[k.replace('_', ' ').title()] = f"Rp {v:,.2f}".replace(',', 'X').replace('.', ',').replace('X', '.')
+                elif isinstance(v, (int, float)):
+                    # Format angka ribuan untuk qty tanpa Rp
+                    formatted_row[k.replace('_', ' ').title()] = f"{v:,.2f}".replace(',', 'X').replace('.', ',').replace('X', '.')
                 else:
                     formatted_row[k.replace('_', ' ').title()] = str(v)
             data_tabel.append(formatted_row)

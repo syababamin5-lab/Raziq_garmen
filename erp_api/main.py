@@ -162,7 +162,7 @@ async def log_user_activity(request: Request, call_next):
                 write_user_log(username, nama, aksi, menu)
                 
         except:
-            pass # Jangan biarkan error logging menghentikan aplikasi
+            pass 
             
     return response
 
@@ -209,14 +209,13 @@ async def startup_event():
         except:
             db.rollback()
 
-        # Migrasi password_plain untuk tabel users (Super Admin feature)
         try:
             db.execute(text("ALTER TABLE users ADD COLUMN password_plain VARCHAR"))
             db.commit()
         except:
             db.rollback()
 
-        # AUTO-RECOVERY PASSWORD LAMA (Menjalankan di background agar startup tidak lambat)
+
         def run_recovery():
             recovery_db = SessionLocal()
             try:

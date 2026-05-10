@@ -100,12 +100,17 @@ def get_dashboard_summary(db: Session = Depends(get_db)):
             if total_baju_nilai <= 0:
                 total_baju_nilai = sum((b.stok_saat_ini or 0) * (b.harga_modal or 0) for b in barang_jadi)
             
-            kain = db.query(models.Barang).filter(
+            # 3a. Stok Kain (Bahan Baku)
+            kain_all = db.query(models.Barang).filter(
                 models.Barang.kategori.ilike("%Bahan Baku%") | 
                 models.Barang.kategori.ilike("%Kain%")
             ).all()
-            total_kain_kg = sum(k.stok_saat_ini or 0 for k in kain)
-            detail_kain = [{"nama": k.nama_barang, "kg": k.stok_saat_ini or 0} for k in kain[:5]]
+            total_kain_kg = sum(k.stok_saat_ini or 0 for k in kain_all)
+            
+            # Urutkan berdasarkan stok terbanyak dan ambil 5 teratas yang tidak nol
+            kain_sorted = sorted([k for k in kain_all if (k.stok_saat_ini or 0) > 0], 
+                                key=lambda x: x.stok_saat_ini, reverse=True)
+            detail_kain = [{"nama": k.nama_barang, "kg": k.stok_saat_ini} for k in kain_sorted[:5]]
 
             # 3b. TARGET & AKTUAL CUTTING (Mingguan)
             config = db.query(models.CompanyConfig).first()
