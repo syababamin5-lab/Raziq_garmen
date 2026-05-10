@@ -120,7 +120,7 @@ def get_dashboard_summary(db: Session = Depends(get_db)):
             buffer_hours = 7
             start_of_week_utc = start_of_week - datetime.timedelta(hours=buffer_hours)
 
-            # Hitung Aktual dari ProductionLog
+            # Hitung Aktual dari ProductionLog (Tanpa batas atas agar data terbaru masuk)
             actual_cutting = db.query(func.sum(models.ProductionLog.qty_hasil))\
                 .filter(models.ProductionLog.divisi.ilike("Cutting"), models.ProductionLog.tanggal >= start_of_week_utc)\
                 .scalar() or 0

@@ -119,11 +119,18 @@ def get_cutting_history(periode: str = "hari_ini", db: Session = Depends(get_db)
         end_date_utc = end_date - datetime.timedelta(hours=buffer_hours)
 
         # Query Utama: Gunakan filter ilike dan rentang tanggal yang pas
-        logs = db.query(models.ProductionLog).filter(
-            models.ProductionLog.divisi.ilike("Cutting"),
-            models.ProductionLog.tanggal >= start_date_utc,
-            models.ProductionLog.tanggal < end_date_utc
-        ).order_by(models.ProductionLog.tanggal.desc()).all()
+        # PERBAIKAN: Untuk periode berjalan, jangan batasi end_date_utc terlalu ketat agar data terbaru tidak hilang
+        if periode in ["hari_ini", "minggu_ini", "bulan_ini", "semua"]:
+            logs = db.query(models.ProductionLog).filter(
+                models.ProductionLog.divisi.ilike("Cutting"),
+                models.ProductionLog.tanggal >= start_date_utc
+            ).order_by(models.ProductionLog.tanggal.desc()).all()
+        else:
+            logs = db.query(models.ProductionLog).filter(
+                models.ProductionLog.divisi.ilike("Cutting"),
+                models.ProductionLog.tanggal >= start_date_utc,
+                models.ProductionLog.tanggal < end_date_utc
+            ).order_by(models.ProductionLog.tanggal.desc()).all()
 
         result = []
         for l in logs:
