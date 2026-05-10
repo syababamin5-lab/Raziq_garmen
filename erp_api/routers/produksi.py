@@ -348,6 +348,10 @@ def get_rekap_cutting(db: Session = Depends(get_db)):
                     info_potong = ket.split("[Potong: ")[1].split("]")[0] 
                     nama = info_potong.split(" | ")[0].strip()
                     upah = float(info_potong.split("Upah: ")[1].strip())
+                    
+                    # Update Grouping Map untuk ringkasan di atas
+                    group_map[nama] = group_map.get(nama, 0) + upah
+
                     pcs_match = re.search(r'Cutting (\d+) pcs', ket)
                     pcs = int(pcs_match.group(1)) if pcs_match else 0
 
