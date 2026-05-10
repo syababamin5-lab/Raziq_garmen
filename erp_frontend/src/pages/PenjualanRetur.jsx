@@ -31,6 +31,7 @@ export default function PenjualanRetur() {
 
     // REAL-TIME BALANCES
     const [balances, setBalances] = useState({ tunai: 0, bank: 0 });
+    const [showHelp, setShowHelp] = useState(false);
 
     const fetchBalances = async () => {
         try {
@@ -184,7 +185,7 @@ export default function PenjualanRetur() {
                 </div>
 
                 {/* Real-time Balances UI */}
-                <div className="ml-auto flex gap-4">
+                <div className="ml-auto flex items-center gap-4">
                     <div className="bg-emerald-50 border border-emerald-100 p-4 rounded-2xl flex flex-col items-center min-w-[140px] shadow-sm">
                         <span className="text-[10px] font-black text-emerald-600 uppercase tracking-widest mb-1 flex items-center gap-1">
                             <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse"></span>
@@ -210,22 +211,33 @@ export default function PenjualanRetur() {
             )}
 
             {/* TABS */}
-            <div className="flex space-x-1 p-1 bg-slate-100 rounded-2xl w-fit">
-                {[
-                    { id: 'input', label: 'Input Penjualan', icon: 'add_shopping_cart' },
-                    { id: 'retur', label: 'Retur Barang', icon: 'keyboard_return' },
-                    { id: 'history', label: 'Riwayat & Void', icon: 'history' }
-                ].map(t => (
-                    <button
-                        key={t.id}
-                        onClick={() => { setActiveTab(t.id); setMsg({ text: '', type: '' }); }}
-                        className={`flex items-center gap-2 px-6 py-2.5 rounded-xl text-sm font-bold transition-all ${activeTab === t.id ? 'bg-[#10B981] text-white shadow-md' : 'text-slate-500 hover:bg-slate-200'
-                            }`}
-                    >
-                        <span className="material-symbols-rounded text-lg">{t.icon}</span>
-                        {t.label}
-                    </button>
-                ))}
+            <div className="flex items-center gap-4">
+                <div className="flex space-x-1 p-1 bg-slate-100 rounded-2xl w-fit border border-slate-200 shadow-sm">
+                    {[
+                        { id: 'input', label: 'Input Penjualan', icon: 'add_shopping_cart' },
+                        { id: 'retur', label: 'Retur Barang', icon: 'keyboard_return' },
+                        { id: 'history', label: 'Riwayat & Void', icon: 'history' }
+                    ].map(t => (
+                        <button
+                            key={t.id}
+                            onClick={() => { setActiveTab(t.id); setMsg({ text: '', type: '' }); }}
+                            className={`flex items-center gap-2 px-6 py-2.5 rounded-xl text-sm font-bold transition-all ${activeTab === t.id ? 'bg-[#10B981] text-white shadow-md' : 'text-slate-500 hover:bg-slate-200'
+                                }`}
+                        >
+                            <span className="material-symbols-rounded text-lg">{t.icon}</span>
+                            {t.label}
+                        </button>
+                    ))}
+                </div>
+
+                <button 
+                    onClick={() => setShowHelp(true)}
+                    className="flex items-center gap-2 px-4 py-2.5 rounded-xl bg-white border border-slate-200 text-slate-500 hover:bg-emerald-50 hover:text-emerald-600 hover:border-emerald-200 transition-all font-bold text-sm shadow-sm group"
+                >
+                    <span className="material-symbols-rounded text-xl group-hover:rotate-12 transition-transform">help</span>
+                    <span>Bantuan</span>
+                    <span className="w-2 h-2 bg-red-500 rounded-full animate-pulse"></span>
+                </button>
             </div>
 
             <div className="bg-white rounded-[2rem] p-8 shadow-[0_10px_40px_rgba(0,0,0,0.03)] border border-slate-100 min-h-[500px]">
@@ -644,6 +656,135 @@ export default function PenjualanRetur() {
                 onClose={() => setInvoiceModal({ open: false, invoice: null })}
                 invoice={invoiceModal.invoice}
             />
+
+            {/* ── HELP / TUTORIAL MODAL ────────────────── */}
+            {showHelp && (
+                <div className="fixed inset-0 z-[60] flex items-center justify-center p-4 bg-slate-900/60 backdrop-blur-md animate-in fade-in duration-300">
+                    <div className="bg-white rounded-[2.5rem] shadow-2xl w-full max-w-2xl max-h-[85vh] overflow-hidden flex flex-col animate-in zoom-in-95 slide-in-from-bottom-8 duration-300">
+                        {/* Header Help */}
+                        <div className="bg-gradient-to-r from-[#064E3B] to-[#10B981] p-8 text-white flex items-center justify-between">
+                            <div className="flex items-center gap-4">
+                                <div className="w-12 h-12 bg-white/20 rounded-2xl flex items-center justify-center backdrop-blur-sm">
+                                    <span className="material-symbols-rounded text-2xl">menu_book</span>
+                                </div>
+                                <div>
+                                    <h2 className="text-xl font-black uppercase tracking-tighter">Panduan Pengisian Form Penjualan</h2>
+                                    <p className="text-emerald-100 text-xs font-medium">Pelajari cara kerja sistem POS & Akuntansi Raziq Garmen</p>
+                                </div>
+                            </div>
+                            <button onClick={() => setShowHelp(false)} className="w-10 h-10 rounded-xl bg-black/10 hover:bg-black/20 flex items-center justify-center transition-all">
+                                <span className="material-symbols-rounded">close</span>
+                            </button>
+                        </div>
+
+                        {/* Content Help (Scrollable) */}
+                        <div className="p-8 overflow-y-auto space-y-8 font-outfit">
+                            {/* Section 1 */}
+                            <section className="space-y-3">
+                                <div className="flex items-center gap-2 text-emerald-700">
+                                    <span className="material-symbols-rounded">edit_document</span>
+                                    <h3 className="font-black text-lg uppercase tracking-tight">1. Apa yang harus diisi?</h3>
+                                </div>
+                                <div className="grid grid-cols-1 md:grid-cols-2 gap-3 text-sm">
+                                    <div className="bg-slate-50 p-4 rounded-2xl border border-slate-100">
+                                        <p className="font-black text-slate-800 mb-1">Produk & Qty</p>
+                                        <p className="text-slate-500 leading-relaxed">Pilih model baju. Input jumlah dalam <b>Lusin</b> (Contoh: 1.5 LS = 18 Pcs). Pastikan stok mencukupi.</p>
+                                    </div>
+                                    <div className="bg-slate-50 p-4 rounded-2xl border border-slate-100">
+                                        <p className="font-black text-slate-800 mb-1">Customer & Tanggal</p>
+                                        <p className="text-slate-500 leading-relaxed">Pilih pembeli dari daftar mitra. Sesuaikan tanggal nota jika terjadi transaksi mundur.</p>
+                                    </div>
+                                    <div className="bg-slate-50 p-4 rounded-2xl border border-slate-100">
+                                        <p className="font-black text-slate-800 mb-1">Metode Pembayaran</p>
+                                        <p className="text-slate-500 leading-relaxed"><b>Tunai/Transfer</b> untuk lunas langsung, <b>Tempo</b> untuk penjualan kredit (piutang).</p>
+                                    </div>
+                                    <div className="bg-slate-50 p-4 rounded-2xl border border-slate-100">
+                                        <p className="font-black text-slate-800 mb-1">DP & Diskon</p>
+                                        <p className="text-slate-500 leading-relaxed">Gunakan DP untuk tanda jadi pada metode Tempo. Diskon akan memotong total tagihan bersih.</p>
+                                    </div>
+                                </div>
+                            </section>
+
+                            {/* Section 2 */}
+                            <section className="space-y-3">
+                                <div className="flex items-center gap-2 text-blue-700">
+                                    <span className="material-symbols-rounded">ads_click</span>
+                                    <h3 className="font-black text-lg uppercase tracking-tight">2. Langkah-Langkah Mengisi</h3>
+                                </div>
+                                <div className="space-y-2">
+                                    {[
+                                        "Pilih Barang & Harga -> Klik <b>Masukkan ke Keranjang</b>.",
+                                        "Ulangi langkah di atas jika ada lebih dari satu item barang.",
+                                        "Lengkapi <b>Informasi Nota</b> (Customer, Tanggal, Metode).",
+                                        "Periksa kembali <b>Ringkasan Nota</b> di panel sebelah kanan.",
+                                        "Klik tombol <b>TERBITKAN INVOICE</b> untuk menyimpan transaksi."
+                                    ].map((step, i) => (
+                                        <div key={i} className="flex gap-4 items-start bg-blue-50/50 p-3 rounded-xl border border-blue-100/50">
+                                            <span className="w-6 h-6 rounded-full bg-blue-600 text-white flex-shrink-0 flex items-center justify-center text-[10px] font-black">{i+1}</span>
+                                            <p className="text-sm text-slate-700" dangerouslySetInnerHTML={{ __html: step }}></p>
+                                        </div>
+                                    ))}
+                                </div>
+                            </section>
+
+                            {/* Section 3 */}
+                            <section className="space-y-3">
+                                <div className="flex items-center gap-2 text-red-700">
+                                    <span className="material-symbols-rounded">warning</span>
+                                    <h3 className="font-black text-lg uppercase tracking-tight">3. Hal yang JANGAN Dilakukan</h3>
+                                </div>
+                                <ul className="space-y-2 list-none">
+                                    <li className="flex gap-2 text-sm text-slate-600 bg-red-50/50 p-3 rounded-xl border border-red-100/50">
+                                        <span className="text-red-500 font-black">✖</span>
+                                        <span><b>Jangan</b> input Qty melebihi stok tersedia. Sistem akan memblokir transaksi otomatis.</span>
+                                    </li>
+                                    <li className="flex gap-2 text-sm text-slate-600 bg-red-50/50 p-3 rounded-xl border border-red-100/50">
+                                        <span className="text-red-500 font-black">✖</span>
+                                        <span><b>Jangan</b> salah pilih metode (Tunai vs Tempo). Ini akan mengacaukan laporan Piutang & Kas.</span>
+                                    </li>
+                                    <li className="flex gap-2 text-sm text-slate-600 bg-red-50/50 p-3 rounded-xl border border-red-100/50">
+                                        <span className="text-red-500 font-black">✖</span>
+                                        <span><b>Jangan</b> menghapus invoice yang sudah lunas tanpa koordinasi. Sebaiknya gunakan fitur Void.</span>
+                                    </li>
+                                </ul>
+                            </section>
+
+                            {/* Section 4 */}
+                            <section className="bg-slate-900 rounded-[2rem] p-6 text-white space-y-4">
+                                <div className="flex items-center gap-2 text-emerald-400">
+                                    <span className="material-symbols-rounded">analytics</span>
+                                    <h3 className="font-black text-lg uppercase tracking-tight">4. Alur & Pengaruh Transaksi</h3>
+                                    <span className="ml-auto px-3 py-1 rounded-full bg-emerald-500/20 text-[10px] font-black border border-emerald-500/30">AUTOMATED JURNAL</span>
+                                </div>
+                                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                    <div className="space-y-2">
+                                        <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest">Dampak Stok</p>
+                                        <div className="flex items-center gap-3">
+                                            <div className="w-10 h-10 rounded-xl bg-white/10 flex items-center justify-center"><span className="material-symbols-rounded text-emerald-400">inventory_2</span></div>
+                                            <p className="text-xs text-slate-300 leading-relaxed">Stok barang jadi (baju) berkurang sesuai jumlah yang terjual di gudang.</p>
+                                        </div>
+                                    </div>
+                                    <div className="space-y-2">
+                                        <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest">Dampak Keuangan</p>
+                                        <div className="flex items-center gap-3">
+                                            <div className="w-10 h-10 rounded-xl bg-white/10 flex items-center justify-center"><span className="material-symbols-rounded text-blue-400">account_balance_wallet</span></div>
+                                            <p className="text-xs text-slate-300 leading-relaxed">Mencatat Pendapatan, HPP, serta menambah Saldo Kas/Bank atau Saldo Piutang Customer.</p>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div className="pt-2">
+                                    <p className="text-[10px] text-center text-slate-500 italic font-medium">Transaksi ini akan muncul di Dashboard (Uang Masuk), Laba Rugi, dan Kartu Piutang.</p>
+                                </div>
+                            </section>
+                        </div>
+
+                        {/* Footer Help */}
+                        <div className="p-6 border-t border-slate-100 flex justify-center bg-slate-50/50">
+                            <button onClick={() => setShowHelp(false)} className="px-12 py-3 bg-slate-900 text-white rounded-2xl font-black hover:bg-black transition-all shadow-lg">MENGERTI, TUTUP PANDUAN</button>
+                        </div>
+                    </div>
+                </div>
+            )}
 
         </div>
     );
