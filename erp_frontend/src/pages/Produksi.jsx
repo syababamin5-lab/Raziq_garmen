@@ -9,6 +9,8 @@ export default function Produksi() {
   const [activeTab, setActiveTab] = useState('cutting');
   const [loading, setLoading] = useState(false);
   const [msg, setMsg] = useState({ text: '', type: '' });
+  const [showHelp, setShowHelp] = useState(false);
+  const [helpContext, setHelpContext] = useState('cutting');
 
   // Master Data
   const [options, setOptions] = useState({ kain_list: [], baju_list: [], karyawan_list: [] });
@@ -207,14 +209,22 @@ export default function Produksi() {
 
   return (
     <div className="max-w-6xl mx-auto pb-10">
-      <div className="flex items-center gap-3 mb-6">
-        <div className="w-10 h-10 rounded-xl bg-emerald-100 flex items-center justify-center">
-          <span className="material-symbols-rounded text-emerald-600">content_cut</span>
+      <div className="flex items-center justify-between mb-6 bg-slate-50 p-6 rounded-3xl border border-slate-100 shadow-sm">
+        <div className="flex items-center gap-3">
+          <div className="w-12 h-12 rounded-2xl bg-emerald-100 flex items-center justify-center shadow-inner">
+            <span className="material-symbols-rounded text-emerald-600 text-3xl">content_cut</span>
+          </div>
+          <div>
+            <h1 className="text-2xl font-black text-slate-800 tracking-tight">Produksi Harian</h1>
+            <p className="text-sm text-slate-500 font-medium">Catat flow pemotongan kain dan penyelesaian barang jadi.</p>
+          </div>
         </div>
-        <div>
-          <h1 className="text-2xl font-black text-slate-800">Produksi Harian</h1>
-          <p className="text-sm text-slate-500 font-medium">Catat flow pemotongan kain dan penyelesaian barang jadi.</p>
-        </div>
+        <button 
+            onClick={() => { setHelpContext(activeTab); setShowHelp(true); }}
+            className="w-10 h-10 rounded-2xl flex items-center justify-center bg-white text-slate-400 hover:bg-slate-900 hover:text-white transition-all shadow-md border border-slate-100 group"
+        >
+            <span className="material-symbols-rounded text-[22px] group-hover:rotate-12 transition-transform">info</span>
+        </button>
       </div>
 
       {msg.text && (
@@ -719,6 +729,141 @@ export default function Produksi() {
         )}
 
       </div>
+
+      {/* ── HELP / TUTORIAL MODAL (DYNAMIC CONTENT) ────────────────── */}
+      {showHelp && (
+        <div className="fixed inset-0 z-[60] flex items-center justify-center p-4 bg-slate-900/60 backdrop-blur-md animate-in fade-in duration-300">
+            <div className="bg-white rounded-[2.5rem] shadow-2xl w-full max-w-3xl max-h-[90vh] overflow-hidden flex flex-col animate-in zoom-in-95 slide-in-from-bottom-8 duration-300">
+                {/* Header Help */}
+                <div className={`p-8 text-white flex items-center justify-between bg-gradient-to-r ${
+                    activeTab === 'cutting' ? 'from-emerald-700 to-emerald-500' : 
+                    activeTab === 'jahit' ? 'from-blue-700 to-blue-500' : 
+                    activeTab === 'rekap' ? 'from-slate-700 to-slate-500' :
+                    activeTab === 'wip' ? 'from-indigo-700 to-indigo-500' :
+                    'from-amber-700 to-amber-500'
+                }`}>
+                    <div className="flex items-center gap-6">
+                        <div className="w-14 h-14 bg-white/20 rounded-2xl flex items-center justify-center backdrop-blur-sm border border-white/20 shadow-inner">
+                            <span className="material-symbols-rounded text-2xl">
+                                {activeTab === 'cutting' ? 'content_cut' : activeTab === 'jahit' ? 'checkroom' : activeTab === 'rekap' ? 'payments' : activeTab === 'wip' ? 'inventory_2' : 'settings_backup_restore'}
+                            </span>
+                        </div>
+                        <div>
+                            <h2 className="text-xl font-black uppercase tracking-tighter">
+                                PANDUAN {activeTab === 'cutting' ? 'POTONG KAIN' : activeTab === 'jahit' ? 'PENYELESAIAN JAHIT' : activeTab === 'rekap' ? 'REKAP UPAH' : activeTab === 'wip' ? 'WIP PRODUCTION' : 'SETUP AWAL WIP'}
+                            </h2>
+                            <p className="text-white/70 text-xs font-medium italic">Standard Operating Procedure - Raziq Garmen Production Flow</p>
+                        </div>
+                    </div>
+                    <button onClick={() => setShowHelp(false)} className="w-10 h-10 rounded-xl bg-black/10 hover:bg-black/20 flex items-center justify-center transition-all">
+                        <span className="material-symbols-rounded">close</span>
+                    </button>
+                </div>
+
+                {/* Content Help (Scrollable) */}
+                <div className="p-10 overflow-y-auto space-y-8 font-outfit text-slate-700">
+                    
+                    {activeTab === 'cutting' && (
+                        <div className="space-y-6">
+                            <section className="bg-emerald-50/50 p-6 rounded-2xl border border-emerald-100 space-y-2">
+                                <h3 className="font-black text-emerald-800 uppercase text-sm tracking-widest">Transformasi Bahan Baku</h3>
+                                <p className="text-sm leading-relaxed">Modul ini mencatat pengubahan <b>Kain Gulungan (Kg)</b> menjadi <b>Potongan Baju (Pcs)</b>. Ini adalah langkah awal biaya produksi terserap ke dalam produk.</p>
+                            </section>
+                            <div className="bg-slate-900 text-white p-6 rounded-3xl space-y-3 shadow-xl">
+                                <p className="text-[10px] font-black uppercase tracking-widest text-emerald-400">Dampak Sistem & Jurnal:</p>
+                                <ul className="text-xs space-y-3 font-medium">
+                                    <li className="flex gap-3">
+                                        <span className="material-symbols-rounded text-emerald-400 text-sm">remove_circle</span>
+                                        <span>Stok Kain di Gudang akan <b>berkurang otomatis</b> sesuai jumlah Kg yang Anda input.</span>
+                                    </li>
+                                    <li className="flex gap-3">
+                                        <span className="material-symbols-rounded text-emerald-400 text-sm">add_circle</span>
+                                        <span>Nilai Persediaan akan berpindah dari <b>Bahan Baku</b> ke <b>Barang Dalam Proses (WIP)</b>.</span>
+                                    </li>
+                                    <li className="flex gap-3">
+                                        <span className="material-symbols-rounded text-emerald-400 text-sm">person</span>
+                                        <span>Upah potong akan tercatat sebagai hutang upah yang harus dibayarkan ke tukang potong.</span>
+                                    </li>
+                                </ul>
+                            </div>
+                        </div>
+                    )}
+
+                    {activeTab === 'jahit' && (
+                        <div className="space-y-6">
+                            <section className="bg-blue-50/50 p-6 rounded-2xl border border-blue-100 space-y-2">
+                                <h3 className="font-black text-blue-800 uppercase text-sm tracking-widest">Penyelesaian Barang Jadi</h3>
+                                <p className="text-sm leading-relaxed">Gunakan tab ini saat baju sudah selesai dijahit, di-QC, dan siap dijual. Satuan input adalah <b>Lusin</b>.</p>
+                            </section>
+                            <section className="space-y-3">
+                                <h3 className="font-black text-slate-800 uppercase text-[10px] tracking-widest pl-2">Alur Kerja Akuntansi:</h3>
+                                <ul className="text-xs space-y-3 font-medium">
+                                    <li className="flex items-start gap-4 bg-slate-50 p-4 rounded-xl border border-slate-100">
+                                        <span className="material-symbols-rounded text-blue-600">inventory</span>
+                                        <p>Input ini akan <b>menambah stok Barang Jadi</b> di gudang dan <b>mengurangi saldo WIP</b> (karena barang sudah tidak lagi "dalam proses").</p>
+                                    </li>
+                                    <li className="flex items-start gap-4 bg-slate-50 p-4 rounded-xl border border-slate-100">
+                                        <span className="material-symbols-rounded text-blue-600">calculate</span>
+                                        <p>Sistem akan menghitung HPP (Harga Pokok Penjualan) secara otomatis berdasarkan total biaya bahan dan upah yang terserap selama proses produksi.</p>
+                                    </li>
+                                </ul>
+                            </section>
+                        </div>
+                    )}
+
+                    {activeTab === 'wip' && (
+                        <div className="space-y-6">
+                            <section className="bg-indigo-50/50 p-6 rounded-2xl border border-indigo-100 space-y-2">
+                                <h3 className="font-black text-indigo-800 uppercase text-sm tracking-widest">Work In Process (WIP)</h3>
+                                <p className="text-sm leading-relaxed">WIP adalah aset perusahaan yang berbentuk barang setengah jadi. Monitoring WIP sangat penting untuk menjaga kesehatan arus produksi.</p>
+                            </section>
+                            <div className="grid grid-cols-2 gap-4 text-[11px]">
+                                <div className="p-5 border rounded-[2rem] bg-amber-50 border-amber-100">
+                                    <p className="font-black mb-2 uppercase tracking-tighter text-amber-800">WIP Positif (+)</p>
+                                    <p className="font-medium text-amber-700 leading-relaxed">Berarti ada barang yang sudah dipotong tapi <b>belum selesai dijahit/finishing</b>. Ini adalah antrean produksi.</p>
+                                </div>
+                                <div className="p-5 border rounded-[2rem] bg-red-50 border-red-100">
+                                    <p className="font-black mb-2 uppercase tracking-tighter text-red-800">WIP Negatif (-)</p>
+                                    <p className="font-medium text-red-700 leading-relaxed">Indikasi kesalahan input. Berarti jumlah barang jadi yang dilaporkan <b>lebih banyak</b> daripada kain yang pernah dipotong.</p>
+                                </div>
+                            </div>
+                        </div>
+                    )}
+
+                    {activeTab === 'wip_awal' && (
+                        <div className="space-y-6">
+                            <section className="bg-amber-50/50 p-6 rounded-2xl border border-amber-100 space-y-2">
+                                <h3 className="font-black text-amber-800 uppercase text-sm tracking-widest">Fitur Cut-Off Sistem</h3>
+                                <p className="text-sm leading-relaxed">Form ini hanya digunakan saat masa transisi awal penggunaan software Raziq Garmen. Tujuannya untuk mencatat barang yang sedang diproses di pabrik saat sistem baru mulai diaktifkan.</p>
+                            </section>
+                            <div className="bg-slate-900 p-8 rounded-[2.5rem] text-white">
+                                <p className="text-[10px] font-black uppercase tracking-[0.2em] mb-4 text-amber-400 flex items-center gap-2">
+                                    <span className="material-symbols-rounded">warning</span> ATURAN PENTING
+                                </p>
+                                <p className="text-[12px] leading-relaxed italic text-slate-300 font-medium">
+                                    "Fitur ini <b>tidak akan memotong stok kain</b> dan <b>tidak memotong saldo bank</b>. Sistem berasumsi biaya tersebut sudah dikeluarkan di periode akuntansi sebelumnya (sistem lama). Input ini hanya akan memunculkan saldo WIP awal agar barang bisa diselesaikan (Jahit) di sistem baru."
+                                </p>
+                            </div>
+                        </div>
+                    )}
+
+                    <div className="pt-6 border-t border-slate-100">
+                        <div className="flex items-center gap-3 bg-slate-50 p-4 rounded-xl justify-center">
+                            <span className="material-symbols-rounded text-slate-400">verified_user</span>
+                            <p className="text-[10px] text-slate-500 font-bold uppercase tracking-tighter text-center">
+                                SUMBER ATURAN: SAK ETAP INDONESIA, MANUFAKTUR BEST PRACTICES, & LOGIKA PRODUKSI RAZIQ GARMEN
+                            </p>
+                        </div>
+                    </div>
+                </div>
+
+                {/* Footer Help */}
+                <div className="p-8 border-t border-slate-100 flex justify-center bg-slate-50/50">
+                    <button onClick={() => setShowHelp(false)} className="px-16 py-4 bg-slate-900 text-white rounded-2xl font-black hover:bg-black transition-all shadow-xl hover:scale-105 active:scale-95 uppercase tracking-widest text-xs">SAYA MENGERTI, LANJUTKAN KERJA</button>
+                </div>
+            </div>
+        </div>
+      )}
     </div>
   );
 }
