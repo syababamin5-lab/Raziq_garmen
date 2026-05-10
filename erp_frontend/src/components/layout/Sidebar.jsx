@@ -14,6 +14,29 @@ export default function Sidebar({ isOpen, onOpenProfile }) {
     return () => clearInterval(timer);
   }, []);
 
+  const fetchMenus = async () => {
+    try {
+      const { data } = await api.get('/menus');
+      const filtered = data.filter(m => {
+        const isRoleMatch = m.roles?.split(',').includes(user?.role);
+        const isNotPanel = m.path !== 'DASHBOARD_PANEL';
+        if (user?.role === 'super_admin') return isRoleMatch && isNotPanel;
+        return m.is_active === 1 && isRoleMatch && isNotPanel;
+      });
+      setMenus(filtered);
+    } catch (err) {
+      console.error("Gagal mengambil menu:", err);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  useEffect(() => {
+    const handleUpdate = () => fetchMenus();
+    window.addEventListener('update-menus', handleUpdate);
+    return () => window.removeEventListener('update-menus', handleUpdate);
+  }, [user]);
+
   // ── Date & Time formatting logic ──
   const gregorianDate = currentTime.toLocaleDateString('id-ID', { weekday: 'long', day: 'numeric', month: 'long', year: 'numeric' });
   const timeString = currentTime.toLocaleTimeString('id-ID', { hour: '2-digit', minute: '2-digit', second: '2-digit' }).replace(/\./g, ':');
@@ -24,30 +47,6 @@ export default function Sidebar({ isOpen, onOpenProfile }) {
     console.error("Hijri calendar not supported:", e);
   }
 
-  useEffect(() => {
-    const fetchMenus = async () => {
-      try {
-        const { data } = await api.get('/menus');
-        // Filter: Hanya yang aktif, sesuai role user, DAN bukan merupakan panel dashboard
-        const filtered = data.filter(m => {
-          const isRoleMatch = m.roles?.split(',').includes(user?.role);
-          const isNotPanel = m.path !== 'DASHBOARD_PANEL';
-          
-          // SUPER ADMIN: Selalu bisa melihat menu apapun yang role-nya cocok (meski is_active=0)
-          if (user?.role === 'super_admin') {
-            return isRoleMatch && isNotPanel;
-          }
-
-          // Role lain: Harus role cocok DAN status menu aktif
-          return m.is_active === 1 && isRoleMatch && isNotPanel;
-        });
-        setMenus(filtered);
-      } catch (err) {
-        console.error("Gagal mengambil menu:", err);
-      } finally {
-        setLoading(false);
-      }
-    };
     fetchMenus();
   }, [user]);
 

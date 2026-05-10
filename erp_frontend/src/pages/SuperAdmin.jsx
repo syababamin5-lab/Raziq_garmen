@@ -345,10 +345,13 @@ export default function SuperAdmin() {
           </div>
 
           <button 
-            onClick={() => window.location.reload()}
-            className="w-full py-4 bg-slate-900 text-white font-black rounded-2xl hover:bg-emerald-600 transition-all duration-300 flex items-center justify-center gap-2 shadow-xl shadow-slate-100 mt-auto"
+            onClick={() => {
+              window.dispatchEvent(new CustomEvent('update-menus'));
+              alert("✅ Pengaturan berhasil diterapkan ke sistem tanpa reload!");
+            }}
+            className="w-full py-4 bg-emerald-600 text-white font-black rounded-2xl hover:bg-emerald-700 transition-all duration-300 flex items-center justify-center gap-2 shadow-xl shadow-emerald-100 mt-auto"
           >
-            <span className="material-symbols-rounded">sync</span>
+            <span className="material-symbols-rounded">check_circle</span>
             TERAPKAN KE SISTEM
           </button>
         </div>
