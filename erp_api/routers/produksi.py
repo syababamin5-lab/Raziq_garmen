@@ -412,9 +412,15 @@ def get_wip(db: Session = Depends(get_db)):
             sku = wa.kode_sku
             cut_map[sku] = cut_map.get(sku, 0) + wa.qty_pcs
         
-        # 2. Tambahkan hasil cutting reguler dari jurnal
+        # 2. Tambahkan hasil cutting reguler dari jurnal (Akun Lama 51110 & Akun Baru 12130)
+        jurnals_cut = db.query(models.JurnalUmum).filter(models.JurnalUmum.kode_akun.in_(["51110", "12130"])).all()
         for j in jurnals_cut:
             ket = str(j.keterangan)
+            
+            # Abaikan jurnal migrasi/kapitalisasi agar tidak double count dengan log fisik
+            if "MIGRASI_WIP" in ket or "Kapitalisasi WIP" in ket:
+                continue
+
             if "Cutting" in ket:
                 pm = re.search(r'Cutting (\d+) pcs', ket)
                 sm = re.search(r'\[SKU:([^\]]+)\]', ket)
