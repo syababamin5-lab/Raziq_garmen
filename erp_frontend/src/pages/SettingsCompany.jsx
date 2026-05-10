@@ -43,7 +43,7 @@ export default function SettingsCompany() {
   };
 
   return (
-    <div className="max-w-4xl mx-auto space-y-8 pb-20">
+    <div className="w-full px-4 md:px-10 space-y-8 pb-20">
       {/* Header */}
       <div className="bg-white p-10 rounded-[3rem] shadow-sm border border-slate-100 flex items-center gap-8 relative overflow-hidden">
         <div className="absolute top-0 right-0 w-32 h-full bg-emerald-500/5 -rotate-12 translate-x-10"></div>
