@@ -16,14 +16,14 @@
   html, body, #root {
     height: 100%;
     font-family: 'Inter', system-ui, sans-serif;
-    /* ── Enhanced Mesh Background ────────────────── */
-    background-color: #F1F5F9;
+    /* ── Midnight Emerald Luxury Theme ────────────────── */
+    background-color: #022C22; /* Darker than menu for depth */
     background-image: 
-      radial-gradient(at 0% 0%, hsla(161, 84%, 75%, 0.25) 0px, transparent 50%),
-      radial-gradient(at 100% 0%, hsla(199, 89%, 75%, 0.25) 0px, transparent 50%),
-      radial-gradient(at 100% 100%, hsla(161, 84%, 75%, 0.2) 0px, transparent 50%),
-      radial-gradient(at 0% 100%, hsla(199, 89%, 75%, 0.2) 0px, transparent 50%);
-    color: #1E293B;
+      radial-gradient(at 0% 0%, hsla(161, 84%, 35%, 0.15) 0px, transparent 50%),
+      radial-gradient(at 100% 0%, hsla(199, 89%, 35%, 0.15) 0px, transparent 50%),
+      radial-gradient(at 100% 100%, hsla(161, 84%, 35%, 0.1) 0px, transparent 50%),
+      radial-gradient(at 0% 100%, hsla(199, 89%, 35%, 0.1) 0px, transparent 50%);
+    color: #F8FAFC;
     -webkit-font-smoothing: antialiased;
     overflow-x: hidden;
   }
@@ -65,14 +65,14 @@
 @layer components {
   .font-outfit { font-family: 'Outfit', sans-serif; }
 
-  /* Card dengan Glassmorphism yang lebih tegas */
+  /* Card dengan Glassmorphism Luxury */
   .card {
-    @apply bg-white/70 backdrop-blur-xl rounded-[2rem] shadow-[0_4px_25px_rgba(0,0,0,0.03)] border border-white/60 p-6;
+    @apply bg-emerald-900/20 backdrop-blur-3xl rounded-[2rem] shadow-[0_8px_32px_rgba(0,0,0,0.2)] border border-white/5 p-6;
     transition: all 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
   }
   .card:hover {
-    @apply shadow-[0_25px_60px_rgba(16,185,129,0.12)] border-emerald-500/30 bg-white/90;
-    transform: translateY(-6px) scale(1.01);
+    @apply shadow-[0_25px_60px_rgba(16,185,129,0.15)] border-emerald-500/20 bg-emerald-800/30;
+    transform: translateY(-6px) scale(1.005);
   }
 
   /* Badge status transaksi */
@@ -90,10 +90,10 @@
   }
 
   .fin-value {
-    @apply text-2xl font-black text-slate-800 leading-tight tracking-tighter font-outfit;
+    @apply text-2xl font-black text-white leading-tight tracking-tighter font-outfit;
   }
   .fin-label {
-    @apply text-[10px] font-bold text-slate-400 uppercase tracking-[0.25em];
+    @apply text-[10px] font-bold text-emerald-400/60 uppercase tracking-[0.25em];
   }
 }
 

@@ -55,8 +55,8 @@ export default function TransactionNotifications({ userRole }) {
                 onClick={toggleDropdown}
                 className={`relative w-10 h-10 rounded-2xl border flex items-center justify-center transition-all ${
                     isOpen 
-                    ? 'bg-emerald-50 border-emerald-200 text-emerald-600' 
-                    : 'bg-slate-100 border-slate-200 text-slate-400 hover:bg-emerald-50 hover:border-emerald-200 hover:text-emerald-600'
+                    ? 'bg-emerald-500/20 border-emerald-500/30 text-emerald-300' 
+                    : 'bg-white/5 border-white/5 text-emerald-100/30 hover:bg-emerald-500/20 hover:border-emerald-500/30 hover:text-emerald-300'
                 }`}
                 title="Notifikasi Transaksi"
             >
@@ -67,13 +67,13 @@ export default function TransactionNotifications({ userRole }) {
             </button>
 
             {isOpen && (
-                <div className="absolute right-0 mt-3 w-80 md:w-96 bg-white rounded-3xl shadow-2xl border border-slate-100 overflow-hidden z-50 animate-in fade-in zoom-in duration-200 origin-top-right">
-                    <div className="p-5 bg-slate-50/50 border-b border-slate-100 flex items-center justify-between">
+                <div className="absolute right-0 mt-3 w-80 md:w-96 bg-emerald-950/90 backdrop-blur-3xl rounded-3xl shadow-2xl border border-white/10 overflow-hidden z-50 animate-in fade-in zoom-in duration-200 origin-top-right">
+                    <div className="p-5 bg-white/5 border-b border-white/5 flex items-center justify-between">
                         <div>
-                            <h3 className="text-slate-800 font-black text-sm uppercase tracking-tight">Notifikasi Transaksi</h3>
-                            <p className="text-[10px] text-slate-400 font-bold uppercase tracking-widest">Aktivitas Keuangan Terbaru</p>
+                            <h3 className="text-white font-black text-sm uppercase tracking-tight">Notifikasi Transaksi</h3>
+                            <p className="text-[10px] text-emerald-400 font-bold uppercase tracking-widest">Aktivitas Keuangan Terbaru</p>
                         </div>
-                        <button onClick={fetchNotifications} className="p-1.5 hover:bg-white rounded-lg text-slate-400 hover:text-emerald-500 transition-all">
+                        <button onClick={fetchNotifications} className="p-1.5 hover:bg-white/10 rounded-lg text-emerald-100/50 hover:text-emerald-400 transition-all">
                             <span className={`material-symbols-rounded text-sm ${loading ? 'animate-spin' : ''}`}>refresh</span>
                         </button>
                     </div>
@@ -81,23 +81,23 @@ export default function TransactionNotifications({ userRole }) {
                     <div className="max-h-[450px] overflow-y-auto custom-scrollbar">
                         {notifications.length === 0 ? (
                             <div className="py-12 px-6 text-center">
-                                <div className="w-16 h-16 bg-slate-50 rounded-2xl flex items-center justify-center mx-auto mb-4 text-slate-200">
+                                <div className="w-16 h-16 bg-white/5 rounded-2xl flex items-center justify-center mx-auto mb-4 text-emerald-100/10">
                                     <span className="material-symbols-rounded text-4xl">notifications_off</span>
                                 </div>
-                                <p className="text-slate-400 text-xs font-bold uppercase tracking-widest">Belum ada transaksi hari ini</p>
+                                <p className="text-emerald-100/30 text-xs font-bold uppercase tracking-widest">Belum ada transaksi hari ini</p>
                             </div>
                         ) : (
-                            <div className="divide-y divide-slate-50">
+                            <div className="divide-y divide-white/5">
                                 {notifications.map((notif) => (
-                                    <div key={notif.id} className="p-4 hover:bg-slate-50 transition-colors flex gap-4 items-start group">
-                                        <div className={`mt-1 w-10 h-10 rounded-2xl flex-shrink-0 flex items-center justify-center text-white shadow-lg shadow-${notif.color}-500/20 bg-${notif.color === 'emerald' ? 'emerald-500' : notif.color === 'orange' ? 'orange-500' : notif.color === 'rose' ? 'rose-500' : 'sky-500'}`}>
+                                    <div key={notif.id} className="p-4 hover:bg-white/5 transition-colors flex gap-4 items-start group">
+                                        <div className={`mt-1 w-10 h-10 rounded-2xl flex-shrink-0 flex items-center justify-center text-white shadow-lg shadow-emerald-500/20 bg-${notif.color === 'emerald' ? 'emerald-500' : notif.color === 'orange' ? 'orange-500' : notif.color === 'rose' ? 'rose-500' : 'sky-500'}`}>
                                             <span className="material-symbols-rounded text-[20px]">{notif.icon}</span>
                                         </div>
                                         <div className="flex-1">
-                                            <p className="text-slate-700 text-xs font-semibold leading-relaxed mb-1 group-hover:text-slate-900">
+                                            <p className="text-emerald-100 font-semibold leading-relaxed mb-1 group-hover:text-white transition-colors">
                                                 {notif.message}
                                             </p>
-                                            <p className="text-[9px] font-black text-slate-300 uppercase tracking-tighter">
+                                            <p className="text-[9px] font-black text-emerald-400/30 uppercase tracking-tighter group-hover:text-emerald-400/60 transition-colors">
                                                 {new Date(notif.tanggal).toLocaleTimeString('id-ID', { hour: '2-digit', minute: '2-digit' })} • {new Date(notif.tanggal).toLocaleDateString('id-ID', { day: 'numeric', month: 'short' })}
                                             </p>
                                         </div>
@@ -107,8 +107,8 @@ export default function TransactionNotifications({ userRole }) {
                         )}
                     </div>
 
-                    <div className="p-4 bg-slate-50 text-center">
-                        <p className="text-[9px] font-bold text-slate-400 uppercase tracking-widest">Sistem Keuangan ANSA Enterprise</p>
+                    <div className="p-4 bg-black/20 text-center">
+                        <p className="text-[9px] font-bold text-emerald-400/20 uppercase tracking-widest">Sistem Keuangan ANSA Enterprise</p>
                     </div>
                 </div>
             )}

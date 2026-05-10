@@ -117,7 +117,7 @@ const PrayerTimesCompact = () => {
     return () => clearInterval(interval);
   }, [timings, lastNotified]);
 
-  if (!timings) return <div className="text-[10px] text-slate-300 animate-pulse font-bold uppercase tracking-widest">Menghubungkan Jadwal...</div>;
+  if (!timings) return <div className="text-[10px] text-emerald-100/30 animate-pulse font-bold uppercase tracking-widest">Menghubungkan Jadwal...</div>;
   if (!nextPrayer) return null;
 
   return (
@@ -131,8 +131,8 @@ const PrayerTimesCompact = () => {
           className={`
             flex items-center gap-3 px-4 py-1.5 rounded-full border transition-all duration-500 cursor-pointer group
             ${isWarning 
-              ? 'bg-red-50 border-red-200 animate-pulse scale-105 shadow-lg shadow-red-500/10' 
-              : 'bg-emerald-50 border-emerald-100 shadow-sm hover:bg-emerald-100'}
+              ? 'bg-red-500/20 border-red-500/30 animate-pulse scale-105 shadow-lg shadow-red-500/20' 
+              : 'bg-white/5 border-white/10 shadow-sm hover:bg-white/10'}
           `}
           title="Klik untuk Simulasi Pop-up"
         >
@@ -145,16 +145,16 @@ const PrayerTimesCompact = () => {
           
           <div className="flex flex-col">
             <div className="flex items-center gap-1.5">
-              <span className={`text-[9px] font-black uppercase tracking-widest ${isWarning ? 'text-red-600' : 'text-emerald-700'}`}>
+              <span className={`text-[9px] font-black uppercase tracking-widest ${isWarning ? 'text-red-400' : 'text-emerald-400'}`}>
                 {isWarning ? 'PERSIAPAN ADZAN' : 'MENUJU'} {nextPrayer.name}
               </span>
-              {isWarning && <span className="w-1 h-1 rounded-full bg-red-500 animate-ping"></span>}
+              {isWarning && <span className="w-1.5 h-1.5 rounded-full bg-red-500 animate-ping"></span>}
             </div>
             <div className="flex items-center gap-2 -mt-1">
-              <span className={`text-xs font-black tabular-nums ${isWarning ? 'text-red-800' : 'text-slate-800'}`}>
+              <span className={`text-xs font-black tabular-nums ${isWarning ? 'text-red-200' : 'text-white'}`}>
                 {timeLeft}
               </span>
-              <span className="text-[10px] font-bold text-slate-400">Lagi</span>
+              <span className="text-[10px] font-bold text-emerald-100/30">Lagi</span>
             </div>
         </div>
       </div>

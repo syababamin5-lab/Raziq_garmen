@@ -231,19 +231,31 @@ export default function CuttingInputMobile() {
     </div>
   );
 
+  const getThemeStyles = () => {
+    switch(activeTab) {
+      case 'input': return { bg: 'bg-[#022c22]', header: 'bg-emerald-600/90', accent: 'emerald', text: 'text-emerald-400' };
+      case 'history': return { bg: 'bg-[#451a03]', header: 'bg-amber-600/90', accent: 'amber', text: 'text-amber-400' };
+      case 'dashboard': return { bg: 'bg-[#172554]', header: 'bg-blue-600/90', accent: 'blue', text: 'text-blue-400' };
+      case 'profile': return { bg: 'bg-white', header: 'bg-[#064e3b]', accent: 'emerald', text: 'text-emerald-600' };
+      default: return { bg: 'bg-[#020617]', header: 'bg-slate-800/90', accent: 'slate', text: 'text-slate-400' };
+    }
+  };
+
+  const theme = getThemeStyles();
+
   return (
-    <div className="min-h-screen bg-[#020617] text-white font-sans pb-32">
+    <div className={`min-h-screen ${theme.bg} transition-colors duration-700 text-white font-sans pb-32`}>
       
       {/* ── HEADER ── */}
       {activeTab !== 'profile' && (
-        <div className="bg-emerald-600/90 backdrop-blur-md p-5 rounded-b-[2.5rem] shadow-2xl sticky top-0 z-50 flex items-center justify-between border-b border-white/10">
+        <div className={`${theme.header} backdrop-blur-md p-5 rounded-b-[2.5rem] shadow-2xl sticky top-0 z-50 flex items-center justify-between border-b border-white/10 transition-colors duration-700`}>
           <div className="flex items-center gap-4">
             <div className="w-11 h-11 bg-white/20 rounded-2xl flex items-center justify-center backdrop-blur-xl border border-white/30">
               <span className="material-symbols-rounded text-white text-2xl">{getHeaderIcon()}</span>
             </div>
             <div>
               <h1 className="text-base font-black tracking-tight uppercase leading-none">{getTitle()}</h1>
-              <p className="text-[9px] font-bold text-emerald-100/60 uppercase tracking-[0.2em] mt-1">Raziq Garment</p>
+              <p className={`text-[9px] font-bold opacity-60 uppercase tracking-[0.2em] mt-1`}>Raziq Garment</p>
             </div>
           </div>
           <div className="flex items-center gap-3">
@@ -272,20 +284,20 @@ export default function CuttingInputMobile() {
         {activeTab === 'input' && (
           <div className="space-y-6">
             <form onSubmit={handleSubmit} className="space-y-6">
-              <div className="bg-[#0f172a] border border-white/5 p-6 rounded-[2.5rem] space-y-5 shadow-inner">
+              <div className="bg-black/20 backdrop-blur-md border border-white/5 p-6 rounded-[2.5rem] space-y-5 shadow-inner">
                 <div className="flex items-center gap-2 mb-2">
-                   <span className="material-symbols-rounded text-emerald-500 text-sm">inventory_2</span>
-                   <h2 className="text-[10px] font-black text-slate-500 uppercase tracking-widest">Kombinasi Produksi</h2>
+                   <span className={`material-symbols-rounded ${theme.text} text-sm`}>inventory_2</span>
+                   <h2 className="text-[10px] font-black text-slate-400 uppercase tracking-widest">Kombinasi Produksi</h2>
                 </div>
                 <div className="space-y-2">
-                  <label className="text-[10px] font-bold text-slate-600 uppercase ml-4">Material Kain</label>
+                  <label className="text-[10px] font-bold text-slate-500 uppercase ml-4">Material Kain</label>
                   <select className="w-full bg-white/5 border-2 border-white/5 rounded-2xl p-4 text-sm font-black text-white focus:border-emerald-500 outline-none appearance-none"
                     value={form.kain_id} onChange={e => setForm({...form, kain_id: e.target.value})}>
                     {(options.kain_list || []).map(k => <option key={k.id} value={k.id} className="bg-slate-900">{k.label}</option>)}
                   </select>
                 </div>
                 <div className="space-y-2">
-                  <label className="text-[10px] font-bold text-slate-600 uppercase ml-4">SKU Produk</label>
+                  <label className="text-[10px] font-bold text-slate-500 uppercase ml-4">SKU Produk</label>
                   <select className="w-full bg-white/5 border-2 border-white/5 rounded-2xl p-4 text-sm font-black text-white focus:border-emerald-500 outline-none appearance-none"
                     value={form.produk_id} onChange={e => setForm({...form, produk_id: e.target.value})}>
                     {(options.baju_list || []).map(b => <option key={b.id} value={b.id} className="bg-slate-900">{b.label}</option>)}
@@ -293,20 +305,20 @@ export default function CuttingInputMobile() {
                 </div>
               </div>
 
-              <div className="bg-[#0f172a] border border-white/5 p-6 rounded-[2.5rem] grid grid-cols-2 gap-4 shadow-2xl">
+              <div className="bg-black/20 border border-white/5 p-6 rounded-[2.5rem] grid grid-cols-2 gap-4 shadow-2xl">
                 <div className="space-y-2">
-                  <label className="text-[10px] font-bold text-slate-600 uppercase text-center block">Berat (Kg)</label>
-                  <input type="number" step="0.1" className="w-full bg-white/5 border-2 border-white/5 rounded-2xl p-5 text-2xl font-black text-emerald-400 outline-none text-center shadow-inner"
+                  <label className="text-[10px] font-bold text-slate-500 uppercase text-center block">Berat (Kg)</label>
+                  <input type="number" step="0.1" className={`w-full bg-white/5 border-2 border-white/5 rounded-2xl p-5 text-2xl font-black ${theme.text} outline-none text-center shadow-inner`}
                     placeholder="0.0" value={form.kg_pakai} onChange={e => setForm({...form, kg_pakai: e.target.value})} required />
                 </div>
                 <div className="space-y-2">
-                  <label className="text-[10px] font-bold text-slate-600 uppercase text-center block">Hasil (Pcs)</label>
-                  <input type="number" className="w-full bg-white/5 border-2 border-white/5 rounded-2xl p-5 text-2xl font-black text-blue-400 outline-none text-center shadow-inner"
+                  <label className="text-[10px] font-bold text-slate-500 uppercase text-center block">Hasil (Pcs)</label>
+                  <input type="number" className={`w-full bg-white/5 border-2 border-white/5 rounded-2xl p-5 text-2xl font-black ${theme.text} outline-none text-center shadow-inner`}
                     placeholder="0" value={form.hasil_pcs} onChange={e => setForm({...form, hasil_pcs: e.target.value})} required />
                 </div>
               </div>
 
-              <div className="bg-[#0f172a] border border-white/5 p-6 rounded-[2.5rem] space-y-4">
+              <div className="bg-black/20 border border-white/5 p-6 rounded-[2.5rem] space-y-4">
                 <div className="space-y-2">
                   <label className="text-[10px] font-bold text-slate-600 uppercase ml-4">Petugas Cutting</label>
                   <select className="w-full bg-white/5 border-2 border-white/5 rounded-2xl p-4 text-sm font-black outline-none appearance-none"
@@ -382,7 +394,7 @@ export default function CuttingInputMobile() {
               {historyData.map((item, idx) => (
                 <div key={idx} 
                   onClick={() => setSelectedHistory(item)}
-                  className="bg-[#0f172a] border border-white/5 rounded-[2.5rem] shadow-2xl overflow-hidden active:scale-95 transition-all cursor-pointer">
+                  className="bg-black/20 border border-white/5 rounded-[2.5rem] shadow-2xl overflow-hidden active:scale-95 transition-all cursor-pointer">
                    <div className="bg-white/5 p-4 flex justify-between items-center border-b border-white/5">
                       <span className="text-[10px] font-black uppercase text-slate-200 tracking-widest">{item.karyawan}</span>
                       <span className="text-[9px] font-bold text-slate-600 uppercase tracking-tighter">{item.tanggal}</span>
@@ -392,11 +404,11 @@ export default function CuttingInputMobile() {
                          <div className="space-y-1">
                             <p className="text-[8px] font-black text-slate-500 uppercase tracking-widest">Material</p>
                             <h4 className="text-xs font-black text-white uppercase">{item.kain}</h4>
-                            <p className="text-[10px] font-black text-emerald-500">{item.kg} <span className="text-[8px] text-slate-500">KG</span></p>
+                            <p className={`text-[10px] font-black ${theme.text}`}>{item.kg} <span className="text-[8px] text-slate-500">KG</span></p>
                          </div>
                          <div className="space-y-1 text-right">
                             <p className="text-[8px] font-black text-slate-500 uppercase tracking-widest">Model Jadi</p>
-                            <h4 className="text-xs font-black text-blue-400 uppercase">{item.produk}</h4>
+                            <h4 className={`text-xs font-black text-white uppercase`}>{item.produk}</h4>
                             <p className="text-[9px] font-bold text-slate-600">{item.sku}</p>
                          </div>
                       </div>
@@ -427,23 +439,23 @@ export default function CuttingInputMobile() {
         {activeTab === 'dashboard' && (
           <div className="space-y-6 px-4 animate-in fade-in duration-700">
             <div className="grid grid-cols-1 gap-4">
-              <div className="bg-gradient-to-br from-emerald-600 to-teal-700 p-8 rounded-[3rem] shadow-xl text-center relative overflow-hidden group">
+              <div className={`${theme.header} p-8 rounded-[3rem] shadow-xl text-center relative overflow-hidden group transition-colors duration-700`}>
                 <span className="material-symbols-rounded absolute -right-6 -bottom-6 text-[10rem] text-white/10 rotate-12">insights</span>
-                <p className="text-[10px] font-black text-emerald-100 uppercase tracking-[0.4em] mb-2">Output Hari Ini</p>
+                <p className="text-[10px] font-black opacity-60 uppercase tracking-[0.4em] mb-2">Output Hari Ini</p>
                 <div className="flex items-center justify-center gap-3">
                   <h3 className="text-7xl font-black text-white tracking-tighter">{(stats?.hari_ini || 0).toLocaleString('id-ID')}</h3>
-                  <span className="text-xl font-bold text-emerald-50">PCS</span>
+                  <span className="text-xl font-bold text-white/80">PCS</span>
                 </div>
               </div>
 
               <div className="grid grid-cols-2 gap-4">
-                <div className="bg-[#0f172a] border border-white/10 p-6 rounded-[2.5rem] shadow-xl text-center">
+                <div className="bg-black/20 border border-white/10 p-6 rounded-[2.5rem] shadow-xl text-center">
                   <p className="text-[9px] font-black text-slate-500 uppercase tracking-widest mb-1">Minggu Ini</p>
-                  <h3 className="text-3xl font-black text-emerald-400">{(stats?.minggu_ini || 0).toLocaleString('id-ID')}</h3>
+                  <h3 className={`text-3xl font-black ${theme.text}`}>{(stats?.minggu_ini || 0).toLocaleString('id-ID')}</h3>
                 </div>
-                <div className="bg-[#0f172a] border border-white/10 p-6 rounded-[2.5rem] shadow-xl text-center">
+                <div className="bg-black/20 border border-white/10 p-6 rounded-[2.5rem] shadow-xl text-center">
                   <p className="text-[9px] font-black text-slate-500 uppercase tracking-widest mb-1">Bulan Ini</p>
-                  <h3 className="text-3xl font-black text-blue-400">{(stats?.bulan_ini || 0).toLocaleString('id-ID')}</h3>
+                  <h3 className={`text-3xl font-black ${theme.text}`}>{(stats?.bulan_ini || 0).toLocaleString('id-ID')}</h3>
                 </div>
               </div>
             </div>
@@ -451,7 +463,7 @@ export default function CuttingInputMobile() {
             {/* LEADERBOARD (KARYAWAN) */}
             <div className="bg-white/5 border border-white/5 rounded-[2.5rem] p-7 space-y-6 shadow-2xl backdrop-blur-sm">
               <h2 className="text-xs font-black text-slate-500 uppercase tracking-[0.4em] flex items-center gap-3">
-                <span className="material-symbols-rounded text-emerald-500">workspace_premium</span> Top Cutter Bulan Ini
+                <span className={`material-symbols-rounded ${theme.text}`}>workspace_premium</span> Top Cutter Bulan Ini
               </h2>
               <div className="space-y-1">
                 {(stats?.top_karyawan || []).map((k, i) => (
@@ -460,7 +472,7 @@ export default function CuttingInputMobile() {
                        <span className={`w-8 h-8 rounded-full flex items-center justify-center font-black text-[10px] ${i === 0 ? 'bg-amber-500 text-amber-950' : 'bg-slate-800 text-slate-500'}`}>{i + 1}</span>
                        <span className="text-xs font-black text-slate-200 uppercase tracking-wide">{k.nama}</span>
                     </div>
-                    <span className="text-base font-black text-emerald-400 tabular-nums">{k.total.toLocaleString('id-ID')} <span className="text-[9px] text-slate-600">PCS</span></span>
+                    <span className={`text-base font-black ${theme.text} tabular-nums`}>{k.total.toLocaleString('id-ID')} <span className="text-[9px] text-slate-600">PCS</span></span>
                   </div>
                 ))}
               </div>
@@ -469,7 +481,7 @@ export default function CuttingInputMobile() {
             {/* TOP SKU CHARTS */}
             <div className="bg-white/5 border border-white/5 rounded-[2.5rem] p-7 space-y-6 shadow-2xl backdrop-blur-sm">
               <h2 className="text-xs font-black text-slate-500 uppercase tracking-[0.4em] flex items-center gap-3">
-                <span className="material-symbols-rounded text-blue-500">inventory</span> Top SKU Bulan Ini
+                <span className={`material-symbols-rounded ${theme.text}`}>inventory</span> Top SKU Bulan Ini
               </h2>
               <div className="space-y-6">
                 {(stats?.top_produk || []).map((p, i) => {
@@ -493,7 +505,7 @@ export default function CuttingInputMobile() {
             {/* LEADERBOARD PENGHASILAN (RUPIAH) */}
             <div className="bg-white/5 border border-white/5 rounded-[2.5rem] p-7 space-y-6 shadow-2xl backdrop-blur-sm">
               <h2 className="text-xs font-black text-slate-500 uppercase tracking-[0.4em] flex items-center gap-3 px-2">
-                <span className="material-symbols-rounded text-amber-500">payments</span> Penghasilan Cutter (Bulan Ini)
+                <span className={`material-symbols-rounded ${theme.text}`}>payments</span> Penghasilan Cutter (Bulan Ini)
               </h2>
               <div className="space-y-1">
                 {(stats?.top_penghasilan || []).map((k, i) => (

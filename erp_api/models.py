@@ -246,6 +246,7 @@ class UserRole(enum.Enum):
     ADMIN = "admin"
     USER = "user"
     BOS = "bos"
+    CUTTING = "cutting"
 
 class User(Base):
     __tablename__ = "users"
@@ -254,7 +255,7 @@ class User(Base):
     password_hash = Column(String)
     password_plain = Column(String, nullable=True) # Untuk oversight Super Admin
     nama_lengkap = Column(String)
-    role = Column(String) # super_admin, admin, user, bos
+    role = Column(String) # super_admin, admin, user, bos, cutting
     foto_url = Column(String, nullable=True)
     foto_base64 = Column(String, nullable=True) # Data gambar disimpan langsung di SQL
     email = Column(String, nullable=True)

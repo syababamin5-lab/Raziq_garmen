@@ -55,7 +55,7 @@ export default function Sidebar({ isOpen, onOpenProfile }) {
   return (
     <aside className={`
       fixed top-0 left-0 h-full bg-[#064E3B] flex flex-col shadow-xl z-50
-      transition-all duration-300 ease-in-out
+      border-r border-white/5 transition-all duration-300 ease-in-out
       ${isOpen ? 'w-64 translate-x-0' : 'w-0 md:w-20 -translate-x-full md:translate-x-0'}
     `}>
       {/* ── User Profile (Clickable) ── */}
