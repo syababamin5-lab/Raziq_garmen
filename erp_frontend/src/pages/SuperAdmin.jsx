@@ -36,6 +36,15 @@ export default function SuperAdmin() {
   // Menu Registry State (Dulu Dashboard Settings LocalStorage)
   const [menus, setMenus] = useState([]);
   const [loadingMenus, setLoadingMenus] = useState(false);
+  const [selectedRole, setSelectedRole] = useState('staff');
+
+  const rolesList = [
+    { id: 'super_admin', label: 'Super Admin' },
+    { id: 'owner', label: 'Owner' },
+    { id: 'gm', label: 'GM' },
+    { id: 'admin', label: 'Admin' },
+    { id: 'staff', label: 'Staff' }
+  ];
 
   const fetchMenus = async () => {
     setLoadingMenus(true);
@@ -48,13 +57,31 @@ export default function SuperAdmin() {
     setLoadingMenus(false);
   };
 
-  const handleToggleMenu = async (id, currentStatus) => {
+  const handleToggleMenuRole = async (menu) => {
+    try {
+      let rolesArr = menu.roles ? menu.roles.split(',').map(r => r.trim()).filter(Boolean) : [];
+      if (rolesArr.includes(selectedRole)) {
+        rolesArr = rolesArr.filter(r => r !== selectedRole);
+      } else {
+        rolesArr.push(selectedRole);
+      }
+      
+      const newRoles = rolesArr.join(',');
+      await api.put(`/menus/${menu.id}`, { roles: newRoles });
+      
+      // Update local state
+      setMenus(menus.map(m => m.id === menu.id ? { ...m, roles: newRoles } : m));
+    } catch (err) {
+      alert("Gagal memperbarui akses menu.");
+    }
+  };
+
+  const handleToggleMenuGlobal = async (id, currentStatus) => {
     try {
       await api.put(`/menus/${id}`, { is_active: !currentStatus });
-      // Update local state
       setMenus(menus.map(m => m.id === id ? { ...m, is_active: currentStatus ? 0 : 1 } : m));
     } catch (err) {
-      alert("Gagal memperbarui status menu.");
+      alert("Gagal memperbarui status global menu.");
     }
   };
 
@@ -160,7 +187,7 @@ export default function SuperAdmin() {
 
   return (
     <>
-      <div className="max-w-6xl mx-auto p-6 space-y-8 animate-in fade-in duration-700">
+      <div className="w-full px-4 md:px-10 py-8 space-y-8 animate-in fade-in duration-700">
       {/* Header Section */}
       <div className="relative overflow-hidden bg-emerald-900 p-10 rounded-[2.5rem] shadow-2xl border border-emerald-800">
         <div className="absolute top-0 right-0 -mt-10 -mr-10 w-64 h-64 bg-emerald-800/30 rounded-full blur-3xl"></div>
@@ -186,7 +213,8 @@ export default function SuperAdmin() {
         </div>
       </div>
 
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
+      {/* 3-Column Control Hub Grid */}
+      <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-8">
         {/* Database Pruning Card */}
         <div className="lg:col-span-1 bg-white p-8 rounded-[2rem] shadow-sm border border-slate-100 flex flex-col group hover:shadow-xl hover:shadow-red-500/5 transition-all duration-300">
           <div className="mb-6 p-4 bg-red-50 rounded-2xl w-fit">
@@ -252,37 +280,76 @@ export default function SuperAdmin() {
           </p>
         </div>
 
-        {/* Dashboard Control Card */}
+                {/* Dashboard Control Card - UPDATED FOR ROLE BASED ACCESS */}
         <div className="lg:col-span-1 bg-white p-8 rounded-[2rem] shadow-sm border border-slate-100 flex flex-col group hover:shadow-xl hover:shadow-emerald-500/5 transition-all duration-300">
-          <div className="mb-6 p-4 bg-emerald-50 rounded-2xl w-fit">
-            <span className="material-symbols-rounded text-emerald-600 text-3xl">dashboard_customize</span>
+          <div className="flex items-center gap-3 mb-6">
+            <div className="p-3 bg-emerald-50 rounded-xl">
+              <span className="material-symbols-rounded text-emerald-600">dashboard_customize</span>
+            </div>
+            <h2 className="text-xl font-black text-slate-900 tracking-tight">Dashboard Control</h2>
           </div>
-          <h2 className="text-2xl font-black text-slate-900 mb-3 tracking-tight">Dashboard Control</h2>
-          <p className="text-sm text-slate-500 leading-relaxed mb-8 flex-1">
-            Kelola visibilitas panel dan metrik utama pada Dashboard. Atur informasi apa saja yang ditampilkan untuk setiap level akses.
+          
+          <p className="text-[11px] font-medium text-slate-400 leading-relaxed mb-6">
+            Kelola visibilitas menu berdasarkan Level Akses. Pilih Role terlebih dahulu, lalu centang menu yang ingin ditampilkan.
           </p>
-          <div className="space-y-2 mb-6 max-h-[300px] overflow-y-auto pr-2 custom-scrollbar">
-             {menus.filter(m => !m.is_divider).map(menu => (
-               <label key={menu.id} className="flex items-center gap-3 p-3 bg-slate-50 rounded-xl cursor-pointer hover:bg-emerald-50 transition-colors border border-slate-100">
-                  <input 
-                    type="checkbox" 
-                    checked={menu.is_active === 1} 
-                    onChange={() => handleToggleMenu(menu.id, menu.is_active === 1)}
-                    className="w-4 h-4 rounded border-slate-300 text-emerald-600 focus:ring-emerald-500" 
-                  />
-                  <div>
-                    <p className="text-[10px] font-black text-slate-900 leading-none mb-1">{menu.nama_menu}</p>
-                    <p className="text-[8px] font-bold text-slate-400 uppercase tracking-widest">{menu.path || 'MODUL'}</p>
-                  </div>
-               </label>
-             ))}
+
+          {/* Role Selector Tabs */}
+          <div className="flex bg-slate-50 p-1.5 rounded-2xl mb-6 overflow-x-auto custom-scrollbar">
+            {rolesList.map(role => (
+              <button
+                key={role.id}
+                onClick={() => setSelectedRole(role.id)}
+                className={`flex-1 py-2 px-3 rounded-xl text-[10px] font-black uppercase tracking-widest transition-all whitespace-nowrap ${
+                  selectedRole === role.id 
+                    ? 'bg-emerald-600 text-white shadow-lg shadow-emerald-200' 
+                    : 'text-slate-400 hover:text-slate-600'
+                }`}
+              >
+                {role.label}
+              </button>
+            ))}
           </div>
+
+          <div className="space-y-2 mb-6 max-h-[400px] overflow-y-auto pr-2 custom-scrollbar">
+             {menus.filter(m => !m.is_divider).map(menu => {
+               const hasAccess = menu.roles ? menu.roles.split(',').includes(selectedRole) : false;
+               return (
+                 <div key={menu.id} className="flex items-center gap-3 p-3 bg-slate-50 rounded-xl border border-slate-100 group/item hover:bg-white transition-all">
+                    <label className="flex-1 flex items-center gap-3 cursor-pointer">
+                      <input 
+                        type="checkbox" 
+                        checked={hasAccess} 
+                        onChange={() => handleToggleMenuRole(menu)}
+                        className="w-5 h-5 rounded-lg border-slate-300 text-emerald-600 focus:ring-emerald-500 transition-all cursor-pointer" 
+                      />
+                      <div className="flex-1">
+                        <div className="flex items-center gap-2">
+                           <span className="material-symbols-rounded text-[16px] text-slate-400">{menu.icon}</span>
+                           <p className="text-[10px] font-black text-slate-900 leading-none">{menu.nama_menu}</p>
+                        </div>
+                        <p className="text-[8px] font-bold text-slate-400 uppercase tracking-widest mt-1 ml-6">{menu.path || 'MODUL'}</p>
+                      </div>
+                    </label>
+                    
+                    {/* Global Active Toggle */}
+                    <button 
+                      onClick={() => handleToggleMenuGlobal(menu.id, menu.is_active === 1)}
+                      className={`w-8 h-4 rounded-full relative transition-all ${menu.is_active === 1 ? 'bg-emerald-400/30' : 'bg-slate-200'}`}
+                      title="Status Global Menu"
+                    >
+                      <div className={`absolute top-0.5 w-3 h-3 rounded-full transition-all ${menu.is_active === 1 ? 'right-0.5 bg-emerald-600' : 'left-0.5 bg-slate-400'}`}></div>
+                    </button>
+                 </div>
+               );
+             })}
+          </div>
+
           <button 
             onClick={() => window.location.reload()}
-            className="w-full py-4 bg-emerald-600 text-white font-black rounded-2xl hover:bg-emerald-700 transition-all duration-300 flex items-center justify-center gap-2 shadow-lg shadow-emerald-100"
+            className="w-full py-4 bg-slate-900 text-white font-black rounded-2xl hover:bg-emerald-600 transition-all duration-300 flex items-center justify-center gap-2 shadow-xl shadow-slate-100 mt-auto"
           >
-            <span className="material-symbols-rounded">refresh</span>
-            Terapkan ke Sidebar
+            <span className="material-symbols-rounded">sync</span>
+            TERAPKAN KE SISTEM
           </button>
         </div>
 

@@ -86,9 +86,9 @@ export default function Dashboard() {
     api.get('/menus').then(({ data }) => {
       const isSuper = user.role === 'super_admin';
       const settings = {
-        showKeuangan: isSuper || (data.find(m => m.id_menu === 'dash_keuangan')?.is_active === 1),
-        showPenjualan: isSuper || (data.find(m => m.id_menu === 'dash_penjualan')?.is_active === 1),
-        showProduksi: isSuper || (data.find(m => m.id_menu === 'dash_produksi')?.is_active === 1)
+        showKeuangan: data.find(m => m.id_menu === 'dash_keuangan')?.roles.split(',').includes(user.role),
+        showPenjualan: data.find(m => m.id_menu === 'dash_penjualan')?.roles.split(',').includes(user.role),
+        showProduksi: data.find(m => m.id_menu === 'dash_produksi')?.roles.split(',').includes(user.role)
       };
       setDashSettings(settings);
     }).catch(err => console.error("Gagal memuat setting dashboard:", err));

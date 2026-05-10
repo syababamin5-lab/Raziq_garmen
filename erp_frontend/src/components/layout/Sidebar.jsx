@@ -30,20 +30,15 @@ export default function Sidebar({ isOpen, onOpenProfile }) {
         const { data } = await api.get('/menus');
         // Filter: Hanya yang aktif, sesuai role user, DAN bukan merupakan panel dashboard
         const filtered = data.filter(m => {
-          const isRoleMatch = m.roles.split(',').includes(user?.role);
+          const isRoleMatch = m.roles?.split(',').includes(user?.role);
           const isNotPanel = m.path !== 'DASHBOARD_PANEL';
           
-          // HAK ISTIMEWA SUPER ADMIN: Abaikan status is_active (Selalu tampil)
+          // SUPER ADMIN: Selalu bisa melihat menu apapun yang role-nya cocok (meski is_active=0)
           if (user?.role === 'super_admin') {
             return isRoleMatch && isNotPanel;
           }
 
-          // Filter khusus Owner & GM (Hanya Dashboard, Laporan, Riwayat, Profile)
-          if (user?.role === 'owner' || user?.role === 'gm') {
-             const allowed = ['dashboard', 'laporan', 'riwayat', 'profile'];
-             return m.is_active === 1 && allowed.includes(m.id_menu) && isNotPanel;
-          }
-
+          // Role lain: Harus role cocok DAN status menu aktif
           return m.is_active === 1 && isRoleMatch && isNotPanel;
         });
         setMenus(filtered);
