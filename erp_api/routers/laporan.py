@@ -53,22 +53,34 @@ def get_laporan_keuangan(bulan: int, tahun: int, db: Session = Depends(get_db)):
         if bulan == 12: end_date = datetime.datetime(tahun+1, 1, 1)
         else: end_date = datetime.datetime(tahun, bulan+1, 1)
 
-        # 1. HPP (Cost of Goods Manufactured / Sold)
-        # 511xx: Bahan Baku & HPP Terjual
-        # 512xx: BTKL
-        # 513xx: BOP
-        # 51199: Ikhtisar Produksi (Credit for stock output)
-        
+        # 1. HPP (Standard Manufacturing Flow)
+        # Baku_val & BTKL_val sekarang kita ambil dari mutasi yang masuk ke WIP atau yang dicatat di 51xx
         baku_val, d_baku = get_saldo_sqlite(db, "5111", start_date, end_date)
         btkl_val, d_btkl = get_saldo_sqlite(db, "512", start_date, end_date)
         bop_val, d_bop = get_saldo_sqlite(db, "513", start_date, end_date)
         ikhtisar_val, d_ikh = get_saldo_sqlite(db, "51199", start_date, end_date)
-        terjual_val, d_terjual = get_saldo_sqlite(db, "51120", start_date, end_date) # khusus HPP barang jual
+        terjual_val, d_terjual = get_saldo_sqlite(db, "51120", start_date, end_date) 
+
+        # --- HITUNG WIP ADJUSTMENT (PENTING UNTUK CUT-OFF) ---
+        # WIP Awal = Saldo akun 12130 sebelum start_date
+        d_awal_wip = db.query(func.sum(models.JurnalUmum.debit)).filter(models.JurnalUmum.kode_akun == "12130", models.JurnalUmum.tanggal < start_date).scalar() or 0
+        k_awal_wip = db.query(func.sum(models.JurnalUmum.kredit)).filter(models.JurnalUmum.kode_akun == "12130", models.JurnalUmum.tanggal < start_date).scalar() or 0
+        wip_awal = d_awal_wip - k_awal_wip
+
+        # WIP Akhir = Saldo akun 12130 hingga end_date
+        d_akhir_wip = db.query(func.sum(models.JurnalUmum.debit)).filter(models.JurnalUmum.kode_akun == "12130", models.JurnalUmum.tanggal < end_date).scalar() or 0
+        k_akhir_wip = db.query(func.sum(models.JurnalUmum.kredit)).filter(models.JurnalUmum.kode_akun == "12130", models.JurnalUmum.tanggal < end_date).scalar() or 0
+        wip_akhir = d_akhir_wip - k_akhir_wip
+
+        # Jika biaya produksi dicatat langsung ke 12130 (Perpetual), maka HPP Produksi adalah 
+        # Total mutasi DEBIT 12130 (Usage) + WIP Awal - WIP Akhir.
+        # Namun agar laporan tetap detail (Baku, BTKL, dll), kita ambil dari 51xx (jika ada) 
+        # atau dari mutasi debit 12130 yang spesifik.
         
-        # Dalam Akuntansi Manufaktur: 
-        # total_hpp_produksi = baku + btkl + bop + ikhtisar_val (WIP/Output, ikhtisar biasanya kredit/negatif)
-        # total_cogs = total_hpp_produksi + terjual_val
-        total_hpp_periode = baku_val + btkl_val + bop_val + ikhtisar_val + terjual_val
+        # Penyesuaian HPP Produksi (WIP Movement)
+        # Rumus: (Biaya Produksi) + (WIP Awal - WIP Akhir)
+        # Akun 51199 (Ikhtisar) sekarang menangkap output produksi reguler
+        total_hpp_periode = baku_val + btkl_val + bop_val + ikhtisar_val + terjual_val + (wip_awal - wip_akhir)
         
         # 2. Laba Rugi
         omzet, d_omzet = get_saldo_sqlite(db, "411", start_date, end_date)
@@ -165,7 +177,9 @@ def get_laporan_keuangan(bulan: int, tahun: int, db: Session = Depends(get_db)):
                     "btkl": {"total": btkl_val, "detail": d_btkl}, 
                     "bop": {"total": bop_val, "detail": d_bop},
                     "terjual": {"total": terjual_val, "detail": d_terjual},
-                    "ikhtisar": {"total": ikhtisar_val, "detail": d_ikh}
+                    "ikhtisar": {"total": ikhtisar_val, "detail": d_ikh},
+                    "wip_awal": wip_awal,
+                    "wip_akhir": wip_akhir
                 },
                 "laba_rugi": {
                     "pendapatan": {"total": omzet, "detail": d_omzet},
@@ -369,8 +383,11 @@ def export_laporan_pdf(tipe: str, bulan: int, tahun: int, db: Session = Depends(
             # BOP
             pdf_list.append(("OVERHEAD PABRIK", None, True))
             for k, v in data["hpp"]["bop"]["detail"].items(): pdf_list.append((k, v, False))
+            # Penyesuaian WIP (Standard Manufacturing)
+            pdf_list.append(("PERSEDIAAN WIP AWAL (+)", data["hpp"]["wip_awal"], True))
+            pdf_list.append(("PERSEDIAAN WIP AKHIR (-)", -data["hpp"]["wip_akhir"], True))
             
-            label_total = "TOTAL HPP"
+            label_total = "TOTAL HARGA POKOK PRODUKSI"
             val_total = data["hpp"]["total_hpp"]
             
         elif tipe == "LR":

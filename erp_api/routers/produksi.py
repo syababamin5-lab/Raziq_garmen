@@ -201,10 +201,10 @@ def submit_cutting(payload: CuttingRequest, db: Session = Depends(get_db)):
         total_upah = payload.hasil_pcs * payload.ongkos_per_pcs
         ket_jurnal = f"Cutting {payload.hasil_pcs} pcs dari {payload.kg_pakai}kg {kain.nama_barang} [SKU:{produk.kode_sku}] [Potong: {karyawan.nama_karyawan} | Upah: {total_upah}]"
 
-        # Jurnal Pemakaian Bahan Baku
+        # Jurnal Pemakaian Bahan Baku -> MASUK KE WIP (ASSET)
         db.add(models.JurnalUmum(
             tanggal=waktu_transaksi, 
-            kode_akun="51110", nama_akun="Pemakaian Bahan Baku", 
+            kode_akun="12130", nama_akun="Persediaan Barang Dalam Proses (WIP)", 
             keterangan=ket_jurnal, debit=nilai_kain_terpakai, kredit=0
         ))
         db.add(models.JurnalUmum(
@@ -213,11 +213,11 @@ def submit_cutting(payload: CuttingRequest, db: Session = Depends(get_db)):
             keterangan=f"Pemakaian Kain {kain.nama_barang} [{kain.kode_sku}] [Qty: {payload.kg_pakai}]", debit=0, kredit=nilai_kain_terpakai
         ))
 
-        # Jurnal Pengakuan Utang Upah (BTKL) - IFRS Compliance
+        # Jurnal Pengakuan Utang Upah (BTKL) -> MASUK KE WIP (ASSET)
         if total_upah > 0:
             db.add(models.JurnalUmum(
                 tanggal=waktu_transaksi,
-                kode_akun="51210", nama_akun="BTKL - Upah Cutting",
+                kode_akun="12130", nama_akun="Persediaan Barang Dalam Proses (WIP)",
                 keterangan=f"Upah Potong {payload.hasil_pcs} pcs - {karyawan.nama_karyawan}",
                 debit=total_upah, kredit=0
             ))
@@ -258,9 +258,9 @@ def submit_jahit(payload: JahitRequest, db: Session = Depends(get_db)):
         total_pcs = int(payload.qty_lusin * 12)
         produk.stok_saat_ini += total_pcs
 
-        # Kalkulasi HPP Dinamis (Bahan + Upah) berdasarkan riwayat Cutting
+        # Kalkulasi HPP Dinamis (Bahan + Upah) berdasarkan riwayat WIP (12130)
         jurnals_cut = db.query(models.JurnalUmum).filter(
-            models.JurnalUmum.kode_akun == "51110",
+            models.JurnalUmum.kode_akun == "12130",
             models.JurnalUmum.keterangan.like(f"%[SKU:{produk.kode_sku}]%")
         ).all()
         
@@ -312,7 +312,7 @@ def submit_jahit(payload: JahitRequest, db: Session = Depends(get_db)):
         db.add(models.JurnalUmum(tanggal=waktu_transaksi, kode_akun="12150", nama_akun="Persediaan Barang Jadi", keterangan=f"Masuk {total_pcs} pcs {produk.kode_sku} (Jahit)", debit=nilai_masuk, kredit=0))
         
         if nilai_dari_produksi > 0:
-            db.add(models.JurnalUmum(tanggal=waktu_transaksi, kode_akun="51199", nama_akun="Ikhtisar Produksi", keterangan=f"Masuk Gudang {produk.kode_sku} (Produksi)", debit=0, kredit=nilai_dari_produksi))
+            db.add(models.JurnalUmum(tanggal=waktu_transaksi, kode_akun="12130", nama_akun="Persediaan Barang Dalam Proses (WIP)", keterangan=f"Masuk Gudang {produk.kode_sku} (Produksi)", debit=0, kredit=nilai_dari_produksi))
         
         if nilai_dari_wip > 0:
             db.add(models.JurnalUmum(tanggal=waktu_transaksi, kode_akun="12130", nama_akun="Persediaan Barang Dalam Proses (WIP)", keterangan=f"Masuk Gudang {produk.kode_sku} (Pelunasan WIP Awal)", debit=0, kredit=nilai_dari_wip))
@@ -335,8 +335,8 @@ def submit_jahit(payload: JahitRequest, db: Session = Depends(get_db)):
 @router.get("/rekap-cutting", response_model=APIResponse)
 def get_rekap_cutting(db: Session = Depends(get_db)):
     try:
-        # Filter ledger untuk cutting
-        jurnals = db.query(models.JurnalUmum).filter(models.JurnalUmum.kode_akun == "51110").order_by(models.JurnalUmum.tanggal.desc()).limit(100).all()
+        # Filter ledger untuk WIP
+        jurnals = db.query(models.JurnalUmum).filter(models.JurnalUmum.kode_akun == "12130").order_by(models.JurnalUmum.tanggal.desc()).limit(100).all()
         
         data_rekap = []
         group_map = {}
