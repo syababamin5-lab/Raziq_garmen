@@ -21,9 +21,13 @@ export default function CuttingInputMobile() {
   const [historyPeriode, setHistoryPeriode] = useState('hari_ini');
   const [selectedHistory, setSelectedHistory] = useState(null);
 
-  // Load User Data from LocalStorage
-  const userStr = localStorage.getItem('user');
-  const userData = userStr ? JSON.parse(userStr) : {};
+  // Load User Data
+  const [userData, setUserData] = useState(() => {
+    const saved = localStorage.getItem('user');
+    return saved ? JSON.parse(saved) : {};
+  });
+
+  const [isEditing, setIsEditing] = useState(false);
 
   // Profile Form State
   const [profileForm, setProfileForm] = useState({
@@ -144,11 +148,16 @@ export default function CuttingInputMobile() {
 
   const handleSaveProfile = async (e) => {
     e.preventDefault();
+    if (!userData.id) {
+      setMsg({ text: '❌ ID User tidak ditemukan. Silakan login ulang.', type: 'error' });
+      return;
+    }
+    
     setLoading(true);
     setMsg({ text: '', type: '' });
     try {
       const res = await updateProfile({
-        id: userData.id, // Ambil dari object user yang sudah di-parse
+        id: userData.id,
         username: userData.username,
         new_username: profileForm.username,
         nama_lengkap: profileForm.name,
@@ -159,9 +168,8 @@ export default function CuttingInputMobile() {
       });
 
       if (res.status === 'success') {
-        setMsg({ text: '✅ Profil Berhasil Disinkronkan!', type: 'success' });
+        setMsg({ text: '✅ Profil Berhasil Diperbarui!', type: 'success' });
         
-        // Update Object User di LocalStorage (Standard App)
         const updatedUser = {
           ...userData,
           username: res.user.username,
@@ -172,13 +180,14 @@ export default function CuttingInputMobile() {
           foto_base64: res.user.foto_base64
         };
         localStorage.setItem('user', JSON.stringify(updatedUser));
+        setUserData(updatedUser); // Update state agar UI langsung berubah
         
-        // Update Token jika ada
         if (res.access_token) {
           localStorage.setItem('token', res.access_token);
         }
         
         setProfileForm(prev => ({ ...prev, password: '' })); 
+        setIsEditing(false); // Keluar dari mode edit
       } else {
         setMsg({ text: `Gagal: ${res.message}`, type: 'error' });
       }
@@ -537,84 +546,96 @@ export default function CuttingInputMobile() {
                           alt="profile large" 
                           className="w-full h-full object-cover" 
                         />
-                        <label className="absolute inset-0 bg-black/20 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity cursor-pointer">
-                           <span className="material-symbols-rounded text-white text-4xl">photo_camera</span>
-                           <input 
-                             type="file" 
-                             accept="image/*" 
-                             className="hidden" 
-                             onChange={async (e) => {
-                               const file = e.target.files[0];
-                               if (!file) return;
-                               
-                               const formData = new FormData();
-                               formData.append('file', file);
-                               
-                               try {
-                                 setLoading(true);
-                                 const res = await api.post('/users/upload-photo', formData, {
-                                   headers: { 'Content-Type': 'multipart/form-data' }
-                                 });
-                                 if (res.data.status === 'success') {
-                                   setProfileForm(prev => ({ ...prev, foto_base64: res.data.url }));
-                                   setMsg({ text: '📸 Foto terpilih! Klik simpan untuk permanen.', type: 'success' });
+                        {isEditing && (
+                          <label className="absolute inset-0 bg-black/20 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity cursor-pointer">
+                             <span className="material-symbols-rounded text-white text-4xl">photo_camera</span>
+                             <input 
+                               type="file" 
+                               accept="image/*" 
+                               className="hidden" 
+                               onChange={async (e) => {
+                                 const file = e.target.files[0];
+                                 if (!file) return;
+                                 
+                                 const formData = new FormData();
+                                 formData.append('file', file);
+                                 
+                                 try {
+                                   setLoading(true);
+                                   const res = await api.post('/users/upload-photo', formData, {
+                                     headers: { 'Content-Type': 'multipart/form-data' }
+                                   });
+                                   if (res.data.status === 'success') {
+                                     setProfileForm(prev => ({ ...prev, foto_base64: res.data.url }));
+                                     setMsg({ text: '📸 Foto terpilih! Klik simpan untuk permanen.', type: 'success' });
+                                   }
+                                 } catch (err) {
+                                   setMsg({ text: 'Gagal upload foto', type: 'error' });
+                                 } finally {
+                                   setLoading(false);
                                  }
-                               } catch (err) {
-                                 setMsg({ text: 'Gagal upload foto', type: 'error' });
-                               } finally {
-                                 setLoading(false);
-                               }
-                             }}
-                           />
-                        </label>
+                               }}
+                             />
+                          </label>
+                        )}
                      </div>
-                     <p className="text-[9px] font-black text-slate-400 uppercase tracking-widest text-center">Klik gambar untuk mengubah foto</p>
+                     {!isEditing ? (
+                        <button onClick={() => setIsEditing(true)} className="bg-emerald-50 text-emerald-600 px-6 py-2 rounded-full text-xs font-black uppercase tracking-widest flex items-center gap-2 border border-emerald-100">
+                          <span className="material-symbols-rounded text-sm">edit</span> EDIT PROFIL SAYA
+                        </button>
+                     ) : (
+                        <p className="text-[9px] font-black text-slate-400 uppercase tracking-widest text-center">Mode Edit Aktif - Klik gambar untuk ganti foto</p>
+                     )}
                   </div>
 
                   <div className="space-y-6">
                      <div className="space-y-2">
                         <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1">Username Login</label>
-                        <input type="text" className="w-full bg-slate-100/50 border border-transparent rounded-2xl p-5 text-base font-bold text-slate-800 outline-none focus:border-emerald-500 focus:bg-white transition-all"
+                        <input type="text" readOnly={!isEditing} className={`w-full border border-transparent rounded-2xl p-5 text-base font-bold outline-none transition-all ${isEditing ? 'bg-slate-100/50 focus:border-emerald-500 focus:bg-white text-slate-800' : 'bg-slate-50 text-slate-400'}`}
                           value={profileForm.username} onChange={e => setProfileForm({...profileForm, username: e.target.value})} />
-                        <p className="text-[8px] italic text-slate-400 ml-1">Ganti username ini jika ingin mengubah ID untuk login.</p>
                      </div>
 
                      <div className="space-y-2">
                         <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1">Nama Lengkap</label>
-                        <input type="text" className="w-full bg-slate-100/50 border border-transparent rounded-2xl p-5 text-base font-bold text-slate-800 outline-none focus:border-emerald-500 focus:bg-white transition-all"
+                        <input type="text" readOnly={!isEditing} className={`w-full border border-transparent rounded-2xl p-5 text-base font-bold outline-none transition-all ${isEditing ? 'bg-slate-100/50 focus:border-emerald-500 focus:bg-white text-slate-800' : 'bg-slate-50 text-slate-400'}`}
                           value={profileForm.name} onChange={e => setProfileForm({...profileForm, name: e.target.value})} />
                      </div>
 
                      <div className="space-y-2">
                         <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1">Email</label>
-                        <input type="email" className="w-full bg-slate-100/50 border border-transparent rounded-2xl p-5 text-base font-bold text-slate-800 outline-none focus:border-emerald-500 focus:bg-white transition-all"
+                        <input type="email" readOnly={!isEditing} className={`w-full border border-transparent rounded-2xl p-5 text-base font-bold outline-none transition-all ${isEditing ? 'bg-slate-100/50 focus:border-emerald-500 focus:bg-white text-slate-800' : 'bg-slate-50 text-slate-400'}`}
                           value={profileForm.email} onChange={e => setProfileForm({...profileForm, email: e.target.value})} />
                      </div>
 
                      <div className="space-y-2">
                         <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1">Nomor HP</label>
-                        <input type="tel" className="w-full bg-slate-100/50 border border-transparent rounded-2xl p-5 text-base font-bold text-slate-800 outline-none focus:border-emerald-500 focus:bg-white transition-all"
+                        <input type="tel" readOnly={!isEditing} className={`w-full border border-transparent rounded-2xl p-5 text-base font-bold outline-none transition-all ${isEditing ? 'bg-slate-100/50 focus:border-emerald-500 focus:bg-white text-slate-800' : 'bg-slate-50 text-slate-400'}`}
                           placeholder="" value={profileForm.hp} onChange={e => setProfileForm({...profileForm, hp: e.target.value})} />
                      </div>
 
                      <div className="space-y-2">
-                        <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1">Password Baru (Kosongkan jika tidak ganti)</label>
-                        <input type="password" placeholder="••••••••" className="w-full bg-slate-100/50 border border-transparent rounded-2xl p-5 text-base font-bold text-slate-800 outline-none focus:border-emerald-500 focus:bg-white transition-all"
+                        <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1">Password Baru {isEditing ? '(Kosongkan jika tidak ganti)' : ''}</label>
+                        <input type="password" readOnly={!isEditing} placeholder={isEditing ? "••••••••" : "******"} className={`w-full border border-transparent rounded-2xl p-5 text-base font-bold outline-none transition-all ${isEditing ? 'bg-slate-100/50 focus:border-emerald-500 focus:bg-white text-slate-800' : 'bg-slate-50 text-slate-400'}`}
                           value={profileForm.password} onChange={e => setProfileForm({...profileForm, password: e.target.value})} />
                      </div>
 
-                     <button 
-                        onClick={handleSaveProfile}
-                        disabled={loading}
-                        className={`w-full font-black py-6 rounded-3xl mt-8 shadow-xl active:scale-[0.98] transition-all flex items-center justify-center gap-3 ${
-                          loading ? 'bg-slate-300 text-slate-500' : 'bg-emerald-600 hover:bg-emerald-700 text-white shadow-emerald-600/20'
-                        }`}
-                     >
-                        <span className={`material-symbols-rounded ${loading ? 'animate-spin' : ''}`}>
-                          {loading ? 'sync' : 'save'}
-                        </span>
-                        {loading ? 'MENYIMPAN...' : 'SIMPAN PERUBAHAN PROFIL'}
-                     </button>
+                     {isEditing && (
+                       <div className="flex gap-3 mt-8">
+                          <button onClick={() => setIsEditing(false)} className="flex-1 font-black py-6 rounded-3xl bg-slate-100 text-slate-500 shadow-sm active:scale-95 transition-all">BATAL</button>
+                          <button 
+                              onClick={handleSaveProfile}
+                              disabled={loading}
+                              className={`flex-[2] font-black py-6 rounded-3xl shadow-xl active:scale-[0.98] transition-all flex items-center justify-center gap-3 ${
+                                loading ? 'bg-slate-300 text-slate-500' : 'bg-emerald-600 text-white shadow-emerald-600/20'
+                              }`}
+                          >
+                              <span className={`material-symbols-rounded ${loading ? 'animate-spin' : ''}`}>
+                                {loading ? 'sync' : 'save'}
+                              </span>
+                              {loading ? 'MENYIMPAN...' : 'SIMPAN PERUBAHAN'}
+                          </button>
+                       </div>
+                     )}
 
                       {deferredPrompt && (
                         <button 
