@@ -41,10 +41,10 @@ export default function PembelianBiaya() {
   const [purchaseModal, setPurchaseModal] = useState({ open: false, po: null });
 
   // OPEX FORM
-  const [opexForm, setOpexForm] = useState({ tgl: getLocalDate(), akun: '', nominal: 0, ket: '', sumber: 'Kas Tunai' });
+  const [opexForm, setOpexForm] = useState({ tgl: getLocalDate(), akun: '', nominal: 0, ket: '', sumber: '' });
 
   // ASET FORM
-  const [asetForm, setAsetForm] = useState({ tgl: getLocalDate(), akun: '13210', nama_barang: '', nominal: 0, sumber: 'Kas Tunai' });
+  const [asetForm, setAsetForm] = useState({ tgl: getLocalDate(), akun: '', nama_barang: '', nominal: 0, sumber: '' });
 
   // RETUR FORM
   const [poList, setPoList] = useState([]);
@@ -147,7 +147,7 @@ export default function PembelianBiaya() {
         });
         if (res.success) {
             setMsg({ text: res.message, type: 'success' });
-            setOpexForm({ ...opexForm, nominal: 0, ket: '' });
+            setOpexForm({ ...opexForm, nominal: 0, ket: '', akun: '', sumber: '' });
             fetchData(); // Refresh balances
         } else setMsg({ text: res.message, type: 'error' });
     } catch (err) { setMsg({ text: err.message, type: 'error' }); }
@@ -177,7 +177,7 @@ export default function PembelianBiaya() {
         });
         if (res.success) {
             setMsg({ text: res.message, type: 'success' });
-            setAsetForm({ ...asetForm, nominal: 0, nama_barang: '' });
+            setAsetForm({ ...asetForm, nominal: 0, nama_barang: '', akun: '', sumber: '' });
             fetchData(); // Refresh summary
         } else setMsg({ text: res.message, type: 'error' });
     } catch (err) { setMsg({ text: err.message, type: 'error' }); }
@@ -526,9 +526,10 @@ export default function PembelianBiaya() {
                     </div>
                     <div className="col-span-1">
                          <label className="block text-xs font-bold text-slate-500 mb-1">SUMBER DANA</label>
-                         <select className="w-full p-3 border border-slate-200 rounded-xl font-bold text-emerald-700" value={opexForm.sumber} onChange={e => setOpexForm({...opexForm, sumber: e.target.value})}>
-                            <option value="Kas Tunai">Kas Tunai</option>
-                            <option value="BCA">BCA</option>
+                         <select className="w-full p-3 border border-slate-200 rounded-xl font-bold text-emerald-700" value={opexForm.sumber} onChange={e => setOpexForm({...opexForm, sumber: e.target.value})} required>
+                            <option value="">-- Pilih Sumber Dana --</option>
+                            <option value="Kas Tunai">Kas Tunai (11110)</option>
+                            <option value="BCA">BCA (11120)</option>
                          </select>
                     </div>
                     <div className="col-span-2">
@@ -811,7 +812,8 @@ export default function PembelianBiaya() {
                         </div>
                         <div>
                             <label className="block text-xs font-bold text-slate-500 mb-1">KATEGORI ASET</label>
-                            <select className="w-full p-2.5 border rounded-lg font-bold" value={asetForm.akun} onChange={e => setAsetForm({...asetForm, akun: e.target.value})}>
+                            <select className="w-full p-2.5 border rounded-lg font-bold" value={asetForm.akun} onChange={e => setAsetForm({...asetForm, akun: e.target.value})} required>
+                                <option value="">-- Pilih Kategori Aset --</option>
                                 <option value="13110">13110 - Tanah & Bangunan (Aset Tetap)</option>
                                 <option value="13210">13210 - Mesin Produksi (Aset Tetap)</option>
                                 <option value="13310">13310 - Kendaraan (Aset Tetap)</option>
@@ -844,9 +846,10 @@ export default function PembelianBiaya() {
                         )}
                         <div>
                             <label className="block text-xs font-bold text-slate-500 mb-1">SUMBER DANA</label>
-                            <select className="w-full p-2.5 border rounded-lg" value={asetForm.sumber} onChange={e => setAsetForm({...asetForm, sumber: e.target.value})}>
-                                <option value="Kas Tunai">Kas Tunai</option>
-                                <option value="BCA">BCA</option>
+                            <select className="w-full p-2.5 border rounded-lg" value={asetForm.sumber} onChange={e => setAsetForm({...asetForm, sumber: e.target.value})} required>
+                                <option value="">-- Pilih Sumber Dana --</option>
+                                <option value="Kas Tunai">Kas Tunai (11110)</option>
+                                <option value="BCA">BCA (11120)</option>
                                 <option value="Modal Awal (Khusus Aset Lama)">Modal Awal (Aset Lama)</option>
                             </select>
                         </div>
