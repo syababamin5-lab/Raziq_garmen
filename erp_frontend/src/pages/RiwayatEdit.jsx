@@ -78,14 +78,14 @@ export default function RiwayatEdit() {
   return (
     <div className="w-full px-4 md:px-10 space-y-6 pb-20 font-outfit">
       {/* Header */}
-      <div className="bg-white p-8 rounded-[2rem] shadow-sm border border-slate-100 flex items-center justify-between">
+      <div className="card flex items-center justify-between">
         <div className="flex items-center gap-4">
-          <div className="w-14 h-14 rounded-2xl bg-emerald-900 flex items-center justify-center text-white shadow-lg">
+          <div className="w-14 h-14 rounded-2xl bg-emerald-500/20 flex items-center justify-center text-emerald-400 shadow-lg border border-emerald-500/20">
             <span className="material-symbols-rounded text-3xl">history</span>
           </div>
           <div>
-            <h1 className="text-2xl font-black text-slate-800 uppercase tracking-tighter">Riwayat & Edit Transaksi</h1>
-            <p className="text-slate-500 text-sm font-medium">Jejak audit sistem dan fitur pembatalan (VOID) transaksi.</p>
+            <h1 className="text-2xl font-black text-white uppercase tracking-tighter">Riwayat & Edit Transaksi</h1>
+            <p className="text-emerald-400/60 text-sm font-medium">Jejak audit sistem dan fitur pembatalan (VOID) transaksi.</p>
           </div>
         </div>
       </div>
@@ -101,31 +101,31 @@ export default function RiwayatEdit() {
         </div>
       )}
 
-      <div className="bg-white p-10 rounded-[3rem] shadow-[0_20px_50px_rgba(0,0,0,0.02)] border border-slate-50 min-h-[500px]">
+      <div className="card min-h-[500px]">
         <div className="animate-in fade-in slide-in-from-bottom-4 space-y-6">
           {/* Legend & Search */}
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             <div className="relative w-full">
-              <span className="material-symbols-rounded absolute left-4 top-1/2 -translate-y-1/2 text-slate-400">search</span>
-              <input type="text" className="w-full pl-12 pr-4 py-3 bg-slate-100 rounded-2xl border-none text-sm font-bold" placeholder="Cari keterangan atau akun..." value={search} onChange={e => setSearch(e.target.value)} />
+              <span className="material-symbols-rounded absolute left-4 top-1/2 -translate-y-1/2 text-emerald-500/50">search</span>
+              <input type="text" className="w-full pl-12 pr-4 py-3 bg-white/5 rounded-2xl border border-white/5 text-sm font-bold text-white placeholder:text-white/20 focus:ring-2 focus:ring-emerald-500/20 outline-none" placeholder="Cari keterangan atau akun..." value={search} onChange={e => setSearch(e.target.value)} />
             </div>
             <div className="flex gap-3">
-              <div className="flex items-center gap-2 bg-amber-50 text-amber-800 text-[11px] font-bold rounded-2xl border border-amber-100 px-4 py-2">
+              <div className="flex items-center gap-2 bg-sky-500/10 text-sky-400 text-[11px] font-bold rounded-2xl border border-sky-500/20 px-4 py-2">
                 <span className="material-symbols-rounded text-base">undo</span>
-                <span>VOID = Buat jurnal pembalik (aman)</span>
+                <span>VOID = Jurnal Pembalik</span>
               </div>
               {isSuperAdmin && (
-                <div className="flex items-center gap-2 bg-red-50 text-red-800 text-[11px] font-bold rounded-2xl border border-red-100 px-4 py-2">
+                <div className="flex items-center gap-2 bg-red-500/10 text-red-400 text-[11px] font-bold rounded-2xl border border-red-500/20 px-4 py-2">
                   <span className="material-symbols-rounded text-base">delete_forever</span>
-                  <span>HAPUS = Hapus permanen (Admin)</span>
+                  <span>HAPUS = Permanen</span>
                 </div>
               )}
             </div>
           </div>
 
-          <div className="overflow-x-auto border border-slate-100 rounded-[2rem] shadow-sm">
+          <div className="overflow-x-auto border border-white/5 rounded-[2rem]">
             <table className="w-full text-left text-xs">
-              <thead className="bg-slate-900 text-white font-black uppercase tracking-widest">
+              <thead className="bg-white/5 text-emerald-400 font-black uppercase tracking-widest">
                 <tr>
                   <th className="py-4 px-5">ID</th>
                   <th className="py-4 px-5">Tanggal</th>
@@ -136,30 +136,30 @@ export default function RiwayatEdit() {
                   <th className="py-4 px-5 text-center">Aksi</th>
                 </tr>
               </thead>
-              <tbody className="divide-y divide-slate-100">
+              <tbody className="divide-y divide-white/5">
                 {filteredRiwayat.map((row) => {
                   const isVoid = (row.keterangan || '').includes('VOID');
                   return (
-                    <tr key={row.id} className={`hover:bg-slate-50/80 transition-all group ${isVoid ? 'opacity-50' : ''}`}>
-                      <td className="py-3 px-5 text-slate-400 font-mono">#{row.id}</td>
-                      <td className="py-3 px-5 font-medium text-slate-500">
+                    <tr key={row.id} className={`hover:bg-white/5 transition-all group ${isVoid ? 'opacity-30' : ''}`}>
+                      <td className="py-3 px-5 text-emerald-100/30 font-mono">#{row.id}</td>
+                      <td className="py-3 px-5 font-medium text-emerald-100/60">
                         {new Date(row.tanggal).toLocaleString('id-ID', {day:'2-digit', month:'2-digit', year:'2-digit', hour:'2-digit', minute:'2-digit'})}
                       </td>
                       <td className="py-3 px-5">
-                        <span className={`font-bold px-2 py-0.5 rounded text-[10px] ${isVoid ? 'bg-red-100 text-red-600' : 'bg-slate-100 text-slate-700'}`}>
+                        <span className={`font-bold px-2 py-0.5 rounded text-[10px] ${isVoid ? 'bg-red-500/20 text-red-400' : 'bg-emerald-500/10 text-emerald-400'}`}>
                           [{row.kode_akun}] {row.nama_akun}
                         </span>
                       </td>
-                      <td className="py-3 px-5 text-slate-600 max-w-[200px] truncate" title={row.keterangan}>{row.keterangan}</td>
-                      <td className="py-3 px-5 text-right font-bold text-emerald-600">{row.debit > 0 ? formatRp(row.debit) : '-'}</td>
-                      <td className="py-3 px-5 text-right font-bold text-red-600">{row.kredit > 0 ? formatRp(row.kredit) : '-'}</td>
+                      <td className="py-3 px-5 text-emerald-100/80 max-w-[200px] truncate" title={row.keterangan}>{row.keterangan}</td>
+                      <td className="py-3 px-5 text-right font-black text-emerald-400">{row.debit > 0 ? formatRp(row.debit) : '-'}</td>
+                      <td className="py-3 px-5 text-right font-black text-red-400">{row.kredit > 0 ? formatRp(row.kredit) : '-'}</td>
                       <td className="py-3 px-5 text-center">
                         {!cannotEdit && (
                           <div className="flex items-center justify-center gap-1">
                             {isVoidable(row) && canAction && (
                               <button 
                                 onClick={() => openModal('void', row)} 
-                                className="p-1.5 rounded-lg text-amber-500 hover:bg-amber-50 hover:text-amber-700 transition-all"
+                                className="p-1.5 rounded-lg text-sky-400 hover:bg-sky-500/20 transition-all"
                                 title="VOID - Buat jurnal pembalik"
                               >
                                 <span className="material-symbols-rounded text-[18px]">undo</span>
@@ -168,7 +168,7 @@ export default function RiwayatEdit() {
                             {isSuperAdmin && isVoidable(row) && (
                               <button 
                                 onClick={() => openModal('hapus', row)} 
-                                className="p-1.5 rounded-lg text-red-400 hover:bg-red-50 hover:text-red-700 transition-all"
+                                className="p-1.5 rounded-lg text-red-400 hover:bg-red-500/20 transition-all"
                                 title="HAPUS PERMANEN - Hanya Super Admin"
                               >
                                 <span className="material-symbols-rounded text-[18px]">delete_forever</span>
@@ -189,36 +189,36 @@ export default function RiwayatEdit() {
 
       {/* CONFIRMATION MODAL */}
       {modal && (
-        <div className="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center z-50 p-4">
-          <div className="bg-white rounded-[2rem] p-10 max-w-lg w-full shadow-2xl animate-in zoom-in-95 duration-200">
+        <div className="fixed inset-0 bg-black/80 backdrop-blur-md flex items-center justify-center z-50 p-4">
+          <div className="bg-[#064E3B] border border-white/10 rounded-[2rem] p-10 max-w-lg w-full shadow-2xl animate-in zoom-in-95 duration-200">
             {modal.type === 'void' ? (
               <>
-                <div className="w-14 h-14 bg-amber-100 rounded-2xl flex items-center justify-center mb-6">
-                  <span className="material-symbols-rounded text-amber-600 text-3xl">undo</span>
+                <div className="w-14 h-14 bg-sky-500/20 rounded-2xl flex items-center justify-center mb-6 border border-sky-500/20">
+                  <span className="material-symbols-rounded text-sky-400 text-3xl">undo</span>
                 </div>
-                <h2 className="text-2xl font-black text-slate-800 mb-2">Konfirmasi VOID</h2>
-                <p className="text-slate-500 text-sm mb-1">Transaksi berikut akan <span className="font-bold text-amber-700">dibalik otomatis</span> dengan jurnal pembalik.</p>
+                <h2 className="text-2xl font-black text-white mb-2">Konfirmasi VOID</h2>
+                <p className="text-emerald-100/60 text-sm mb-1">Transaksi berikut akan <span className="font-bold text-sky-400">dibalik otomatis</span> dengan jurnal pembalik.</p>
               </>
             ) : (
               <>
-                <div className="w-14 h-14 bg-red-100 rounded-2xl flex items-center justify-center mb-6">
-                  <span className="material-symbols-rounded text-red-600 text-3xl">delete_forever</span>
+                <div className="w-14 h-14 bg-red-500/20 rounded-2xl flex items-center justify-center mb-6 border border-red-500/20">
+                  <span className="material-symbols-rounded text-red-400 text-3xl">delete_forever</span>
                 </div>
-                <h2 className="text-2xl font-black text-slate-800 mb-2">⚠️ Hapus Permanen</h2>
-                <p className="text-slate-500 text-sm mb-1">Transaksi ini akan <span className="font-black text-red-700">DIHAPUS SELAMANYA</span>.</p>
+                <h2 className="text-2xl font-black text-white mb-2">⚠️ Hapus Permanen</h2>
+                <p className="text-emerald-100/60 text-sm mb-1">Transaksi ini akan <span className="font-black text-red-400">DIHAPUS SELAMANYA</span>.</p>
               </>
             )}
 
-            <div className="bg-slate-50 p-4 rounded-2xl mb-6 mt-4">
-              <p className="text-xs font-mono text-slate-800"><span className="font-black">#{modal.row.id}</span> — {modal.row.keterangan}</p>
-              <p className="text-xs text-slate-500 mt-1">Debit: {formatRp(modal.row.debit)} | Kredit: {formatRp(modal.row.kredit)}</p>
+            <div className="bg-black/20 p-4 rounded-2xl mb-6 mt-4 border border-white/5">
+              <p className="text-xs font-mono text-emerald-100"><span className="font-black text-emerald-400">#{modal.row.id}</span> — {modal.row.keterangan}</p>
+              <p className="text-xs text-emerald-100/40 mt-1">Debit: {formatRp(modal.row.debit)} | Kredit: {formatRp(modal.row.kredit)}</p>
             </div>
 
             <div className="mb-6">
-              <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-2 block">Alasan</label>
+              <label className="text-[10px] font-black text-emerald-400 uppercase tracking-widest mb-2 block">Alasan</label>
               <input
                 type="text"
-                className="w-full p-4 rounded-2xl bg-slate-50 border border-slate-200 font-medium text-sm outline-none focus:ring-2 focus:ring-emerald-500/20"
+                className="w-full p-4 rounded-2xl bg-white/5 border border-white/10 font-medium text-sm text-white outline-none focus:ring-2 focus:ring-emerald-500/20"
                 value={alasan}
                 onChange={e => setAlasan(e.target.value)}
                 autoFocus
@@ -226,11 +226,11 @@ export default function RiwayatEdit() {
             </div>
 
             <div className="flex gap-3">
-              <button onClick={() => setModal(null)} className="flex-1 p-4 rounded-2xl bg-slate-100 font-black text-slate-600 hover:bg-slate-200 transition-all">BATAL</button>
+              <button onClick={() => setModal(null)} className="flex-1 p-4 rounded-2xl bg-white/5 font-black text-emerald-100/60 hover:bg-white/10 transition-all">BATAL</button>
               <button
                 onClick={handleConfirm}
                 disabled={modalLoading || (modal.type === 'hapus' && !alasan)}
-                className={`flex-1 p-4 rounded-2xl font-black text-white transition-all flex items-center justify-center gap-2 ${modal.type === 'void' ? 'bg-amber-600 hover:bg-amber-700' : 'bg-red-600 hover:bg-red-700'}`}
+                className={`flex-1 p-4 rounded-2xl font-black text-white transition-all flex items-center justify-center gap-2 ${modal.type === 'void' ? 'bg-sky-600 hover:bg-sky-700 shadow-lg shadow-sky-900/20' : 'bg-red-600 hover:bg-red-700 shadow-lg shadow-red-900/20'}`}
               >
                 {modalLoading ? <span className="material-symbols-rounded animate-spin">sync</span> : 'YA, KONFIRMASI'}
               </button>
