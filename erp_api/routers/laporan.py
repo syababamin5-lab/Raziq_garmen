@@ -54,12 +54,30 @@ def get_laporan_keuangan(bulan: int, tahun: int, db: Session = Depends(get_db)):
         else: end_date = datetime.datetime(tahun, bulan+1, 1)
 
         # 1. HPP (Standard Manufacturing Flow)
-        # Baku_val & BTKL_val sekarang kita ambil dari mutasi yang masuk ke WIP atau yang dicatat di 51xx
+        # Ambil dari Akun Beban Langsung (51xx)
         baku_val, d_baku = get_saldo_sqlite(db, "5111", start_date, end_date)
         btkl_val, d_btkl = get_saldo_sqlite(db, "512", start_date, end_date)
         bop_val, d_bop = get_saldo_sqlite(db, "513", start_date, end_date)
         ikhtisar_val, d_ikh = get_saldo_sqlite(db, "51199", start_date, end_date)
         terjual_val, d_terjual = get_saldo_sqlite(db, "51120", start_date, end_date) 
+
+        # --- TAMBAHAN: Ambil biaya yang masuk lewat WIP (12130) agar rincian tetap muncul ---
+        # Kami mencari mutasi DEBIT di 12130 selama periode ini
+        wip_debits = db.query(models.JurnalUmum).filter(
+            models.JurnalUmum.kode_akun == "12130",
+            models.JurnalUmum.tanggal >= start_date,
+            models.JurnalUmum.tanggal < end_date,
+            models.JurnalUmum.debit > 0
+        ).all()
+
+        for j in wip_debits:
+            ket = str(j.keterangan).lower()
+            if "bahan" in ket or "cutting" in ket:
+                baku_val += j.debit
+                d_baku["Pemakaian Bahan (WIP)"] = d_baku.get("Pemakaian Bahan (WIP)", 0) + j.debit
+            elif "upah" in ket:
+                btkl_val += j.debit
+                d_btkl["Upah Produksi (WIP)"] = d_btkl.get("Upah Produksi (WIP)", 0) + j.debit
 
         # --- HITUNG WIP ADJUSTMENT (PENTING UNTUK CUT-OFF) ---
         # WIP Awal = Saldo akun 12130 sebelum start_date
