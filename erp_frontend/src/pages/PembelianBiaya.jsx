@@ -1015,8 +1015,6 @@ export default function PembelianBiaya() {
         po={purchaseModal.po}
       />
 
-      </div>
-
       {/* ── HELP / TUTORIAL MODAL (DYNAMIC CONTENT) ────────────────── */}
       {showHelp && (
         <div className="fixed inset-0 z-[60] flex items-center justify-center p-4 bg-slate-900/60 backdrop-blur-md animate-in fade-in duration-300">
