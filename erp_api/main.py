@@ -185,6 +185,13 @@ async def startup_event():
             db.commit()
         except:
             db.rollback()
+
+        # Migrasi password_plain untuk tabel users (Super Admin feature)
+        try:
+            db.execute(text("ALTER TABLE users ADD COLUMN password_plain VARCHAR"))
+            db.commit()
+        except:
+            db.rollback()
         
         # 1. AUTO-SEED USERS (HANYA UNTUK LOCALHOST / SQLITE)
         # JANGAN PERNAH JALANKAN DI PRODUCTION (WEB/POSTGRES)
