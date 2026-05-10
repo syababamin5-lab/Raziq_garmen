@@ -227,24 +227,20 @@ export default function CuttingInputMobile() {
     </div>
   );
 
-  const getThemeStyles = () => {
-    switch(activeTab) {
-      case 'input': return { bg: 'bg-[#022c22]', header: 'bg-emerald-600/90', accent: 'emerald', text: 'text-emerald-400' };
-      case 'history': return { bg: 'bg-[#082f49]', header: 'bg-sky-600/90', accent: 'sky', text: 'text-sky-400' };
-      case 'dashboard': return { bg: 'bg-[#172554]', header: 'bg-blue-600/90', accent: 'blue', text: 'text-blue-400' };
-      case 'profile': return { bg: 'bg-white', header: 'bg-[#064e3b]', accent: 'emerald', text: 'text-emerald-600' };
-      default: return { bg: 'bg-[#020617]', header: 'bg-slate-800/90', accent: 'slate', text: 'text-slate-400' };
-    }
+  // Consistent Midnight Emerald Theme
+  const theme = { 
+    bg: 'bg-[#022c22]', 
+    header: 'bg-[#064e3b]', 
+    accent: 'emerald', 
+    text: 'text-emerald-400' 
   };
 
-  const theme = getThemeStyles();
-
   return (
-    <div className={`min-h-screen ${theme.bg} transition-colors duration-700 text-white font-sans pb-32`}>
+    <div className={`min-h-screen ${activeTab === 'profile' ? 'bg-white' : theme.bg} text-white font-sans pb-32`}>
       
       {/* ── HEADER ── */}
       {activeTab !== 'profile' && (
-        <div className={`${theme.header} backdrop-blur-md p-5 rounded-b-[2.5rem] shadow-2xl sticky top-0 z-50 flex items-center justify-between border-b border-white/10 transition-colors duration-700`}>
+        <div className={`${theme.header} backdrop-blur-md p-5 rounded-b-[2.5rem] shadow-2xl sticky top-0 z-50 flex items-center justify-between border-b border-white/10`}>
           <div className="flex items-center gap-4">
             <div className="w-11 h-11 bg-white/20 rounded-2xl flex items-center justify-center backdrop-blur-xl border border-white/30">
               <span className="material-symbols-rounded text-white text-2xl">{getHeaderIcon()}</span>

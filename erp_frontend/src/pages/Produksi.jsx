@@ -57,7 +57,13 @@ export default function Produksi() {
   const fetchOptions = async () => {
     try {
       const res = await getProduksiOptions();
-      if (res.data) setOptions(res.data);
+      setOptions(res.data);
+      if (res.data.kain_list.length > 0) setCuttingForm(s => ({ ...s, kain_id: res.data.kain_list[0].id }));
+      if (res.data.baju_list.length > 0) {
+        setCuttingForm(s => ({ ...s, produk_id: res.data.baju_list[0].id }));
+        setJahitForm(s => ({ ...s, produk_id: res.data.baju_list[0].id }));
+      }
+      if (res.data.karyawan_list.length > 0) setCuttingForm(s => ({ ...s, tukang_potong_id: res.data.karyawan_list[0].id }));
     } catch (err) {
       console.error(err);
       setMsg({ text: 'Gagal memuat master data.', type: 'error' });
@@ -260,16 +266,14 @@ export default function Produksi() {
               <div>
                 <label className="block text-xs font-bold text-slate-600 mb-1.5 uppercase tracking-wide">Pilih Kain</label>
                 <select className="w-full bg-slate-50 border border-slate-200 text-slate-700 text-sm rounded-lg p-2.5 outline-none focus:border-emerald-500 focus:ring-1 focus:ring-emerald-500 transition-all font-medium"
-                        value={cuttingForm.kain_id} onChange={e => setCuttingForm({...cuttingForm, kain_id: e.target.value})} required>
-                  <option value="">-- Pilih Material Kain --</option>
+                        value={cuttingForm.kain_id} onChange={e => setCuttingForm({...cuttingForm, kain_id: e.target.value})}>
                   {options.kain_list.map(k => <option key={k.id} value={k.id}>{k.label}</option>)}
                 </select>
               </div>
               <div>
                 <label className="block text-xs font-bold text-slate-600 mb-1.5 uppercase tracking-wide">Model Baju</label>
                 <select className="w-full bg-slate-50 border border-slate-200 text-slate-700 text-sm rounded-lg p-2.5 outline-none focus:border-emerald-500 focus:ring-1 focus:ring-emerald-500 transition-all font-medium"
-                        value={cuttingForm.produk_id} onChange={e => setCuttingForm({...cuttingForm, produk_id: e.target.value})} required>
-                  <option value="">-- Pilih Model SKU --</option>
+                        value={cuttingForm.produk_id} onChange={e => setCuttingForm({...cuttingForm, produk_id: e.target.value})}>
                   {options.baju_list.map(b => <option key={b.id} value={b.id}>{b.label}</option>)}
                 </select>
               </div>
@@ -296,10 +300,9 @@ export default function Produksi() {
                 </div>
                 <div>
                   <label className="block text-xs font-bold text-slate-500 mb-1 uppercase tracking-wide">Tukang Potong</label>
-                <select value={cuttingForm.tukang_potong_id} onChange={e => setCuttingForm({...cuttingForm, tukang_potong_id: e.target.value})} className="w-full bg-white border border-slate-200 rounded-lg p-2 font-medium text-slate-700 outline-none focus:border-emerald-500" required>
-                    <option value="">-- Pilih Tukang Potong --</option>
+                  <select value={cuttingForm.tukang_potong_id} onChange={e => setCuttingForm({...cuttingForm, tukang_potong_id: e.target.value})} className="w-full bg-white border border-slate-200 rounded-lg p-2 font-medium text-slate-700 outline-none focus:border-emerald-500">
                     {options.karyawan_list.map(k => <option key={k.id} value={k.id}>{k.label}</option>)}
-                </select>
+                  </select>
                 </div>
                 <div>
                   <label className="block text-xs font-bold text-slate-500 mb-1 uppercase tracking-wide">Upah / Pcs (Rp)</label>
@@ -339,8 +342,7 @@ export default function Produksi() {
             <div>
               <label className="block text-xs font-bold text-slate-600 mb-1.5 uppercase tracking-wide">Model Baju</label>
               <select className="w-full md:w-1/2 bg-slate-50 border border-slate-200 text-slate-700 text-sm rounded-lg p-2.5 outline-none focus:border-emerald-500 transition-all font-medium"
-                      value={jahitForm.produk_id} onChange={e => setJahitForm({...jahitForm, produk_id: e.target.value})} required>
-                <option value="">-- Pilih Model Barang Jadi --</option>
+                      value={jahitForm.produk_id} onChange={e => setJahitForm({...jahitForm, produk_id: e.target.value})}>
                 {options.baju_list.map(b => <option key={b.id} value={b.id}>{b.label}</option>)}
               </select>
             </div>
