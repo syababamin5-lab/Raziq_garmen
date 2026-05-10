@@ -61,8 +61,17 @@ def get_ai_financial_analysis(db: Session = Depends(get_db)):
             models.JurnalUmum.tanggal >= first_day
         ).scalar() or 0
         
-        # HPP: Baku (5111), BTKL (512), BOP (513), Ikhtisar (51199), Terjual (51120)
-        hpp = db.query(func.sum(models.JurnalUmum.debit - models.JurnalUmum.kredit)).filter(
+        # HPP: Baku (5111), BTKL (512), BOP (513), Ikhtisar (51199), Terjual (51120) + WIP Adjustment
+        # --- WIP ADJUSTMENT SYNC WITH laporan.py ---
+        d_awal_wip = db.query(func.sum(models.JurnalUmum.debit)).filter(models.JurnalUmum.kode_akun == "12130", models.JurnalUmum.tanggal < first_day).scalar() or 0
+        k_awal_wip = db.query(func.sum(models.JurnalUmum.kredit)).filter(models.JurnalUmum.kode_akun == "12130", models.JurnalUmum.tanggal < first_day).scalar() or 0
+        wip_awal = d_awal_wip - k_awal_wip
+
+        d_akhir_wip = db.query(func.sum(models.JurnalUmum.debit)).filter(models.JurnalUmum.kode_akun == "12130", models.JurnalUmum.tanggal <= now).scalar() or 0
+        k_akhir_wip = db.query(func.sum(models.JurnalUmum.kredit)).filter(models.JurnalUmum.kode_akun == "12130", models.JurnalUmum.tanggal <= now).scalar() or 0
+        wip_akhir = d_akhir_wip - k_akhir_wip
+
+        hpp_base = db.query(func.sum(models.JurnalUmum.debit - models.JurnalUmum.kredit)).filter(
             or_(
                 models.JurnalUmum.kode_akun.startswith('5111'),
                 models.JurnalUmum.kode_akun.startswith('512'),
@@ -72,6 +81,8 @@ def get_ai_financial_analysis(db: Session = Depends(get_db)):
             ),
             models.JurnalUmum.tanggal >= first_day
         ).scalar() or 0
+        
+        hpp = hpp_base + (wip_awal - wip_akhir)
         
         beban_ops = db.query(func.sum(models.JurnalUmum.debit - models.JurnalUmum.kredit)).filter(
             or_(
@@ -90,9 +101,10 @@ def get_ai_financial_analysis(db: Session = Depends(get_db)):
             models.Barang.kategori.ilike('%Jadi%')
         ).scalar() or 0
         
-        # WIP (Estimasi dari log produksi yang belum selesai/terkirim)
-        total_wip_cutting = db.query(func.sum(models.ProductionLog.qty_hasil)).filter(
-            models.ProductionLog.divisi == 'CUTTING'
+        # WIP (Nilai Real-time dari Buku Besar 12130)
+        nilai_wip_realtime = wip_akhir
+        total_wip_cutting_pcs = db.query(func.sum(models.ProductionLog.qty_hasil)).filter(
+            models.ProductionLog.divisi == 'Cutting'
         ).scalar() or 0
 
         # Konstruksi Data JSON untuk AI
@@ -118,7 +130,8 @@ def get_ai_financial_analysis(db: Session = Depends(get_db)):
             "inventory_wip": {
                 "nilai_bahan_baku": persediaan_bahan,
                 "nilai_barang_jadi": persediaan_jadi,
-                "total_wip_cutting_pcs": total_wip_cutting
+                "nilai_wip_saat_ini": nilai_wip_realtime,
+                "total_wip_cutting_pcs": total_wip_cutting_pcs
             }
         }
 
@@ -176,10 +189,11 @@ Berikut adalah tabel-tabel utama:
 1. jurnal_umum (Akuntansi Dasar):
    - id, tanggal, kode_akun, nama_akun, keterangan, debit, kredit
    - RUMUS SALDO:
-     * Pendapatan: SUM(kredit - debit) WHERE kode_akun LIKE '411%'
-     * HPP: SUM(debit - kredit) WHERE kode_akun IN ('5111%', '512%', '513%', '51199%', '51120%')
-     * Beban Operasional: SUM(debit - kredit) WHERE kode_akun LIKE '6%'
-     * Kas/Bank: SUM(debit - kredit) WHERE kode_akun LIKE '111%'
+      * Pendapatan: SUM(kredit - debit) WHERE kode_akun LIKE '411%'
+      * HPP: (SUM(debit - kredit) WHERE kode_akun IN ('5111%', '512%', '513%', '51199%', '51120%')) + (WIP_AWAL - WIP_AKHIR)
+      * WIP (Persediaan Dalam Proses): Akun 12130 (Debit menambah, Kredit mengurangi)
+      * Beban Operasional: SUM(debit - kredit) WHERE kode_akun LIKE '6%'
+      * Kas/Bank: SUM(debit - kredit) WHERE kode_akun LIKE '111%'
    - PENTING: Jangan hanya SUM(debit) agar reversal/VOID terhitung benar.
 
 2. barang (Master Barang/Stok):

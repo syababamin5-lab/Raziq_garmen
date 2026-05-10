@@ -31,21 +31,27 @@ export default function LaporanKeuangan() {
         <div className="space-y-4 text-slate-600 leading-relaxed">
           <p>HPP (Harga Pokok Penjualan) adalah total biaya yang Bapak keluarkan untuk **membuat satu unit produk** sampai siap dijual.</p>
           <div className="bg-emerald-50 p-4 rounded-2xl border border-emerald-100">
-            <p className="font-black text-emerald-800 text-xs mb-2 uppercase">Rumus Utama:</p>
-            <p className="font-mono text-sm font-bold text-emerald-900">Bahan Baku + Upah Tenaga Kerja + Biaya Overhead = HPP</p>
+            <p className="font-black text-emerald-800 text-xs mb-2 uppercase">Rumus Utama (Standar Manufaktur):</p>
+            <p className="font-mono text-[13px] font-bold text-emerald-900 leading-relaxed">
+              (Bahan + Upah + Overhead) + (WIP Awal - WIP Akhir) = HPP
+            </p>
           </div>
           <ul className="space-y-3">
             <li className="flex gap-3">
               <span className="w-6 h-6 rounded-full bg-emerald-100 text-emerald-600 flex-shrink-0 flex items-center justify-center font-bold text-xs">1</span>
-              <p><span className="font-black text-slate-800">Pemakaian Bahan Baku:</span> Diambil dari mutasi keluar akun **12110**. Setiap kain yang Bapak potong akan masuk ke sini sebagai modal awal.</p>
+              <p><span className="font-black text-slate-800">Bahan Baku:</span> Nilai kain yang dipotong. Sekarang dialokasikan ke akun **12130 (WIP)** agar modal Bapak tetap tercatat sebagai aset selama proses jahit.</p>
             </li>
             <li className="flex gap-3">
               <span className="w-6 h-6 rounded-full bg-emerald-100 text-emerald-600 flex-shrink-0 flex items-center justify-center font-bold text-xs">2</span>
-              <p><span className="font-black text-slate-800">Biaya Tenaga Kerja:</span> Total upah borongan (Cutting, Jahit, QC) yang dicatat di akun **512xx**. Ini adalah biaya 'keringat' orang di workshop.</p>
+              <p><span className="font-black text-slate-800">Biaya Tenaga Kerja:</span> Upah potong/jahit yang sudah Bapak keluarkan. Ini menambah nilai barang yang sedang diproses.</p>
             </li>
             <li className="flex gap-3">
               <span className="w-6 h-6 rounded-full bg-emerald-100 text-emerald-600 flex-shrink-0 flex items-center justify-center font-bold text-xs">3</span>
-              <p><span className="font-black text-slate-800">Overhead Pabrik:</span> Biaya pendukung seperti Listrik, Benang, Jarum, dan Plastik (Akun **513xx**).</p>
+              <p><span className="font-black text-slate-800">Overhead Pabrik:</span> Biaya pendukung (Listrik, Benang, Jarum) yang melekat pada proses produksi.</p>
+            </li>
+            <li className="flex gap-3 pt-2 border-t border-emerald-100">
+              <span className="w-6 h-6 rounded-full bg-amber-100 text-amber-600 flex-shrink-0 flex items-center justify-center font-bold text-xs">4</span>
+              <p><span className="font-black text-amber-800">Penyesuaian WIP:</span> Jika ada baju yang dipotong tapi **belum selesai jahit** di akhir bulan, nilainya akan dikurangi dari HPP bulan ini dan menjadi modal awal di bulan depan. Laporan Bapak jadi sangat akurat!</p>
             </li>
           </ul>
         </div>
@@ -91,7 +97,7 @@ export default function LaporanKeuangan() {
           <ul className="space-y-3">
             <li className="flex gap-3">
               <span className="w-6 h-6 rounded-full bg-amber-100 text-amber-600 flex-shrink-0 flex items-center justify-center font-bold text-xs">A</span>
-              <p><span className="font-black text-slate-800">Aset (Harta):</span> Uang di Kas/Bank, Piutang (uang di orang lain), Stok Kain, Stok Baju, hingga Mesin Jahit Bapak.</p>
+              <p><span className="font-black text-slate-800">Aset (Harta):</span> Uang di Kas/Bank, Piutang, Stok Kain, **Stok WIP (Baju Antre Jahit)**, Stok Baju Jadi, hingga Mesin Jahit Bapak.</p>
             </li>
             <li className="flex gap-3">
               <span className="w-6 h-6 rounded-full bg-amber-100 text-amber-600 flex-shrink-0 flex items-center justify-center font-bold text-xs">K</span>
