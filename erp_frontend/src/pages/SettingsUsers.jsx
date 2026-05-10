@@ -115,6 +115,7 @@ export default function SettingsUsers() {
       'owner': 'bg-amber-100 text-amber-700',
       'gm': 'bg-blue-100 text-blue-700',
       'admin': 'bg-emerald-100 text-emerald-700',
+      'cutting': 'bg-emerald-500 text-white',
       'staff': 'bg-slate-100 text-slate-700'
     };
     const labels = {
@@ -122,6 +123,7 @@ export default function SettingsUsers() {
       'owner': 'OWNER',
       'gm': 'GENERAL MANAGER / KEPALA OPERASIONAL',
       'admin': 'ADMIN',
+      'cutting': 'PETUGAS CUTTING (HP)',
       'staff': 'STAFF'
     };
     return <span className={`px-3 py-1 rounded-full text-[10px] font-black uppercase tracking-wider ${map[role] || map.staff}`}>{labels[role] || role}</span>;
@@ -206,6 +208,7 @@ export default function SettingsUsers() {
                     <option value="owner">OWNER</option>
                     <option value="gm">GENERAL MANAGER / KEPALA OPERASIONAL</option>
                     <option value="admin">ADMIN</option>
+                    <option value="cutting">PETUGAS CUTTING (MOBILE)</option>
                     <option value="staff">STAFF</option>
                   </select>
                 </div>

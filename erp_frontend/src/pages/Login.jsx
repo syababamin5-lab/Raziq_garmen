@@ -40,8 +40,8 @@ export default function Login() {
         localStorage.setItem('token', res.access_token);
         localStorage.setItem('user', JSON.stringify(res.user));
         
-        // Pengalihan Otomatis: Jika user adalah cutting, langsung ke halaman HP
-        if (username.toLowerCase() === 'cutting') {
+        // Pengalihan Otomatis Berdasarkan Role
+        if (res.user.role === 'cutting') {
           navigate('/m/cutting');
         } else {
           navigate('/');
