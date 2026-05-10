@@ -6,7 +6,7 @@ const SubscriptionModal = ({ isOpen, onClose }) => {
     const packages = [
         {
             name: "UMKM LITE",
-            price: "Rp 299.000",
+            price: "Rp 349.000",
             period: "/ Bulan",
             color: "from-blue-600 to-blue-400",
             bg: "bg-blue-50",
@@ -16,7 +16,7 @@ const SubscriptionModal = ({ isOpen, onClose }) => {
         },
         {
             name: "SMART FACTORY",
-            price: "Rp 749.000",
+            price: "Rp 980.000",
             period: "/ Bulan",
             color: "from-emerald-600 to-emerald-400",
             bg: "bg-emerald-50",
@@ -26,7 +26,7 @@ const SubscriptionModal = ({ isOpen, onClose }) => {
         },
         {
             name: "ENTERPRISE PRO",
-            price: "Rp 1.499.000",
+            price: "Rp 1.990.000",
             period: "/ Bulan",
             color: "from-purple-600 to-purple-400",
             bg: "bg-purple-50",
