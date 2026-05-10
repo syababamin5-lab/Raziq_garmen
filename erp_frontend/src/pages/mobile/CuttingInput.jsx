@@ -520,7 +520,7 @@ export default function CuttingInputMobile() {
         {activeTab === 'profile' && (
           <div className="animate-in fade-in duration-500 bg-white min-h-screen">
             <div className="p-6 pt-10">
-               <div className="bg-[#064e3b] rounded-[2.5rem] p-8 flex items-center justify-between shadow-2xl relative overflow-hidden">
+               <div className="bg-[#064e3b] rounded-[2.5rem] p-8 flex items-center justify-center shadow-2xl relative overflow-hidden">
                   <div className="flex items-center gap-6 relative z-10">
                     <div className="w-16 h-16 rounded-2xl overflow-hidden border-2 border-white/20 shadow-lg flex-shrink-0">
                        <img 
@@ -529,18 +529,11 @@ export default function CuttingInputMobile() {
                          className="w-full h-full object-cover" 
                        />
                     </div>
-                    <div>
+                    <div className="text-center">
                        <h2 className="text-2xl font-bold text-white tracking-tight leading-none">Halo, {userData.nama_lengkap?.split(' ')[0] || 'Cutter'}!</h2>
                        <p className="text-[9px] font-bold text-emerald-200/60 uppercase tracking-[0.2em] mt-2">Kelola Informasi Pribadi Anda</p>
                     </div>
                   </div>
-                  
-                  <button 
-                    onClick={handleLogout}
-                    className="relative z-20 w-12 h-12 rounded-2xl bg-red-500/20 backdrop-blur-md border border-red-500/30 flex items-center justify-center text-red-200 active:scale-90 transition-all shadow-lg"
-                  >
-                    <span className="material-symbols-rounded">logout</span>
-                  </button>
                   
                   <div className="absolute -right-10 -bottom-10 w-40 h-40 bg-white/5 rounded-full"></div>
                </div>
@@ -596,42 +589,38 @@ export default function CuttingInputMobile() {
                           <span className="material-symbols-rounded text-sm">edit</span> EDIT PROFIL SAYA
                         </button>
                      ) : (
-                        <p className="text-[9px] font-black text-slate-400 uppercase tracking-widest text-center">Mode Edit Aktif - Klik gambar untuk ganti foto</p>
-                     )}
-                  </div>
+                        <p classNam                  {isEditing && (
+                    <div className="space-y-6 animate-in slide-in-from-top-4 duration-500">
+                       <div className="space-y-2">
+                          <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1">Username Login</label>
+                          <input type="text" readOnly={!isEditing} className={`w-full border border-transparent rounded-2xl p-5 text-base font-bold outline-none transition-all ${isEditing ? 'bg-slate-100/50 focus:border-emerald-500 focus:bg-white text-slate-800' : 'bg-slate-50 text-slate-400'}`}
+                            value={profileForm.username} onChange={e => setProfileForm({...profileForm, username: e.target.value})} />
+                       </div>
 
-                  <div className="space-y-6">
-                     <div className="space-y-2">
-                        <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1">Username Login</label>
-                        <input type="text" readOnly={!isEditing} className={`w-full border border-transparent rounded-2xl p-5 text-base font-bold outline-none transition-all ${isEditing ? 'bg-slate-100/50 focus:border-emerald-500 focus:bg-white text-slate-800' : 'bg-slate-50 text-slate-400'}`}
-                          value={profileForm.username} onChange={e => setProfileForm({...profileForm, username: e.target.value})} />
-                     </div>
+                       <div className="space-y-2">
+                          <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1">Nama Lengkap</label>
+                          <input type="text" readOnly={!isEditing} className={`w-full border border-transparent rounded-2xl p-5 text-base font-bold outline-none transition-all ${isEditing ? 'bg-slate-100/50 focus:border-emerald-500 focus:bg-white text-slate-800' : 'bg-slate-50 text-slate-400'}`}
+                            value={profileForm.name} onChange={e => setProfileForm({...profileForm, name: e.target.value})} />
+                       </div>
 
-                     <div className="space-y-2">
-                        <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1">Nama Lengkap</label>
-                        <input type="text" readOnly={!isEditing} className={`w-full border border-transparent rounded-2xl p-5 text-base font-bold outline-none transition-all ${isEditing ? 'bg-slate-100/50 focus:border-emerald-500 focus:bg-white text-slate-800' : 'bg-slate-50 text-slate-400'}`}
-                          value={profileForm.name} onChange={e => setProfileForm({...profileForm, name: e.target.value})} />
-                     </div>
+                       <div className="space-y-2">
+                          <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1">Email</label>
+                          <input type="email" readOnly={!isEditing} className={`w-full border border-transparent rounded-2xl p-5 text-base font-bold outline-none transition-all ${isEditing ? 'bg-slate-100/50 focus:border-emerald-500 focus:bg-white text-slate-800' : 'bg-slate-50 text-slate-400'}`}
+                            value={profileForm.email} onChange={e => setProfileForm({...profileForm, email: e.target.value})} />
+                       </div>
 
-                     <div className="space-y-2">
-                        <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1">Email</label>
-                        <input type="email" readOnly={!isEditing} className={`w-full border border-transparent rounded-2xl p-5 text-base font-bold outline-none transition-all ${isEditing ? 'bg-slate-100/50 focus:border-emerald-500 focus:bg-white text-slate-800' : 'bg-slate-50 text-slate-400'}`}
-                          value={profileForm.email} onChange={e => setProfileForm({...profileForm, email: e.target.value})} />
-                     </div>
+                       <div className="space-y-2">
+                          <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1">Nomor HP</label>
+                          <input type="tel" readOnly={!isEditing} className={`w-full border border-transparent rounded-2xl p-5 text-base font-bold outline-none transition-all ${isEditing ? 'bg-slate-100/50 focus:border-emerald-500 focus:bg-white text-slate-800' : 'bg-slate-50 text-slate-400'}`}
+                            placeholder="" value={profileForm.hp} onChange={e => setProfileForm({...profileForm, hp: e.target.value})} />
+                       </div>
 
-                     <div className="space-y-2">
-                        <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1">Nomor HP</label>
-                        <input type="tel" readOnly={!isEditing} className={`w-full border border-transparent rounded-2xl p-5 text-base font-bold outline-none transition-all ${isEditing ? 'bg-slate-100/50 focus:border-emerald-500 focus:bg-white text-slate-800' : 'bg-slate-50 text-slate-400'}`}
-                          placeholder="" value={profileForm.hp} onChange={e => setProfileForm({...profileForm, hp: e.target.value})} />
-                     </div>
+                       <div className="space-y-2">
+                          <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1">Password Baru (Kosongkan jika tidak ganti)</label>
+                          <input type="password" readOnly={!isEditing} placeholder="••••••••" className={`w-full border border-transparent rounded-2xl p-5 text-base font-bold outline-none transition-all ${isEditing ? 'bg-slate-100/50 focus:border-emerald-500 focus:bg-white text-slate-800' : 'bg-slate-50 text-slate-400'}`}
+                            value={profileForm.password} onChange={e => setProfileForm({...profileForm, password: e.target.value})} />
+                       </div>
 
-                     <div className="space-y-2">
-                        <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1">Password Baru {isEditing ? '(Kosongkan jika tidak ganti)' : ''}</label>
-                        <input type="password" readOnly={!isEditing} placeholder={isEditing ? "••••••••" : "******"} className={`w-full border border-transparent rounded-2xl p-5 text-base font-bold outline-none transition-all ${isEditing ? 'bg-slate-100/50 focus:border-emerald-500 focus:bg-white text-slate-800' : 'bg-slate-50 text-slate-400'}`}
-                          value={profileForm.password} onChange={e => setProfileForm({...profileForm, password: e.target.value})} />
-                     </div>
-
-                     {isEditing && (
                        <div className="flex gap-3 mt-8">
                           <button onClick={() => setIsEditing(false)} className="flex-1 font-black py-6 rounded-3xl bg-slate-100 text-slate-500 shadow-sm active:scale-95 transition-all">BATAL</button>
                           <button 
@@ -647,6 +636,7 @@ export default function CuttingInputMobile() {
                               {loading ? 'MENYIMPAN...' : 'SIMPAN PERUBAHAN'}
                           </button>
                        </div>
+                    </div>
                      )}
 
                       {deferredPrompt && (
