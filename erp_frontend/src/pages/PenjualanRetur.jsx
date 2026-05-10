@@ -228,15 +228,6 @@ export default function PenjualanRetur() {
                                 <span className="material-symbols-rounded text-lg">{t.icon}</span>
                                 {t.label}
                             </button>
-                            
-                            {/* Aesthetic "i" Icon Button - Glassmorphism Style */}
-                            <button 
-                                onClick={(e) => { e.stopPropagation(); setHelpContext(t.id); setShowHelp(true); }}
-                                className="absolute -top-2.5 -right-2.5 w-7 h-7 rounded-full flex items-center justify-center bg-slate-500/20 backdrop-blur-md text-slate-600 hover:bg-emerald-500 hover:text-white transition-all z-10 hover:scale-110 active:scale-95 border border-white/50 shadow-sm"
-                                title={`Panduan ${t.label}`}
-                            >
-                                <span className="material-symbols-rounded text-[16px] select-none">info</span>
-                            </button>
                         </div>
                     ))}
                 </div>
@@ -249,7 +240,16 @@ export default function PenjualanRetur() {
                     <div className="grid grid-cols-1 lg:grid-cols-3 gap-10">
                         <div className="lg:col-span-1 space-y-6">
                             <div className="bg-slate-50 p-6 rounded-2xl border border-slate-200 space-y-4">
-                                <label className="block text-[10px] font-black text-slate-400 uppercase tracking-widest">1. Tambah Produk</label>
+                                <div className="flex items-center justify-between">
+                                    <label className="block text-[10px] font-black text-slate-400 uppercase tracking-widest">1. Tambah Produk</label>
+                                    <button 
+                                        onClick={() => { setHelpContext('input'); setShowHelp(true); }}
+                                        className="w-6 h-6 rounded-full flex items-center justify-center bg-slate-500/10 backdrop-blur-md text-slate-400 hover:bg-emerald-500 hover:text-white transition-all shadow-sm border border-white/50"
+                                        title="Bantuan Input Penjualan"
+                                    >
+                                        <span className="material-symbols-rounded text-[14px]">info</span>
+                                    </button>
+                                </div>
                                 <select
                                     className="w-full p-3 border rounded-xl font-medium bg-white"
                                     onChange={(e) => {
@@ -401,12 +401,21 @@ export default function PenjualanRetur() {
                 {/* TAB 2: RETUR */}
                 {activeTab === 'retur' && (
                     <div className="max-w-2xl mx-auto space-y-8">
-                        <div className="bg-amber-50 p-6 rounded-3xl border border-amber-100 flex items-center gap-4">
-                            <span className="material-symbols-rounded text-amber-600 text-4xl">assignment_return</span>
-                            <div>
-                                <h2 className="text-xl font-black text-amber-900 leading-tight">Input Retur Penjualan</h2>
-                                <p className="text-amber-700 text-sm font-medium">Proses barang dikembalikan dari customer dan pembalikan HPP.</p>
+                        <div className="bg-amber-50 p-6 rounded-3xl border border-amber-100 flex items-center justify-between">
+                            <div className="flex items-center gap-4">
+                                <span className="material-symbols-rounded text-amber-600 text-4xl">assignment_return</span>
+                                <div>
+                                    <h2 className="text-xl font-black text-amber-900 leading-tight">Input Retur Penjualan</h2>
+                                    <p className="text-amber-700 text-sm font-medium">Proses barang dikembalikan dari customer dan pembalikan HPP.</p>
+                                </div>
                             </div>
+                            <button 
+                                onClick={() => { setHelpContext('retur'); setShowHelp(true); }}
+                                className="w-8 h-8 rounded-full flex items-center justify-center bg-amber-600/10 backdrop-blur-md text-amber-600 hover:bg-amber-600 hover:text-white transition-all shadow-sm border border-amber-200"
+                                title="Bantuan Retur Barang"
+                            >
+                                <span className="material-symbols-rounded text-[18px]">info</span>
+                            </button>
                         </div>
 
                         <form onSubmit={handleReturSubmit} className="space-y-6">
@@ -469,9 +478,18 @@ export default function PenjualanRetur() {
                 {/* TAB 3: RIWAYAT */}
                 {activeTab === 'history' && (
                     <div className="space-y-6">
-                        <div className="flex justify-between items-center mb-6">
-                            <h3 className="text-xl font-black text-slate-800">Riwayat 50 Invoice Terakhir</h3>
-                            <button onClick={fetchData} className="p-2 border rounded-full hover:bg-slate-50"><span className="material-symbols-rounded">sync</span></button>
+                        <div className="flex justify-between items-center mb-6 bg-slate-50 p-4 rounded-2xl border border-slate-100">
+                            <div className="flex items-center gap-3">
+                                <h3 className="text-xl font-black text-slate-800 tracking-tight uppercase">Riwayat 50 Invoice Terakhir</h3>
+                                <button 
+                                    onClick={() => { setHelpContext('history'); setShowHelp(true); }}
+                                    className="w-7 h-7 rounded-full flex items-center justify-center bg-slate-500/10 backdrop-blur-md text-slate-400 hover:bg-slate-700 hover:text-white transition-all shadow-sm border border-white"
+                                    title="Bantuan Riwayat & Void"
+                                >
+                                    <span className="material-symbols-rounded text-[16px]">info</span>
+                                </button>
+                            </div>
+                            <button onClick={fetchData} className="p-2 border rounded-full hover:bg-slate-200 bg-white transition-all shadow-sm"><span className="material-symbols-rounded">sync</span></button>
                         </div>
 
                         <div className="overflow-x-auto border border-slate-100 rounded-[2rem]">
