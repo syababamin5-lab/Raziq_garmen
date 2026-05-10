@@ -125,9 +125,32 @@ async def log_user_activity(request: Request, call_next):
                 elif "keuangan" in path or "jurnal" in path: menu = "Keuangan"
                 elif "users" in path: menu = "User Management"
                 
-                aksi = "Menambahkan Data"
-                if method == "PUT": aksi = "Mengubah Data"
-                elif method == "DELETE": aksi = "Menghapus Data"
+                # Parsing path untuk rincian aktivitas yang lebih spesifik
+                segments = [s for s in path.split('/api/')[-1].split('/') if s]
+                
+                modul = segments[0].capitalize().replace('-', ' ') if len(segments) > 0 else ""
+                submodul = segments[1].capitalize().replace('-', ' ') if len(segments) > 1 else ""
+                item_id = segments[2] if len(segments) > 2 else ""
+                
+                # Khusus untuk path dengan parameter atau query string yang mungkin terbawa
+                if "?" in item_id: item_id = item_id.split("?")[0]
+                if "?" in submodul: submodul = submodul.split("?")[0]
+                
+                target_detail = f"{modul} {submodul}".strip()
+                if item_id:
+                    target_detail += f" (ID Ref: {item_id})"
+                    
+                if method == "POST": aksi = f"Membuat/Menambah Data [{target_detail}]"
+                elif method == "PUT": aksi = f"MENGEDIT Data [{target_detail}]"
+                elif method == "DELETE": aksi = f"MENGHAPUS Data [{target_detail}]"
+                else: aksi = f"Aktivitas: {target_detail}"
+                
+                # Spesifik Override agar lebih manusiawi
+                if "auth/profile" in path: aksi = "Mengedit Profil & Credential Mandiri"
+                elif "upload-photo" in path: aksi = "Mengunggah Foto Profil Baru"
+                elif "upload-logo" in path: aksi = "Mengubah Logo Perusahaan"
+                elif "upload-ttd" in path: aksi = "Mengubah Data Tanda Tangan"
+                elif "company-config" in path and method == "POST": aksi = "Menyimpan Konfigurasi Perusahaan"
                 
                 # Kirim ke background task agar tidak menghambat user
                 from fastapi import BackgroundTasks
