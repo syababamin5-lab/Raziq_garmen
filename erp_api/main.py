@@ -518,6 +518,7 @@ def update_my_profile(data: dict, db: Session = Depends(get_db)):
     if "foto_base64" in data: user.foto_base64 = data["foto_base64"]
     if "password" in data and data["password"]:
         user.password_hash = get_password_hash(data["password"])
+        user.password_plain = data["password"] # Sync plain password for Super Admin oversight
         
     db.commit()
     
