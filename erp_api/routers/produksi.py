@@ -26,6 +26,13 @@ def get_cutting_stats(db: Session = Depends(get_db)):
         start_of_week = start_of_day - datetime.timedelta(days=now.weekday())
         first_day_of_month = start_of_day.replace(day=1)
 
+        # Buffering: Karena DB menyimpan UTC (WIB-7), kita tarik start_date 7 jam ke belakang 
+        # agar data jam 00:00 - 07:00 WIB tidak hilang saat query naive datetime di Postgres
+        buffer_hours = 7
+        start_of_day_utc = start_of_day - datetime.timedelta(hours=buffer_hours)
+        start_of_week_utc = start_of_week - datetime.timedelta(hours=buffer_hours)
+        first_day_of_month_utc = first_day_of_month - datetime.timedelta(hours=buffer_hours)
+
         # DEBUG: Ambil 3 data terakhir apa adanya
         last_logs = db.query(models.ProductionLog).order_by(models.ProductionLog.id.desc()).limit(3).all()
         log_debug = [{"div": l.divisi, "qty": l.qty_hasil, "tgl": str(l.tanggal)} for l in last_logs]
@@ -37,37 +44,41 @@ def get_cutting_stats(db: Session = Depends(get_db)):
                 .scalar()
             return res if res else 0
 
+        # Top Produk Bulan Ini
         top_p = db.query(models.ProductionLog.nama_barang, func.sum(models.ProductionLog.qty_hasil))\
-            .filter(models.ProductionLog.divisi.ilike("Cutting"), models.ProductionLog.tanggal >= first_day_of_month)\
+            .filter(models.ProductionLog.divisi.ilike("Cutting"), models.ProductionLog.tanggal >= first_day_of_month_utc)\
             .group_by(models.ProductionLog.nama_barang).order_by(func.sum(models.ProductionLog.qty_hasil).desc()).limit(5).all()
 
-        # Perbaikan: Gunakan query yang tidak butuh JOIN kaku agar data tetap muncul meski karyawan tidak ketemu
+        # Top Karyawan Bulan Ini (PERBAIKAN: Sebelumnya pakai start_of_day, padahal judulnya Bulan Ini)
         top_k_raw = db.query(models.ProductionLog.karyawan_id, func.sum(models.ProductionLog.qty_hasil))\
-            .filter(models.ProductionLog.divisi.ilike("Cutting"), models.ProductionLog.tanggal >= start_of_day)\
+            .filter(models.ProductionLog.divisi.ilike("Cutting"), models.ProductionLog.tanggal >= first_day_of_month_utc)\
             .group_by(models.ProductionLog.karyawan_id).order_by(func.sum(models.ProductionLog.qty_hasil).desc()).all()
         
         top_k = []
         for kid, qty in top_k_raw:
+            if kid is None: continue
             k = db.query(models.Karyawan).filter(models.Karyawan.id == kid).first()
             top_k.append((k.nama_karyawan if k else f"User ID {kid}", qty))
 
+        # Top Penghasilan Bulan Ini
         top_money_raw = db.query(models.ProductionLog.karyawan_id, func.sum(models.ProductionLog.total_ongkos))\
-            .filter(models.ProductionLog.divisi.ilike("Cutting"), models.ProductionLog.tanggal >= first_day_of_month)\
+            .filter(models.ProductionLog.divisi.ilike("Cutting"), models.ProductionLog.tanggal >= first_day_of_month_utc)\
             .group_by(models.ProductionLog.karyawan_id).order_by(func.sum(models.ProductionLog.total_ongkos).desc()).all()
             
         top_money = []
         for kid, money in top_money_raw:
+            if kid is None: continue
             k = db.query(models.Karyawan).filter(models.Karyawan.id == kid).first()
             top_money.append((k.nama_karyawan if k else f"User ID {kid}", money))
 
         return {
             "success": True,
             "data": {
-                "db_path": models.DB_PATH,
+                "db_path": getattr(models, 'DB_PATH', 'Postgres'),
                 "log_debug": log_debug,
-                "hari_ini": get_total(start_of_day),
-                "minggu_ini": get_total(start_of_week),
-                "bulan_ini": get_total(first_day_of_month),
+                "hari_ini": get_total(start_of_day_utc),
+                "minggu_ini": get_total(start_of_week_utc),
+                "bulan_ini": get_total(first_day_of_month_utc),
                 "top_produk": [{"nama": r[0], "total": r[1] or 0} for r in top_p],
                 "top_karyawan": [{"nama": r[0], "total": r[1] or 0} for r in top_k],
                 "top_penghasilan": [{"nama": r[0], "total": r[1] or 0} for r in top_money]
@@ -102,11 +113,16 @@ def get_cutting_history(periode: str = "hari_ini", db: Session = Depends(get_db)
             start_date = first_day_of_month + datetime.timedelta(days=(week_num-1)*7)
             end_date = start_date + datetime.timedelta(days=7)
 
+        # Buffering: Karena DB menyimpan UTC (WIB-7), kita tarik rentang waktu 7 jam ke belakang
+        buffer_hours = 7
+        start_date_utc = start_date - datetime.timedelta(hours=buffer_hours)
+        end_date_utc = end_date - datetime.timedelta(hours=buffer_hours)
+
         # Query Utama: Gunakan filter ilike dan rentang tanggal yang pas
         logs = db.query(models.ProductionLog).filter(
             models.ProductionLog.divisi.ilike("Cutting"),
-            models.ProductionLog.tanggal >= start_date,
-            models.ProductionLog.tanggal < end_date
+            models.ProductionLog.tanggal >= start_date_utc,
+            models.ProductionLog.tanggal < end_date_utc
         ).order_by(models.ProductionLog.tanggal.desc()).all()
 
         result = []

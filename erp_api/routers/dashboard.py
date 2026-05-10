@@ -116,9 +116,13 @@ def get_dashboard_summary(db: Session = Depends(get_db)):
             config = db.query(models.CompanyConfig).first()
             target_pcs = config.target_cutting_mingguan if config else 1000
             
+            # Buffering: Karena DB menyimpan UTC (WIB-7)
+            buffer_hours = 7
+            start_of_week_utc = start_of_week - datetime.timedelta(hours=buffer_hours)
+
             # Hitung Aktual dari ProductionLog
             actual_cutting = db.query(func.sum(models.ProductionLog.qty_hasil))\
-                .filter(models.ProductionLog.divisi == "Cutting", models.ProductionLog.tanggal >= start_of_week)\
+                .filter(models.ProductionLog.divisi.ilike("Cutting"), models.ProductionLog.tanggal >= start_of_week_utc)\
                 .scalar() or 0
             
             cutting_pct = (actual_cutting / target_pcs * 100) if target_pcs > 0 else 0
@@ -188,19 +192,25 @@ def get_dashboard_summary(db: Session = Depends(get_db)):
             
             # Helper for Total Produksi Jahit (Pcs)
             def get_total_produksi_jahit(start, end):
+                buffer_h = 7
+                start_utc = start - datetime.timedelta(hours=buffer_h)
+                end_utc = end - datetime.timedelta(hours=buffer_h)
                 return db.query(func.sum(models.ProductionLog.qty_hasil))\
-                    .filter(models.ProductionLog.divisi == "Jahit", models.ProductionLog.tanggal >= start, models.ProductionLog.tanggal <= end).scalar() or 0
+                    .filter(models.ProductionLog.divisi == "Jahit", models.ProductionLog.tanggal >= start_utc, models.ProductionLog.tanggal <= end_utc).scalar() or 0
                     
             prod_pcs_month = get_total_produksi_jahit(first_day, now)
             prod_pcs_week = get_total_produksi_jahit(start_of_week, now)
             
+            first_day_utc = first_day - datetime.timedelta(hours=7)
+            now_utc = now - datetime.timedelta(hours=7)
+
             prod_detail_raw = db.query(
                 models.ProductionLog.nama_barang, 
                 func.sum(models.ProductionLog.qty_hasil).label("total_pcs")
             ).filter(
                 models.ProductionLog.divisi == "Jahit", 
-                models.ProductionLog.tanggal >= first_day, 
-                models.ProductionLog.tanggal <= now
+                models.ProductionLog.tanggal >= first_day_utc, 
+                models.ProductionLog.tanggal <= now_utc
             ).group_by(models.ProductionLog.nama_barang).all()
             
             detail_prod = [{"nama_barang": r.nama_barang, "qty_lusin": r.total_pcs / 12} for r in prod_detail_raw]
