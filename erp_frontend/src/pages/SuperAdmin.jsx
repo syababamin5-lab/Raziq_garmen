@@ -100,6 +100,7 @@ export default function SuperAdmin() {
     startDate: '',
     endDate: ''
   });
+  const [showTypeDropdown, setShowTypeDropdown] = useState(false);
   const [isExporting, setIsExporting] = useState(false);
   const [exportSuccess, setExportSuccess] = useState(false);
 
@@ -427,16 +428,54 @@ export default function SuperAdmin() {
             <div className="space-y-2">
               <label className="text-[10px] font-black text-slate-400 uppercase tracking-[0.2em] ml-1">Pilih Jenis Data</label>
               <div className="relative">
-                <select 
-                  value={exportWizard.dataType}
-                  onChange={(e) => setExportWizard({...exportWizard, dataType: e.target.value})}
-                  className="w-full p-4 bg-white/60 border border-slate-200 hover:border-blue-300 focus:border-blue-500 rounded-2xl text-sm font-bold text-slate-700 outline-none focus:ring-2 focus:ring-blue-500/20 appearance-none cursor-pointer backdrop-blur-sm transition-all"
+                {/* Custom Styled Dropdown */}
+                <button 
+                  onClick={() => setShowTypeDropdown(!showTypeDropdown)}
+                  className="w-full p-4 bg-white/60 border border-slate-200 hover:border-blue-300 focus:border-blue-500 rounded-2xl text-sm font-bold text-slate-700 outline-none flex items-center justify-between backdrop-blur-sm transition-all shadow-sm"
                 >
-                  <option value="full">📦 Full Database Backup</option>
-                  <option value="master">👥 Data Master (SKU & Karyawan)</option>
-                  <option value="transaksi">💸 Data Transaksi (Invoice/PO)</option>
-                </select>
-                <span className="material-symbols-rounded absolute right-4 top-1/2 -translate-y-1/2 text-slate-400 pointer-events-none">expand_more</span>
+                  <div className="flex items-center gap-3">
+                    <span className="material-symbols-rounded text-blue-500">
+                      {exportWizard.dataType === 'full' ? 'inventory_2' : exportWizard.dataType === 'master' ? 'groups' : 'receipt_long'}
+                    </span>
+                    <span>
+                      {exportWizard.dataType === 'full' ? 'Full Database Backup' : exportWizard.dataType === 'master' ? 'Data Master (SKU & Karyawan)' : 'Data Transaksi (Invoice/PO)'}
+                    </span>
+                  </div>
+                  <span className={`material-symbols-rounded text-slate-400 transition-transform duration-300 ${showTypeDropdown ? 'rotate-180' : ''}`}>expand_more</span>
+                </button>
+                
+                {showTypeDropdown && (
+                  <>
+                    <div className="fixed inset-0 z-40" onClick={() => setShowTypeDropdown(false)}></div>
+                    <div className="absolute top-full left-0 right-0 mt-2 bg-white border border-slate-100 rounded-2xl shadow-2xl z-50 overflow-hidden animate-in fade-in slide-in-from-top-2 duration-200">
+                      {[
+                        { id: 'full', label: 'Full Database Backup', icon: 'inventory_2', desc: 'Seluruh data sistem' },
+                        { id: 'master', label: 'Data Master (SKU & Karyawan)', icon: 'groups', desc: 'Data barang, mitra, karyawan' },
+                        { id: 'transaksi', label: 'Data Transaksi (Invoice/PO)', icon: 'receipt_long', desc: 'Data mutasi & keuangan' }
+                      ].map(type => (
+                        <button
+                          key={type.id}
+                          onClick={() => {
+                            setExportWizard({...exportWizard, dataType: type.id});
+                            setShowTypeDropdown(false);
+                          }}
+                          className="w-full p-4 flex items-center gap-4 hover:bg-blue-50 transition-all text-left group border-b border-slate-50 last:border-0"
+                        >
+                          <div className={`p-2.5 rounded-xl transition-all ${exportWizard.dataType === type.id ? 'bg-blue-600 text-white shadow-lg shadow-blue-200' : 'bg-slate-50 text-slate-400 group-hover:bg-blue-100 group-hover:text-blue-600'}`}>
+                            <span className="material-symbols-rounded text-lg">{type.icon}</span>
+                          </div>
+                          <div>
+                            <p className={`text-sm font-black ${exportWizard.dataType === type.id ? 'text-blue-600' : 'text-slate-700'}`}>{type.label}</p>
+                            <p className="text-[10px] text-slate-400 font-bold uppercase tracking-wider">{type.desc}</p>
+                          </div>
+                          {exportWizard.dataType === type.id && (
+                            <span className="material-symbols-rounded text-blue-500 ml-auto">check_circle</span>
+                          )}
+                        </button>
+                      ))}
+                    </div>
+                  </>
+                )}
               </div>
             </div>
 
