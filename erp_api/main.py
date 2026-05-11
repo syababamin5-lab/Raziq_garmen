@@ -587,6 +587,43 @@ def get_company_config(db: Session = Depends(get_db)):
 def get_menus(db: Session = Depends(get_db)):
     return db.query(models.MenuRegistry).order_by(models.MenuRegistry.order_priority).all()
 
+@app.post("/api/debug/fix-menus")
+def fix_menus(db: Session = Depends(get_db)):
+    """Bersihkan duplikat menu dan reset ke kondisi bersih."""
+    try:
+        # Hapus semua menu lama, lalu re-seed bersih
+        db.execute(text("DELETE FROM menu_registry"))
+        db.commit()
+
+        # Seed menu bersih (Single Tenant)
+        clean_menus = [
+            {"id_menu": "dashboard",       "nama_menu": "Dashboard",           "path": "/",                "icon": "dashboard",            "roles": "super_admin,owner,gm,admin,staff", "op": 1,  "mp": 1, "is_d": 0},
+            {"id_menu": "master",          "nama_menu": "Master Data & SKU",   "path": "/master",          "icon": "inventory_2",          "roles": "super_admin,admin",                "op": 2,  "mp": 1, "is_d": 0},
+            {"id_menu": "persediaan",      "nama_menu": "Persediaan Awal",     "path": "/persediaan",      "icon": "warehouse",            "roles": "super_admin,admin",                "op": 3,  "mp": 1, "is_d": 0},
+            {"id_menu": "produksi",        "nama_menu": "Produksi Harian",     "path": "/produksi",        "icon": "content_cut",          "roles": "super_admin,gm,admin,staff",       "op": 4,  "mp": 2, "is_d": 0},
+            {"id_menu": "pembelian",       "nama_menu": "Pembelian & Biaya",   "path": "/pembelian",       "icon": "shopping_cart",        "roles": "super_admin,gm,admin",             "op": 5,  "mp": 1, "is_d": 0},
+            {"id_menu": "penjualan",       "nama_menu": "Penjualan",           "path": "/penjualan",       "icon": "local_shipping",       "roles": "super_admin,gm,admin,staff",       "op": 6,  "mp": 1, "is_d": 0},
+            {"id_menu": "kas",             "nama_menu": "Kas & Piutang",       "path": "/kas",             "icon": "account_balance_wallet","roles": "super_admin,gm,admin",             "op": 7,  "mp": 2, "is_d": 0},
+            {"id_menu": "laporan",         "nama_menu": "Laporan Keuangan",    "path": "/laporan",         "icon": "monitoring",           "roles": "super_admin,owner,gm,admin",       "op": 8,  "mp": 3, "is_d": 0},
+            {"id_menu": "kasbon",          "nama_menu": "Kasbon Karyawan",     "path": "/kasbon",          "icon": "payments",             "roles": "super_admin,gm,admin",             "op": 9,  "mp": 1, "is_d": 0},
+            {"id_menu": "riwayat",         "nama_menu": "Riwayat & Edit",      "path": "/riwayat",         "icon": "history",              "roles": "super_admin",                      "op": 10, "mp": 1, "is_d": 0},
+            {"id_menu": "div_admin",       "nama_menu": "SUPER ADMIN CONTROL", "path": "DIVIDER",          "icon": "admin_panel_settings", "roles": "super_admin",                      "op": 11, "mp": 1, "is_d": 1},
+            {"id_menu": "settings_users",  "nama_menu": "Pengaturan User",     "path": "/settings/users",  "icon": "person_add",           "roles": "super_admin",                      "op": 12, "mp": 1, "is_d": 0},
+            {"id_menu": "settings_company","nama_menu": "Profil Perusahaan",   "path": "/settings/company","icon": "business",             "roles": "super_admin",                      "op": 13, "mp": 1, "is_d": 0},
+            {"id_menu": "super_admin_db",  "nama_menu": "Database & Admin",    "path": "/super-admin",     "icon": "database",             "roles": "super_admin",                      "op": 14, "mp": 1, "is_d": 0},
+            {"id_menu": "profile",         "nama_menu": "Profil Saya",         "path": "/profile",         "icon": "account_circle",       "roles": "super_admin,owner,gm,admin,staff", "op": 16, "mp": 1, "is_d": 0},
+        ]
+        for m in clean_menus:
+            db.execute(text("""
+                INSERT INTO menu_registry (id_menu, nama_menu, path, icon, roles, order_priority, min_package, is_divider, is_active)
+                VALUES (:id_menu, :nama_menu, :path, :icon, :roles, :op, :mp, :is_d, 1)
+            """), m)
+        db.commit()
+        return {"status": "success", "message": f"{len(clean_menus)} menu bersih berhasil dipasang"}
+    except Exception as e:
+        db.rollback()
+        return {"status": "error", "message": str(e)}
+
 @app.put("/api/menus/{menu_id}")
 def update_menu(menu_id: int, data: dict, db: Session = Depends(get_db)):
     menu = db.query(models.MenuRegistry).filter(models.MenuRegistry.id == menu_id).first()
