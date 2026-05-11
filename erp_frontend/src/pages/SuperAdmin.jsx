@@ -411,15 +411,18 @@ export default function SuperAdmin() {
         </div>
 
         {/* ── REDESIGNED BACKUP & EXPORT WIZARD ── */}
-        <div className="lg:col-span-1 bg-white p-8 rounded-[2rem] shadow-sm border border-slate-100 flex flex-col group transition-all duration-300 hover:shadow-xl hover:shadow-blue-500/5">
-          <div className="flex items-center gap-3 mb-6">
-            <div className="p-3 bg-blue-50 rounded-xl">
-              <span className="material-symbols-rounded text-blue-600">database</span>
+        <div className="lg:col-span-1 bg-gradient-to-br from-blue-50 via-white to-blue-50/30 p-8 rounded-[2rem] shadow-sm border border-blue-100 flex flex-col group transition-all duration-300 hover:shadow-xl hover:shadow-blue-500/10 relative overflow-hidden">
+          <div className="absolute -right-10 -top-10 w-40 h-40 bg-blue-200/40 rounded-full blur-3xl group-hover:bg-blue-300/40 transition-all"></div>
+          <div className="absolute -left-10 -bottom-10 w-32 h-32 bg-cyan-200/40 rounded-full blur-2xl group-hover:bg-cyan-300/40 transition-all"></div>
+          
+          <div className="flex items-center gap-4 mb-8 relative z-10">
+            <div className="p-4 bg-white rounded-2xl shadow-sm border border-blue-50 group-hover:scale-110 transition-transform duration-300">
+              <span className="material-symbols-rounded text-blue-600 text-2xl">database</span>
             </div>
-            <h2 className="text-xl font-black text-slate-900 tracking-tight">Export Wizard</h2>
+            <h2 className="text-2xl font-black text-slate-900 tracking-tight">Export Wizard</h2>
           </div>
 
-          <div className="space-y-5 flex-1">
+          <div className="space-y-6 flex-1 relative z-10">
             {/* Bagian 1: Pilih Data */}
             <div className="space-y-2">
               <label className="text-[10px] font-black text-slate-400 uppercase tracking-[0.2em] ml-1">Pilih Jenis Data</label>
@@ -427,7 +430,7 @@ export default function SuperAdmin() {
                 <select 
                   value={exportWizard.dataType}
                   onChange={(e) => setExportWizard({...exportWizard, dataType: e.target.value})}
-                  className="w-full p-4 bg-slate-50 border border-slate-100 rounded-2xl text-sm font-bold text-slate-700 outline-none focus:ring-2 focus:ring-blue-500/20 appearance-none cursor-pointer"
+                  className="w-full p-4 bg-white/60 border border-slate-200 hover:border-blue-300 focus:border-blue-500 rounded-2xl text-sm font-bold text-slate-700 outline-none focus:ring-2 focus:ring-blue-500/20 appearance-none cursor-pointer backdrop-blur-sm transition-all"
                 >
                   <option value="full">📦 Full Database Backup</option>
                   <option value="master">👥 Data Master (SKU & Karyawan)</option>
@@ -445,13 +448,13 @@ export default function SuperAdmin() {
                   type="date" 
                   value={exportWizard.startDate}
                   onChange={(e) => setExportWizard({...exportWizard, startDate: e.target.value})}
-                  className="w-full p-3 bg-slate-50 border border-slate-100 rounded-xl text-xs font-bold text-slate-600 outline-none"
+                  className="w-full p-4 bg-white/60 border border-slate-200 hover:border-blue-300 focus:border-blue-500 rounded-xl text-xs font-bold text-slate-600 outline-none backdrop-blur-sm transition-all"
                 />
                 <input 
                   type="date" 
                   value={exportWizard.endDate}
                   onChange={(e) => setExportWizard({...exportWizard, endDate: e.target.value})}
-                  className="w-full p-3 bg-slate-50 border border-slate-100 rounded-xl text-xs font-bold text-slate-600 outline-none"
+                  className="w-full p-4 bg-white/60 border border-slate-200 hover:border-blue-300 focus:border-blue-500 rounded-xl text-xs font-bold text-slate-600 outline-none backdrop-blur-sm transition-all"
                 />
               </div>
             </div>
@@ -468,10 +471,10 @@ export default function SuperAdmin() {
                   <button
                     key={fmt.id}
                     onClick={() => setExportWizard({...exportWizard, format: fmt.id})}
-                    className={`flex flex-col items-center justify-center p-3 rounded-2xl border-2 transition-all gap-1 ${
+                    className={`flex flex-col items-center justify-center p-4 rounded-2xl border-2 transition-all gap-1 ${
                       exportWizard.format === fmt.id 
-                        ? `bg-${fmt.color}-50 border-${fmt.color}-500 text-${fmt.color}-700 shadow-inner` 
-                        : 'bg-white border-slate-50 text-slate-400 hover:bg-slate-50 hover:border-slate-100'
+                        ? `bg-${fmt.color}-50 border-${fmt.color}-400 text-${fmt.color}-700 shadow-md shadow-${fmt.color}-500/20 scale-105` 
+                        : 'bg-white/60 border-slate-200 text-slate-400 hover:bg-white hover:border-blue-300 hover:shadow-sm'
                     }`}
                   >
                     <span className="material-symbols-rounded text-lg">{fmt.icon}</span>
@@ -500,8 +503,8 @@ export default function SuperAdmin() {
                 isExporting 
                   ? 'bg-slate-100 text-slate-400 cursor-wait shadow-none' 
                   : exportSuccess
-                    ? 'bg-emerald-600 text-white shadow-emerald-200'
-                    : 'bg-slate-900 text-white hover:bg-blue-600 shadow-slate-200'
+                    ? 'bg-emerald-500 text-white shadow-emerald-200/50'
+                    : 'bg-blue-600 text-white hover:bg-blue-700 shadow-blue-200/50 hover:-translate-y-1'
               }`}
             >
               {isExporting ? (
