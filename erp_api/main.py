@@ -419,10 +419,15 @@ async def startup_event():
             if m["id_menu"] not in existing_menus:
                 db.add(models.MenuRegistry(**m))
             else:
-                # Force update roles even if menu exists
+                # Update properties if needed, but DO NOT overwrite roles
                 menu_obj = db.query(models.MenuRegistry).filter(models.MenuRegistry.id_menu == m["id_menu"]).first()
                 if menu_obj:
-                    menu_obj.roles = m["roles"]
+                    menu_obj.nama_menu = m["nama_menu"]
+                    menu_obj.icon = m["icon"]
+                    menu_obj.path = m["path"]
+                    menu_obj.order_priority = m["order_priority"]
+                    # Kita TIDAK melakukan overwrite pada menu_obj.roles 
+                    # agar pengaturan dari Super Admin (Dashboard Control) tidak kereset.
         
         # Cleanup duplicate menu from previous versions
         try:
