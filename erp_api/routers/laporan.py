@@ -98,7 +98,10 @@ def get_laporan_keuangan(bulan: int, tahun: int, db: Session = Depends(get_db)):
         # Penyesuaian HPP Produksi (WIP Movement)
         # Rumus: (Biaya Produksi) + (WIP Awal - WIP Akhir)
         # Akun 51199 (Ikhtisar) sekarang menangkap output produksi reguler
-        total_hpp_periode = baku_val + btkl_val + bop_val + ikhtisar_val + terjual_val + (wip_awal - wip_akhir)
+        # --- FINAL HPP CALCULATION (PERPETUAL METHOD) ---
+        # Di sistem perpetual, HPP yang masuk ke Laba Rugi adalah MURNI dari Akun 51120 (Barang Terjual).
+        # Biaya produksi (5111, 512, 12130) adalah mutasi aset (stok) dan tidak boleh dijumlahkan lagi agar tidak dobel.
+        total_hpp_periode = terjual_val
         
         # 2. Laba Rugi
         omzet, d_omzet = get_saldo_sqlite(db, "411", start_date, end_date)

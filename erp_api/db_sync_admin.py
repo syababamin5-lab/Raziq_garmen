@@ -171,6 +171,16 @@ def sync_db():
         except Exception as e:
             print(f"ℹ️ Konsolidasi Info: {e}")
 
+        # 6. SANITASI KODE AKUN (Mencegah Double Code di Masa Depan)
+        try:
+            # Mengubah semua input bahan baku (51110) & upah (51210) menjadi WIP (12130) secara otomatis
+            # Ini memastikan tidak ada lagi 'Double Code' antara beban langsung vs WIP.
+            conn.execute(text("UPDATE jurnal_umum SET kode_akun = '12130', nama_akun = 'Persediaan Barang Dalam Proses (WIP)' WHERE kode_akun IN ('51110', '51210')"))
+            conn.commit()
+            print("✅ Sanitasi Kode Akun Berhasil: Mengarahkan seluruh biaya produksi ke WIP (12130).")
+        except Exception as e:
+            print(f"ℹ️ Sanitasi Info: {e}")
+
 
 if __name__ == "__main__":
     sync_db()
