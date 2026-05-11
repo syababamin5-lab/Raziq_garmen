@@ -135,6 +135,42 @@ def sync_db():
         except Exception as e:
             print(f"ℹ️ WIP Sync Info: {e}")
 
+        # 5. KONSOLIDASI SALDO LAMA (51199, 5111, 512 -> 12130)
+        try:
+            print("--- Menjalankan Konsolidasi Saldo Produksi Lama ---")
+            # Ambil saldo
+            baku_bal = conn.execute(text("SELECT SUM(debit - kredit) FROM jurnal_umum WHERE kode_akun LIKE '5111%'")).scalar() or 0
+            btkl_bal = conn.execute(text("SELECT SUM(debit - kredit) FROM jurnal_umum WHERE kode_akun LIKE '512%'")).scalar() or 0
+            ikh_bal = conn.execute(text("SELECT SUM(debit - kredit) FROM jurnal_umum WHERE kode_akun LIKE '51199%'")).scalar() or 0
+
+            # Toleransi kecil untuk floating point
+            if abs(baku_bal) > 1 or abs(btkl_bal) > 1 or abs(ikh_bal) > 1:
+                print(f"Ditemukan saldo lama: Bahan={baku_bal}, BTKL={btkl_bal}, Ikhtisar={ikh_bal}")
+                import datetime
+                tgl = datetime.datetime.now()
+                ket = "[KONSOLIDASI_SISTEM] Migrasi saldo produksi lama ke sistem WIP Perpetual (Railway-Sync)"
+
+                # A. Pindahkan Bahan (5111) ke WIP (12130)
+                if abs(baku_bal) > 1:
+                    conn.execute(text("INSERT INTO jurnal_umum (tanggal, kode_akun, nama_akun, keterangan, debit, kredit) VALUES (:t, '12130', 'Persediaan Barang Dalam Proses (WIP)', :k, :d, 0)"), {"t": tgl, "k": f"{ket} - Bahan", "d": baku_bal})
+                    conn.execute(text("INSERT INTO jurnal_umum (tanggal, kode_akun, nama_akun, keterangan, debit, kredit) VALUES (:t, '51110', 'Beban Bahan Baku', :k, 0, :c)"), {"t": tgl, "k": f"{ket} - Penyesuaian", "c": baku_bal})
+
+                # B. Pindahkan BTKL (512) ke WIP (12130)
+                if abs(btkl_bal) > 1:
+                    conn.execute(text("INSERT INTO jurnal_umum (tanggal, kode_akun, nama_akun, keterangan, debit, kredit) VALUES (:t, '12130', 'Persediaan Barang Dalam Proses (WIP)', :k, :d, 0)"), {"t": tgl, "k": f"{ket} - Upah", "d": btkl_bal})
+                    conn.execute(text("INSERT INTO jurnal_umum (tanggal, kode_akun, nama_akun, keterangan, debit, kredit) VALUES (:t, '51210', 'Beban Tenaga Kerja Langsung', :k, 0, :c)"), {"t": tgl, "k": f"{ket} - Penyesuaian", "c": btkl_bal})
+
+                # C. Nolkan Ikhtisar (51199) -> Masuk ke WIP sebagai Kredit (Output)
+                if abs(ikh_bal) > 1:
+                    val = abs(ikh_bal)
+                    conn.execute(text("INSERT INTO jurnal_umum (tanggal, kode_akun, nama_akun, keterangan, debit, kredit) VALUES (:t, '51199', 'Ikhtisar Produksi', :k, :d, 0)"), {"t": tgl, "k": f"{ket} - Closing", "d": val})
+                    conn.execute(text("INSERT INTO jurnal_umum (tanggal, kode_akun, nama_akun, keterangan, debit, kredit) VALUES (:t, '12130', 'Persediaan Barang Dalam Proses (WIP)', :k, 0, :c)"), {"t": tgl, "k": f"{ket} - Transfer Output", "c": val})
+
+                conn.commit()
+                print("✅ Konsolidasi Akuntansi Produksi Berhasil.")
+        except Exception as e:
+            print(f"ℹ️ Konsolidasi Info: {e}")
+
 
 if __name__ == "__main__":
     sync_db()
