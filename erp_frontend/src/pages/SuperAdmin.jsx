@@ -143,9 +143,9 @@ export default function SuperAdmin() {
   const handleRestore = async () => {
     if (!restoreFile) return;
     
-    const pass = window.prompt(`PERINGATAN BAHAYA!\nProses ini akan MENGHAPUS SEMUA DATA di sistem dan menggantinya dengan data dari file backup.\nKetik "SAYA YAKIN" untuk melanjutkan:`);
-    if (pass !== "SAYA YAKIN") {
-      alert("Proses dibatalkan.");
+    const pass = window.prompt(`PERINGATAN BAHAYA!\nProses ini akan MENGHAPUS SEMUA DATA di sistem dan menggantinya dengan data dari file backup.\nMasukkan PIN Akses (229308) untuk melanjutkan:`);
+    if (pass !== "229308") {
+      alert("PIN Salah! Proses dibatalkan.");
       return;
     }
 
@@ -522,36 +522,44 @@ export default function SuperAdmin() {
                 </>
               )}
             </button>
-            <p className="text-center text-[9px] text-slate-400 font-bold uppercase tracking-widest mt-4 opacity-60">
-              Last Backup: {new Date().toLocaleDateString('id-ID')}
+            <p className="text-center text-[9px] text-slate-400 font-bold uppercase tracking-widest mt-4 opacity-60 flex items-center justify-center gap-1">
+              <span className="material-symbols-rounded text-[10px]">history</span>
+              Last Session Backup: {new Date().toLocaleString('id-ID', {day:'2-digit', month:'2-digit', year:'numeric', hour:'2-digit', minute:'2-digit', second:'2-digit'})}
             </p>
           </div>
         </div>
       </div>
 
       {/* Restore Database Card */}
-      <div className="bg-white p-8 rounded-[2rem] shadow-sm border border-slate-100 flex flex-col mt-8 hover:shadow-xl transition-all duration-300">
-        <div className="flex items-center gap-3 mb-6">
-          <div className="p-3 bg-purple-50 rounded-xl">
-            <span className="material-symbols-rounded text-purple-600">settings_backup_restore</span>
+      <div className="bg-gradient-to-br from-purple-50 via-white to-purple-50/30 p-8 rounded-[2rem] shadow-sm border border-purple-100 flex flex-col mt-8 hover:shadow-xl hover:shadow-purple-500/10 transition-all duration-300 relative overflow-hidden group">
+        <div className="absolute -right-10 -top-10 w-40 h-40 bg-purple-200/40 rounded-full blur-3xl group-hover:bg-purple-300/40 transition-all"></div>
+        <div className="absolute -left-10 -bottom-10 w-32 h-32 bg-fuchsia-200/40 rounded-full blur-2xl group-hover:bg-fuchsia-300/40 transition-all"></div>
+        
+        <div className="flex items-center gap-4 mb-8 relative z-10">
+          <div className="p-4 bg-white rounded-2xl shadow-sm border border-purple-50 group-hover:scale-110 transition-transform duration-300">
+            <span className="material-symbols-rounded text-purple-600 text-2xl">settings_backup_restore</span>
           </div>
           <div>
-             <h2 className="text-xl font-black text-slate-900 tracking-tight">Restore Database</h2>
-             <p className="text-xs font-medium text-slate-400">Peringatan: Proses ini akan menyapu bersih data yang ada dan menggantinya dengan data dari file backup (.XLSX / .SQL / .JSON).</p>
+             <h2 className="text-2xl font-black text-slate-900 tracking-tight">Restore Database</h2>
+             <p className="text-xs font-medium text-slate-500 mt-1">Peringatan: Proses ini akan menyapu bersih data yang ada dan menggantinya dengan data dari file backup (<span className="font-bold text-purple-600">.XLSX / .SQL / .JSON</span>).</p>
           </div>
         </div>
         
-        <div className="flex flex-col md:flex-row items-center gap-4">
-           <input type="file" accept=".xlsx,.sql,.json" onChange={(e) => setRestoreFile(e.target.files[0])} className="flex-1 p-3 border border-slate-200 rounded-xl text-sm w-full bg-slate-50 cursor-pointer text-slate-600" />
+        <div className="flex flex-col md:flex-row items-stretch md:items-center gap-4 relative z-10 bg-white/60 p-4 rounded-2xl border border-white backdrop-blur-sm">
+           <div className="flex-1 relative">
+             <input type="file" accept=".xlsx,.sql,.json" onChange={(e) => setRestoreFile(e.target.files[0])} className="w-full p-4 pl-12 border border-slate-200 hover:border-purple-300 focus:border-purple-500 rounded-xl text-sm bg-white cursor-pointer text-slate-600 transition-all shadow-sm file:mr-4 file:py-2 file:px-4 file:rounded-lg file:border-0 file:text-xs file:font-black file:bg-purple-50 file:text-purple-700 hover:file:bg-purple-100" />
+             <span className="material-symbols-rounded absolute left-4 top-1/2 -translate-y-1/2 text-purple-400 pointer-events-none">upload_file</span>
+           </div>
+           
            <button 
              disabled={!restoreFile || isRestoring}
              onClick={handleRestore}
-             className={`w-full md:w-auto px-8 py-4 font-black rounded-xl text-white transition-all uppercase tracking-widest text-xs flex items-center justify-center gap-2 ${!restoreFile || isRestoring ? 'bg-slate-300 cursor-not-allowed' : 'bg-purple-600 hover:bg-purple-700 shadow-xl shadow-purple-200'}`}
+             className={`w-full md:w-auto px-8 py-4 font-black rounded-xl text-white transition-all uppercase tracking-widest text-xs flex items-center justify-center gap-2 ${!restoreFile || isRestoring ? 'bg-slate-300 cursor-not-allowed shadow-none' : 'bg-purple-600 hover:bg-purple-700 shadow-xl shadow-purple-200/50 hover:-translate-y-1'}`}
            >
               {isRestoring ? (
                  <><span className="material-symbols-rounded animate-spin">sync</span> Memproses...</>
               ) : (
-                 <><span className="material-symbols-rounded">upload</span> Restore Sekarang</>
+                 <><span className="material-symbols-rounded">cloud_upload</span> Restore Sekarang</>
               )}
            </button>
         </div>
