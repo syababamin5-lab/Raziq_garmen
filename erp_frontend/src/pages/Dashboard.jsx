@@ -144,7 +144,7 @@ export default function Dashboard() {
               </div>
               <div>
                 <h1 className="text-3xl font-black text-white tracking-tighter leading-tight">
-                  {getGreeting()}, <span className="text-emerald-200">Bos {user.nama_lengkap}</span>!
+                  {getGreeting()}, <span className="text-emerald-200">Owner {user.nama_lengkap}</span>!
                 </h1>
                 <p className="text-emerald-50/70 font-medium text-sm mt-1 tracking-wide flex items-center gap-2">
                   <span className="w-2 h-2 rounded-full bg-emerald-400 animate-ping"></span>

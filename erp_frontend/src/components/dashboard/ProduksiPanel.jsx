@@ -98,7 +98,7 @@ export default function ProduksiPanel({ gudang, salesAnalytics, loading = false 
         <div className="mt-4 pt-4 border-t border-slate-100 flex flex-col gap-3">
           <div className="grid grid-cols-2 gap-3 mb-[-8px]">
             {/* Minggu Ini */}
-            <div className="relative overflow-hidden p-6 rounded-[1.5rem] bg-gradient-to-br from-emerald-600 to-emerald-800 text-white shadow-lg shadow-emerald-900/20 group transition-transform hover:scale-[1.02]">
+            <div className="relative overflow-hidden p-6 rounded-[1.5rem] bg-gradient-to-br from-teal-600 to-teal-800 text-white shadow-lg shadow-teal-900/20 group transition-transform hover:scale-[1.02]">
               <div className="absolute bottom-0 right-0 p-4 opacity-10 group-hover:opacity-20 transition-opacity">
                 <span className="material-symbols-rounded text-5xl">trending_up</span>
               </div>
