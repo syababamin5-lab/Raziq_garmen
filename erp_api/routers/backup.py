@@ -123,52 +123,60 @@ def export_database(dataType: str = 'full', format: str = 'xlsx', start_date: st
 
 @router.post("/import")
 async def import_database(file: UploadFile = File(...), db: Session = Depends(get_db)):
-    if not file.filename.endswith('.xlsx'):
-        return {"status": "error", "message": "Saat ini hanya mendukung restore dari file .XLSX"}
+    if not (file.filename.endswith('.xlsx') or file.filename.endswith('.sql')):
+        return {"status": "error", "message": "Saat ini hanya mendukung restore dari file .XLSX atau .SQL"}
     
     try:
         contents = await file.read()
-        excel_data = pd.read_excel(BytesIO(contents), sheet_name=None)
         
-        # We need to drop dependent tables first or just truncate all involved tables
-        # For safety and to avoid FK constraint issues in postgres (though SQLite is looser), 
-        # we will process deletes in reverse order and inserts in order if possible.
-        # But we don't have hard FK constraints enforced in these models mostly.
-        
-        tables_in_file = excel_data.keys()
-        
-        # Begin transaction
-        try:
-            for sheet_name, df in excel_data.items():
-                model = get_table_model(sheet_name)
-                if not model:
-                    continue # Skip unknown sheets
+        if file.filename.endswith('.xlsx'):
+            excel_data = pd.read_excel(BytesIO(contents), sheet_name=None)
+            try:
+                for sheet_name, df in excel_data.items():
+                    model = get_table_model(sheet_name)
+                    if not model: continue
+                    db.execute(text(f"DELETE FROM {sheet_name}"))
+                    records = df.to_dict(orient="records")
+                    if records:
+                        cleaned_records = []
+                        for r in records:
+                            clean_r = {}
+                            for k, v in r.items():
+                                if pd.isna(v): clean_r[k] = None
+                                else: clean_r[k] = v
+                            cleaned_records.append(clean_r)
+                        db.bulk_insert_mappings(model, cleaned_records)
+                db.commit()
+                return {"status": "success", "message": "Database berhasil di-restore dari backup XLSX."}
+            except Exception as e:
+                db.rollback()
+                return {"status": "error", "message": f"Gagal memproses baris data XLSX: {str(e)}"}
                 
-                # Truncate table
-                db.execute(text(f"DELETE FROM {sheet_name}"))
+        elif file.filename.endswith('.sql'):
+            try:
+                # To safely restore SQL, we should execute it statement by statement
+                sql_text = contents.decode('utf-8')
+                statements = [s.strip() for s in sql_text.split(';') if s.strip()]
                 
-                # Insert records
-                records = df.to_dict(orient="records")
-                if records:
-                    # SQLite bulk insert handles NaNs poorly sometimes, replace NaN with None
-                    # Clean records
-                    cleaned_records = []
-                    for r in records:
-                        clean_r = {}
-                        for k, v in r.items():
-                            if pd.isna(v):
-                                clean_r[k] = None
-                            else:
-                                clean_r[k] = v
-                        cleaned_records.append(clean_r)
+                # Extract table names from INSERT statements to clear them first
+                import re
+                tables_to_clear = set()
+                for stmt in statements:
+                    match = re.search(r'INSERT INTO (\w+)', stmt, re.IGNORECASE)
+                    if match:
+                        tables_to_clear.add(match.group(1))
+                
+                for t in tables_to_clear:
+                    db.execute(text(f"DELETE FROM {t}"))
+                
+                for stmt in statements:
+                    db.execute(text(stmt))
                     
-                    db.bulk_insert_mappings(model, cleaned_records)
-                    
-            db.commit()
-            return {"status": "success", "message": "Database berhasil di-restore dari backup."}
-        except Exception as e:
-            db.rollback()
-            return {"status": "error", "message": f"Gagal memproses baris data: {str(e)}"}
-            
+                db.commit()
+                return {"status": "success", "message": "Database berhasil di-restore dari backup SQL."}
+            except Exception as e:
+                db.rollback()
+                return {"status": "error", "message": f"Gagal mengeksekusi script SQL: {str(e)}"}
+
     except Exception as e:
         return {"status": "error", "message": f"Gagal membaca file: {str(e)}"}

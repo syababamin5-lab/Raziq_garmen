@@ -537,12 +537,12 @@ export default function SuperAdmin() {
           </div>
           <div>
              <h2 className="text-xl font-black text-slate-900 tracking-tight">Restore Database</h2>
-             <p className="text-xs font-medium text-slate-400">Peringatan: Proses ini akan menyapu bersih data yang ada dan menggantinya dengan data dari file backup (.XLSX).</p>
+             <p className="text-xs font-medium text-slate-400">Peringatan: Proses ini akan menyapu bersih data yang ada dan menggantinya dengan data dari file backup (.XLSX / .SQL).</p>
           </div>
         </div>
         
         <div className="flex flex-col md:flex-row items-center gap-4">
-           <input type="file" accept=".xlsx" onChange={(e) => setRestoreFile(e.target.files[0])} className="flex-1 p-3 border border-slate-200 rounded-xl text-sm w-full bg-slate-50 cursor-pointer text-slate-600" />
+           <input type="file" accept=".xlsx,.sql" onChange={(e) => setRestoreFile(e.target.files[0])} className="flex-1 p-3 border border-slate-200 rounded-xl text-sm w-full bg-slate-50 cursor-pointer text-slate-600" />
            <button 
              disabled={!restoreFile || isRestoring}
              onClick={handleRestore}
