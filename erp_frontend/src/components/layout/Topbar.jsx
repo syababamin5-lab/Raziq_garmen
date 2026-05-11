@@ -23,7 +23,7 @@ export default function Topbar({ title, onToggleSidebar, isSidebarOpen, onOpenCh
         {/* Toggle Button */}
         <button 
             onClick={onToggleSidebar}
-            className="w-10 h-10 rounded-xl hover:bg-white/5 flex items-center justify-center text-emerald-100/50 transition-colors"
+            className="w-10 h-10 rounded-xl hover:bg-slate-100 flex items-center justify-center text-slate-400 hover:text-emerald-600 transition-colors"
         >
             <span className="material-symbols-rounded">
                 {isSidebarOpen ? 'menu_open' : 'menu'}
@@ -64,12 +64,12 @@ export default function Topbar({ title, onToggleSidebar, isSidebarOpen, onOpenCh
         {/* Chat Toggle Icon */}
         <div 
           onClick={onOpenChat}
-          className="relative w-10 h-10 rounded-2xl bg-white/5 border border-white/5 flex items-center justify-center text-emerald-100/30 group cursor-pointer hover:bg-emerald-500/20 hover:border-emerald-500/30 transition-all"
+          className="relative w-10 h-10 rounded-2xl bg-slate-50 border border-slate-100 flex items-center justify-center text-slate-400 group cursor-pointer hover:bg-emerald-50 hover:border-emerald-200 transition-all"
           title="Buka Chat Internal"
         >
-          <span className="material-symbols-rounded group-hover:text-emerald-300 transition-colors">chat</span>
+          <span className="material-symbols-rounded group-hover:text-emerald-600 transition-colors">chat</span>
           {unreadCount > 0 && (
-            <div className="absolute -top-1 -right-1 bg-red-500 text-white text-[9px] font-black w-4 h-4 rounded-full flex items-center justify-center border-2 border-emerald-950 animate-bounce">
+            <div className="absolute -top-1 -right-1 bg-red-500 text-white text-[9px] font-black w-4 h-4 rounded-full flex items-center justify-center border-2 border-white animate-bounce">
               {unreadCount}
             </div>
           )}
