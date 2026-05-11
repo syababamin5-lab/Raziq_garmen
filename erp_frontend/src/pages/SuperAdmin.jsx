@@ -9,6 +9,10 @@ export default function SuperAdmin() {
   const [loading, setLoading] = useState(false);
   const [understood, setUnderstood] = useState(false);
   
+  // Restore State
+  const [restoreFile, setRestoreFile] = useState(null);
+  const [isRestoring, setIsRestoring] = useState(false);
+  
   // User Logs State
   const [logs, setLogs] = useState([]);
   const [loadingLogs, setLoadingLogs] = useState(false);
@@ -103,16 +107,66 @@ export default function SuperAdmin() {
     setIsExporting(true);
     setExportSuccess(false);
 
-    console.log("Memulai Export dengan konfigurasi:", exportWizard);
-    
-    // Simulasi proses download (2 detik)
-    setTimeout(() => {
+    if (exportWizard.format === 'pdf') {
+      alert("Format .PDF untuk Full Backup tidak didukung karena terlalu besar. Silakan gunakan .XLSX atau .SQL");
+      setIsExporting(false);
+      return;
+    }
+
+    try {
+      const queryParams = new URLSearchParams({
+        dataType: exportWizard.dataType,
+        format: exportWizard.format
+      });
+
+      if (exportWizard.dataType === 'transaksi' || exportWizard.dataType === 'full') {
+        if (exportWizard.startDate) queryParams.append('start_date', exportWizard.startDate);
+        if (exportWizard.endDate) queryParams.append('end_date', exportWizard.endDate);
+      }
+
+      const url = `${api.defaults.baseURL}/admin/database/export?${queryParams.toString()}`;
+      
+      // Open URL directly to trigger download
+      window.open(url, '_blank');
+      
       setIsExporting(false);
       setExportSuccess(true);
-      
-      // Reset status sukses setelah 3 detik
       setTimeout(() => setExportSuccess(false), 3000);
-    }, 2500);
+
+    } catch (err) {
+      console.error(err);
+      alert("Gagal melakukan export: " + err.message);
+      setIsExporting(false);
+    }
+  };
+
+  const handleRestore = async () => {
+    if (!restoreFile) return;
+    
+    const pass = window.prompt(`PERINGATAN BAHAYA!\nProses ini akan MENGHAPUS SEMUA DATA di sistem dan menggantinya dengan data dari file backup.\nKetik "SAYA YAKIN" untuk melanjutkan:`);
+    if (pass !== "SAYA YAKIN") {
+      alert("Proses dibatalkan.");
+      return;
+    }
+
+    setIsRestoring(true);
+    const formData = new FormData();
+    formData.append('file', restoreFile);
+
+    try {
+      const res = await api.post('/admin/database/import', formData, {
+        headers: { 'Content-Type': 'multipart/form-data' }
+      });
+      if (res.data.status === 'success') {
+        alert("✅ " + res.data.message);
+        setRestoreFile(null);
+      } else {
+        alert("❌ Gagal: " + res.data.message);
+      }
+    } catch (err) {
+      alert("Error saat restore: " + err.message);
+    }
+    setIsRestoring(false);
   };
 
   const handlePrune = async () => {
@@ -472,6 +526,34 @@ export default function SuperAdmin() {
               Last Backup: {new Date().toLocaleDateString('id-ID')}
             </p>
           </div>
+        </div>
+      </div>
+
+      {/* Restore Database Card */}
+      <div className="bg-white p-8 rounded-[2rem] shadow-sm border border-slate-100 flex flex-col mt-8 hover:shadow-xl transition-all duration-300">
+        <div className="flex items-center gap-3 mb-6">
+          <div className="p-3 bg-purple-50 rounded-xl">
+            <span className="material-symbols-rounded text-purple-600">settings_backup_restore</span>
+          </div>
+          <div>
+             <h2 className="text-xl font-black text-slate-900 tracking-tight">Restore Database</h2>
+             <p className="text-xs font-medium text-slate-400">Peringatan: Proses ini akan menyapu bersih data yang ada dan menggantinya dengan data dari file backup (.XLSX).</p>
+          </div>
+        </div>
+        
+        <div className="flex flex-col md:flex-row items-center gap-4">
+           <input type="file" accept=".xlsx" onChange={(e) => setRestoreFile(e.target.files[0])} className="flex-1 p-3 border border-slate-200 rounded-xl text-sm w-full bg-slate-50 cursor-pointer text-slate-600" />
+           <button 
+             disabled={!restoreFile || isRestoring}
+             onClick={handleRestore}
+             className={`w-full md:w-auto px-8 py-4 font-black rounded-xl text-white transition-all uppercase tracking-widest text-xs flex items-center justify-center gap-2 ${!restoreFile || isRestoring ? 'bg-slate-300 cursor-not-allowed' : 'bg-purple-600 hover:bg-purple-700 shadow-xl shadow-purple-200'}`}
+           >
+              {isRestoring ? (
+                 <><span className="material-symbols-rounded animate-spin">sync</span> Memproses...</>
+              ) : (
+                 <><span className="material-symbols-rounded">upload</span> Restore Sekarang</>
+              )}
+           </button>
         </div>
       </div>
 
