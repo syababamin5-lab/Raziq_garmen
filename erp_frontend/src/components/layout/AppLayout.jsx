@@ -6,6 +6,7 @@ import ChatSystem from '../chat/ChatSystem'
 import AIAssistantHub from '../dashboard/AIAssistantHub'
 import SubscriptionModal from './SubscriptionModal'
 import { getCurrentUser } from '../../api/authApi'
+import api from '../../api/api'
 
 export default function AppLayout() {
   const user = getCurrentUser();
@@ -28,6 +29,10 @@ export default function AppLayout() {
       }
     };
     fetchCompanyInfo();
+
+    const handleUpdate = () => fetchCompanyInfo();
+    window.addEventListener('update-company-config', handleUpdate);
+    return () => window.removeEventListener('update-company-config', handleUpdate);
   }, []);
 
   const getHolidayTheme = () => {

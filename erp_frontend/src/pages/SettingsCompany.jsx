@@ -36,6 +36,7 @@ export default function SettingsCompany() {
       const { data } = await api.post('/company-config', config);
       if (data.status === 'success') {
         setSuccess(true);
+        window.dispatchEvent(new CustomEvent('update-company-config'));
         setTimeout(() => setSuccess(false), 3000);
       }
     } catch (err) { alert('Gagal memperbarui profil'); }
