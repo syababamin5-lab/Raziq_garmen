@@ -463,7 +463,7 @@ export default function SuperAdmin() {
                 {[
                   { id: 'sql', label: '.SQL', icon: 'terminal', color: 'blue' },
                   { id: 'xlsx', label: '.XLSX', icon: 'table_view', color: 'emerald' },
-                  { id: 'pdf', label: '.PDF', icon: 'picture_as_pdf', color: 'red' },
+                  { id: 'json', label: '.JSON', icon: 'data_object', color: 'purple' },
                 ].map((fmt) => (
                   <button
                     key={fmt.id}
@@ -537,12 +537,12 @@ export default function SuperAdmin() {
           </div>
           <div>
              <h2 className="text-xl font-black text-slate-900 tracking-tight">Restore Database</h2>
-             <p className="text-xs font-medium text-slate-400">Peringatan: Proses ini akan menyapu bersih data yang ada dan menggantinya dengan data dari file backup (.XLSX / .SQL).</p>
+             <p className="text-xs font-medium text-slate-400">Peringatan: Proses ini akan menyapu bersih data yang ada dan menggantinya dengan data dari file backup (.XLSX / .SQL / .JSON).</p>
           </div>
         </div>
         
         <div className="flex flex-col md:flex-row items-center gap-4">
-           <input type="file" accept=".xlsx,.sql" onChange={(e) => setRestoreFile(e.target.files[0])} className="flex-1 p-3 border border-slate-200 rounded-xl text-sm w-full bg-slate-50 cursor-pointer text-slate-600" />
+           <input type="file" accept=".xlsx,.sql,.json" onChange={(e) => setRestoreFile(e.target.files[0])} className="flex-1 p-3 border border-slate-200 rounded-xl text-sm w-full bg-slate-50 cursor-pointer text-slate-600" />
            <button 
              disabled={!restoreFile || isRestoring}
              onClick={handleRestore}

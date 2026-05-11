@@ -29,7 +29,7 @@ def get_table_model(table_name: str):
 
 @router.get("/export")
 def export_database(dataType: str = 'full', format: str = 'xlsx', start_date: str = None, end_date: str = None, db: Session = Depends(get_db)):
-    if format not in ['xlsx', 'sql']:
+    if format not in ['xlsx', 'sql', 'json']:
         raise HTTPException(status_code=400, detail="Format tidak didukung")
 
     master_tables = ["barang", "mitra", "karyawan", "users", "company_config"]
@@ -121,10 +121,46 @@ def export_database(dataType: str = 'full', format: str = 'xlsx', start_date: st
             headers={"Content-Disposition": f"attachment; filename={filename}"}
         )
 
+    elif format == 'json':
+        import json
+        import numpy as np
+        
+        json_data = {}
+        for table in tables_to_export:
+            model = get_table_model(table)
+            if not model: continue
+            
+            query = db.query(model)
+            if dataType in ['transaksi', 'full'] and start_date and end_date and table in trx_tables:
+                if hasattr(model, 'tanggal'):
+                    query = query.filter(model.tanggal >= start_date, model.tanggal <= f"{end_date} 23:59:59")
+                elif hasattr(model, 'tanggal_input'):
+                    query = query.filter(model.tanggal_input >= start_date, model.tanggal_input <= f"{end_date} 23:59:59")
+            
+            df = pd.read_sql(query.statement, db.bind)
+            
+            # Clean up datetime for JSON
+            for col in df.select_dtypes(include=['datetime64[ns, UTC]', 'datetime64[ns]']).columns:
+                df[col] = df[col].dt.tz_localize(None).astype(str)
+                df[col] = df[col].replace('NaT', None)
+                
+            # Convert NaNs to None for valid JSON nulls
+            df = df.replace({np.nan: None})
+            
+            json_data[table] = df.to_dict(orient="records")
+            
+        output = BytesIO(json.dumps(json_data, ensure_ascii=False).encode('utf-8'))
+        filename = f"Backup_Raziq_{dataType}_{datetime.datetime.now().strftime('%Y%m%d_%H%M')}.json"
+        return StreamingResponse(
+            output, 
+            media_type="application/json",
+            headers={"Content-Disposition": f"attachment; filename={filename}"}
+        )
+
 @router.post("/import")
 async def import_database(file: UploadFile = File(...), db: Session = Depends(get_db)):
-    if not (file.filename.endswith('.xlsx') or file.filename.endswith('.sql')):
-        return {"status": "error", "message": "Saat ini hanya mendukung restore dari file .XLSX atau .SQL"}
+    if not (file.filename.endswith('.xlsx') or file.filename.endswith('.sql') or file.filename.endswith('.json')):
+        return {"status": "error", "message": "Saat ini hanya mendukung restore dari file .XLSX, .SQL, atau .JSON"}
     
     try:
         contents = await file.read()
@@ -177,6 +213,32 @@ async def import_database(file: UploadFile = File(...), db: Session = Depends(ge
             except Exception as e:
                 db.rollback()
                 return {"status": "error", "message": f"Gagal mengeksekusi script SQL: {str(e)}"}
+                
+        elif file.filename.endswith('.json'):
+            import json
+            try:
+                json_data = json.loads(contents.decode('utf-8'))
+                for table_name, records in json_data.items():
+                    model = get_table_model(table_name)
+                    if not model: continue
+                    
+                    db.execute(text(f"DELETE FROM {table_name}"))
+                    
+                    if records:
+                        cleaned_records = []
+                        for r in records:
+                            clean_r = {}
+                            for k, v in r.items():
+                                if pd.isna(v) or v == 'NaT': clean_r[k] = None
+                                else: clean_r[k] = v
+                            cleaned_records.append(clean_r)
+                        
+                        db.bulk_insert_mappings(model, cleaned_records)
+                db.commit()
+                return {"status": "success", "message": "Database berhasil di-restore dari backup JSON."}
+            except Exception as e:
+                db.rollback()
+                return {"status": "error", "message": f"Gagal memproses file JSON: {str(e)}"}
 
     except Exception as e:
         return {"status": "error", "message": f"Gagal membaca file: {str(e)}"}
