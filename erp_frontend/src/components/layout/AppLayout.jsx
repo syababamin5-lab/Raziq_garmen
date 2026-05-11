@@ -14,6 +14,21 @@ export default function AppLayout() {
   const [unreadCount, setUnreadCount] = useState(0);
   const [showProfileModal, setShowProfileModal] = useState(false);
   const [showSubscriptionModal, setShowSubscriptionModal] = useState(true);
+  const [companyName, setCompanyName] = useState('RAZIQ GARMENT');
+
+  React.useEffect(() => {
+    const fetchCompanyInfo = async () => {
+      try {
+        const { data } = await api.get('/company-config');
+        if (data && data.nama_perusahaan) {
+          setCompanyName(data.nama_perusahaan);
+        }
+      } catch (err) {
+        console.error("Gagal mengambil nama perusahaan:", err);
+      }
+    };
+    fetchCompanyInfo();
+  }, []);
 
   const getHolidayTheme = () => {
     const now = new Date();
@@ -31,7 +46,7 @@ export default function AppLayout() {
       return { id: 'premium', name: 'PREMIUM EXECUTIVE ACCESS', color: 'from-[#0f172a] via-[#1e293b] to-[#453c15]', icon: 'workspace_premium', bg: 'bg-amber-500/5', border: 'border-amber-500/20' };
     }
 
-    return { id: 'default', name: 'Raziq Garmen ERP', color: 'from-slate-900 to-emerald-900', icon: 'verified_user', bg: 'bg-emerald-500/5' };
+    return { id: 'default', name: `${companyName} ERP`, color: 'from-slate-900 to-emerald-900', icon: 'verified_user', bg: 'bg-emerald-500/5' };
   };
 
   const theme = getHolidayTheme();
@@ -40,7 +55,7 @@ export default function AppLayout() {
     <div className="min-h-screen flex overflow-hidden">
       <Sidebar isOpen={isSidebarOpen} onOpenProfile={() => setShowProfileModal(true)} />
       <div className={`flex-1 flex flex-col min-h-screen transition-all duration-300 ease-in-out ${isSidebarOpen ? 'ml-64' : 'ml-0 md:ml-20'}`}>
-        <Topbar title="Raziq Garment | Enterprise" onToggleSidebar={() => setSidebarOpen(!isSidebarOpen)} isSidebarOpen={isSidebarOpen} onOpenChat={() => setChatOpen(true)} onOpenProfile={() => setShowProfileModal(true)} unreadCount={unreadCount} />
+        <Topbar title={`${companyName} | Enterprise`} onToggleSidebar={() => setSidebarOpen(!isSidebarOpen)} isSidebarOpen={isSidebarOpen} onOpenChat={() => setChatOpen(true)} onOpenProfile={() => setShowProfileModal(true)} unreadCount={unreadCount} />
         <ChatSystem isOpen={isChatOpen} onClose={() => setChatOpen(false)} onUnreadUpdate={setUnreadCount} />
         {!isChatOpen && <AIAssistantHub userRole={user?.role} />}
         <main className="flex-1 mt-14 p-10 overflow-auto"><Outlet /></main>
@@ -49,7 +64,7 @@ export default function AppLayout() {
             <div className="w-8 h-8 rounded-lg bg-slate-50 flex items-center justify-center border border-slate-200 group-hover:bg-emerald-50 transition-colors"><img src="/logo_ansa.png" alt="ANSA Logo" className="h-5 w-5 object-contain" /></div>
             <div className="flex flex-col"><p className="text-slate-400 text-[9px] font-black uppercase tracking-[0.2em] leading-none">Developed by</p><p className="text-slate-900 text-xs font-black tracking-tighter">ANSA <span className="text-emerald-600">ENTERPRISE</span></p></div>
           </div>
-          <div className="flex flex-col items-end gap-1"><p className="text-slate-400 text-[10px] font-bold tracking-widest uppercase">&copy; {new Date().getFullYear()} Raziq Garmen</p><p className="text-slate-300 text-[8px] font-medium tracking-tight">Sistem Informasi Manajemen Produksi & Keuangan Terintegrasi</p></div>
+          <div className="flex flex-col items-end gap-1"><p className="text-slate-400 text-[10px] font-bold tracking-widest uppercase">&copy; {new Date().getFullYear()} {companyName}</p><p className="text-slate-300 text-[8px] font-medium tracking-tight">Sistem Informasi Manajemen Produksi & Keuangan Terintegrasi</p></div>
         </footer>
       </div>
 
