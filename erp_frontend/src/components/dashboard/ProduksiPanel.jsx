@@ -110,9 +110,22 @@ export default function ProduksiPanel({ gudang, salesAnalytics, loading = false 
                   </span>
                 </div>
                 <h4 className="text-xl font-black tracking-tighter mb-1">{formatRp(salesAnalytics.nominal_minggu_ini)}</h4>
-                <div className="flex items-center gap-1.5 opacity-80">
-                  <span className="material-symbols-rounded text-[14px]">checkroom</span>
-                  <p className="text-[11px] font-medium">{salesAnalytics.total_pcs_terjual_minggu_ini} Pcs Terjual</p>
+                <div className="flex flex-col gap-0.5">
+                  <div className="flex items-center gap-1.5 opacity-80">
+                    <span className="material-symbols-rounded text-[14px]">checkroom</span>
+                    <p className="text-[11px] font-medium">
+                      {salesAnalytics.total_pcs_terjual_minggu_ini.toLocaleString('id-ID')} Pcs ({Math.floor(salesAnalytics.total_pcs_terjual_minggu_ini / 12)} Lsn) Terjual
+                    </p>
+                  </div>
+                  <p className="text-[9px] font-medium opacity-50 ml-[20px]">
+                    {(() => {
+                      const now = new Date();
+                      const day = now.getDay() || 7;
+                      const start = new Date(now);
+                      start.setDate(now.getDate() - (day - 1));
+                      return `${start.toLocaleDateString('id-ID', { day: 'numeric', month: 'short' })} - ${now.toLocaleDateString('id-ID', { day: 'numeric', month: 'short' })}`
+                    })()}
+                  </p>
                 </div>
               </div>
             </div>
@@ -130,9 +143,20 @@ export default function ProduksiPanel({ gudang, salesAnalytics, loading = false 
                   </span>
                 </div>
                 <h4 className="text-xl font-black tracking-tighter mb-1">{formatRp(salesAnalytics.nominal_bulan_ini)}</h4>
-                <div className="flex items-center gap-1.5 opacity-70">
-                  <span className="material-symbols-rounded text-[14px]">inventory_2</span>
-                  <p className="text-[11px] font-medium">{salesAnalytics.total_pcs_terjual_bulan_ini} Pcs Terjual</p>
+                <div className="flex flex-col gap-0.5">
+                  <div className="flex items-center gap-1.5 opacity-70">
+                    <span className="material-symbols-rounded text-[14px]">inventory_2</span>
+                    <p className="text-[11px] font-medium">
+                      {salesAnalytics.total_pcs_terjual_bulan_ini.toLocaleString('id-ID')} Pcs ({Math.floor(salesAnalytics.total_pcs_terjual_bulan_ini / 12)} Lsn) Terjual
+                    </p>
+                  </div>
+                  <p className="text-[9px] font-medium opacity-40 ml-[20px]">
+                    {(() => {
+                      const now = new Date();
+                      const start = new Date(now.getFullYear(), now.getMonth(), 1);
+                      return `${start.toLocaleDateString('id-ID', { day: 'numeric', month: 'short' })} - ${now.toLocaleDateString('id-ID', { day: 'numeric', month: 'short', year: 'numeric' })}`
+                    })()}
+                  </p>
                 </div>
               </div>
             </div>
