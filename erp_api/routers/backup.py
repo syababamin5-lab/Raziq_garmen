@@ -155,8 +155,8 @@ async def import_database(file: UploadFile = File(...), db: Session = Depends(ge
         elif file.filename.endswith('.sql'):
             try:
                 # To safely restore SQL, we should execute it statement by statement
-                sql_text = contents.decode('utf-8')
-                statements = [s.strip() for s in sql_text.split(';') if s.strip()]
+                sql_text = contents.decode('utf-8').replace('\r', '')
+                statements = [s.strip() for s in sql_text.split(';\n') if s.strip()]
                 
                 # Extract table names from INSERT statements to clear them first
                 import re
