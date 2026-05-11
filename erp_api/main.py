@@ -407,7 +407,7 @@ async def startup_event():
             {"id_menu": "div_admin", "nama_menu": "Super Admin Control", "path": "", "icon": "", "roles": "super_admin", "order_priority": 11, "is_divider": 1},
             {"id_menu": "settings_users", "nama_menu": "Pengaturan User", "path": "/settings/users", "icon": "manage_accounts", "roles": "super_admin", "order_priority": 12},
             {"id_menu": "settings_company", "nama_menu": "Profil Perusahaan", "path": "/settings/company", "icon": "business_center", "roles": "super_admin", "order_priority": 13},
-            {"id_menu": "super_admin", "nama_menu": "Database & Admin", "path": "/super-admin", "icon": "database", "roles": "super_admin", "order_priority": 14},
+            {"id_menu": "super_admin_db", "nama_menu": "Database & Admin", "path": "/super-admin", "icon": "database", "roles": "super_admin", "order_priority": 14},
             {"id_menu": "div_profile", "nama_menu": "", "path": "", "icon": "", "roles": "super_admin,owner,gm,admin,staff", "order_priority": 15, "is_divider": 1},
             {"id_menu": "profile", "nama_menu": "Profil Saya", "path": "/profile", "icon": "account_circle", "roles": "super_admin,owner,gm,admin,staff", "order_priority": 16},
             {"id_menu": "dash_keuangan", "nama_menu": "Panel Keuangan (Dashboard)", "path": "DASHBOARD_PANEL", "icon": "account_balance", "roles": "super_admin,owner,gm,admin", "order_priority": 100},
@@ -423,6 +423,13 @@ async def startup_event():
                 menu_obj = db.query(models.MenuRegistry).filter(models.MenuRegistry.id_menu == m["id_menu"]).first()
                 if menu_obj:
                     menu_obj.roles = m["roles"]
+        
+        # Cleanup duplicate menu from previous versions
+        try:
+            db.execute(text("DELETE FROM menu_registry WHERE id_menu = 'super_admin'"))
+        except:
+            pass
+            
         db.commit()
 
         # 4. AUTO-SEED / UPDATE COMPANY CONFIG
