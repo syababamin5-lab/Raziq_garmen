@@ -4,7 +4,7 @@ import { getCurrentUser } from '../../api/authApi'
 import api, { getFileUrl } from '../../api/api'
 
 export default function Sidebar({ isOpen, onOpenProfile }) {
-  const user = getCurrentUser();
+  const [user] = useState(getCurrentUser());
   const [menus, setMenus] = useState([]);
   const [loading, setLoading] = useState(true);
   const [currentTime, setCurrentTime] = useState(new Date());
@@ -35,7 +35,7 @@ export default function Sidebar({ isOpen, onOpenProfile }) {
     const handleUpdate = () => fetchMenus();
     window.addEventListener('update-menus', handleUpdate);
     return () => window.removeEventListener('update-menus', handleUpdate);
-  }, [user]);
+  }, []);
 
   // ── Date & Time formatting logic ──
   const gregorianDate = currentTime.toLocaleDateString('id-ID', { weekday: 'long', day: 'numeric', month: 'long', year: 'numeric' });
@@ -48,7 +48,7 @@ export default function Sidebar({ isOpen, onOpenProfile }) {
   }
   useEffect(() => {
     fetchMenus();
-  }, [user]);
+  }, []);
 
   if (loading) return null;
 
