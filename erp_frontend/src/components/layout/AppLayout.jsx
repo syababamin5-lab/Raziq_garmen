@@ -15,7 +15,7 @@ export default function AppLayout() {
   const [unreadCount, setUnreadCount] = useState(0);
   const [showProfileModal, setShowProfileModal] = useState(false);
   const [showSubscriptionModal, setShowSubscriptionModal] = useState(true);
-  const [companyName, setCompanyName] = useState('RAZIQ GARMENT');
+  const [companyName, setCompanyName] = useState('Ansa-Enterprise');
 
   React.useEffect(() => {
     const fetchCompanyInfo = async () => {
@@ -51,7 +51,7 @@ export default function AppLayout() {
       return { id: 'premium', name: 'PREMIUM EXECUTIVE ACCESS', color: 'from-[#0f172a] via-[#1e293b] to-[#453c15]', icon: 'workspace_premium', bg: 'bg-amber-500/5', border: 'border-amber-500/20' };
     }
 
-    return { id: 'default', name: `${companyName} ERP`, color: 'from-slate-900 to-emerald-900', icon: 'verified_user', bg: 'bg-emerald-500/5' };
+    return { id: 'default', name: `${companyName}`, color: 'from-slate-900 to-emerald-900', icon: 'verified_user', bg: 'bg-emerald-500/5' };
   };
 
   const theme = getHolidayTheme();
@@ -60,7 +60,7 @@ export default function AppLayout() {
     <div className="min-h-screen flex overflow-hidden">
       <Sidebar isOpen={isSidebarOpen} onOpenProfile={() => setShowProfileModal(true)} />
       <div className={`flex-1 flex flex-col min-h-screen transition-all duration-300 ease-in-out ${isSidebarOpen ? 'ml-64' : 'ml-0 md:ml-20'}`}>
-        <Topbar title={`${companyName} | Enterprise`} onToggleSidebar={() => setSidebarOpen(!isSidebarOpen)} isSidebarOpen={isSidebarOpen} onOpenChat={() => setChatOpen(true)} onOpenProfile={() => setShowProfileModal(true)} unreadCount={unreadCount} />
+        <Topbar title={`${companyName}`} onToggleSidebar={() => setSidebarOpen(!isSidebarOpen)} isSidebarOpen={isSidebarOpen} onOpenChat={() => setChatOpen(true)} onOpenProfile={() => setShowProfileModal(true)} unreadCount={unreadCount} />
         <ChatSystem isOpen={isChatOpen} onClose={() => setChatOpen(false)} onUnreadUpdate={setUnreadCount} />
         {!isChatOpen && <AIAssistantHub userRole={user?.role} />}
         <main className="flex-1 mt-14 p-10 overflow-auto"><Outlet /></main>

@@ -95,7 +95,7 @@ const AIAssistantHub = ({ userRole }) => {
                                 </div>
                                 <div>
                                     <h2 className="text-sm font-black text-white tracking-tight uppercase">AI Business Intelligence</h2>
-                                    <p className="text-[10px] text-emerald-400 font-bold uppercase tracking-widest">RAZIQ GARMENT Assistant</p>
+                                    <p className="text-[10px] text-emerald-400 font-bold uppercase tracking-widest">Ansa-Enterprise Assistant</p>
                                 </div>
                             </div>
                             <button 
