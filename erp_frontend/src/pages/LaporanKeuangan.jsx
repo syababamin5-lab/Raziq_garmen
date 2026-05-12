@@ -26,34 +26,41 @@ export default function LaporanKeuangan() {
 
   const analogies = {
     hpp: {
-      title: "Analogi Perhitungan HPP (Beban Pokok)",
+      title: "Analogi Perhitungan HPP (Sistem Perpetual)",
       content: (
         <div className="space-y-4 text-slate-600 leading-relaxed">
-          <p>HPP (Harga Pokok Penjualan) adalah total biaya yang Bapak keluarkan untuk **membuat satu unit produk** sampai siap dijual.</p>
-          <div className="bg-emerald-50 p-4 rounded-2xl border border-emerald-100">
-            <p className="font-black text-emerald-800 text-xs mb-2 uppercase">Rumus Utama (Standar Manufaktur):</p>
-            <p className="font-mono text-[13px] font-bold text-emerald-900 leading-relaxed">
-              (Bahan + Upah + Overhead) + (WIP Awal - WIP Akhir) = HPP
-            </p>
+          <p>Sistem Raziq Garmen menggunakan metode **Akuntansi Perpetual**, di mana HPP (Harga Pokok Penjualan) dihitung secara real-time berdasarkan barang yang **benar-benar laku terjual**.</p>
+          
+          <div className="bg-emerald-50 p-5 rounded-2xl border border-emerald-100">
+            <p className="font-black text-emerald-800 text-xs mb-2 uppercase">Prinsip Utama (5W + 1H):</p>
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-3 text-[11px]">
+              <p>📌 <span className="font-bold">What:</span> Nilai modal baju yang sudah laku terjual.</p>
+              <p>📌 <span className="font-bold">Why:</span> Agar Bapak tidak 'rugi palsu' saat beli kain banyak.</p>
+              <p>📌 <span className="font-bold">Where:</span> Diambil dari akun **51120** (Terjual) & **12130** (WIP).</p>
+              <p>📌 <span className="font-bold">When:</span> Berubah otomatis tiap ada invoice / produksi.</p>
+              <p>📌 <span className="font-bold">Who:</span> Dihitung otomatis oleh AI & Sistem Raziq Garmen.</p>
+              <p>📌 <span className="font-bold">How:</span> Biaya di-antrekan di WIP, lalu jadi HPP saat laku.</p>
+            </div>
           </div>
+
           <ul className="space-y-3">
             <li className="flex gap-3">
               <span className="w-6 h-6 rounded-full bg-emerald-100 text-emerald-600 flex-shrink-0 flex items-center justify-center font-bold text-xs">1</span>
-              <p><span className="font-black text-slate-800">Bahan Baku:</span> Nilai kain yang dipotong. Sekarang dialokasikan ke akun **12130 (WIP)** agar modal Bapak tetap tercatat sebagai aset selama proses jahit.</p>
+              <p><span className="font-black text-slate-800">Biaya Input (Bahan & Upah):</span> Saat kain dipotong atau upah dibayar, nilainya "parkir" dulu di akun **12130 (WIP)**. Ini belum dianggap biaya/beban di Laba Rugi karena bajunya belum laku.</p>
             </li>
             <li className="flex gap-3">
               <span className="w-6 h-6 rounded-full bg-emerald-100 text-emerald-600 flex-shrink-0 flex items-center justify-center font-bold text-xs">2</span>
-              <p><span className="font-black text-slate-800">Biaya Tenaga Kerja:</span> Upah potong/jahit yang sudah Bapak keluarkan. Ini menambah nilai barang yang sedang diproses.</p>
+              <p><span className="font-black text-slate-800">Antrean Produksi (WIP):</span> Selama proses jahit, modal Bapak aman sebagai Aset (Harta). Nilainya akan naik-turun tergantung berapa banyak baju yang sedang "mengantre" di penjahit.</p>
             </li>
-            <li className="flex gap-3">
-              <span className="w-6 h-6 rounded-full bg-emerald-100 text-emerald-600 flex-shrink-0 flex items-center justify-center font-bold text-xs">3</span>
-              <p><span className="font-black text-slate-800">Overhead Pabrik:</span> Biaya pendukung (Listrik, Benang, Jarum) yang melekat pada proses produksi.</p>
-            </li>
-            <li className="flex gap-3 pt-2 border-t border-emerald-100">
-              <span className="w-6 h-6 rounded-full bg-amber-100 text-amber-600 flex-shrink-0 flex items-center justify-center font-bold text-xs">4</span>
-              <p><span className="font-black text-amber-800">Penyesuaian WIP:</span> Jika ada baju yang dipotong tapi **belum selesai jahit** di akhir bulan, nilainya akan dikurangi dari HPP bulan ini dan menjadi modal awal di bulan depan. Laporan Bapak jadi sangat akurat!</p>
+            <li className="flex gap-3 border-t border-emerald-100 pt-3">
+              <span className="w-6 h-6 rounded-full bg-amber-500 text-white flex-shrink-0 flex items-center justify-center font-bold text-xs shadow-md">3</span>
+              <p><span className="font-black text-slate-800">HPP (Barang Terjual):</span> Saat Bapak buat invoice penjualan, sistem otomatis menarik modal dari stok dan menjadikannya HPP. Inilah nilai yang Bapak lihat di Laba Rugi.</p>
             </li>
           </ul>
+          
+          <div className="bg-slate-50 p-3 rounded-xl border border-slate-200 text-[10px] italic">
+             *Rumus: Input Biaya (Bahan+Upah) -> Antrean (WIP) -> Stok (Ready) -> HPP (Laku).
+          </div>
         </div>
       )
     },
