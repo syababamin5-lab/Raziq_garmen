@@ -193,28 +193,30 @@ export default function Dashboard() {
         </div>
       )}
 
-      {/* ── MOBILE MENU HUB (HANYA MUNCUL DI HP) ── */}
-      <div className="md:hidden grid grid-cols-2 gap-4 pb-6 mt-4">
-        {[
-          { title: "Keuangan", icon: "account_balance_wallet", color: "from-emerald-500 to-emerald-700", shadow: "shadow-emerald-500/30", path: "/laporan" },
-          { title: "Laporan Penjualan", icon: "shopping_cart", color: "from-blue-500 to-blue-700", shadow: "shadow-blue-500/30", path: "/penjualan" },
-          { title: "Laporan Produksi", icon: "precision_manufacturing", color: "from-indigo-500 to-indigo-700", shadow: "shadow-indigo-500/30", path: "/produksi" },
-          { title: "Piutang Klien", icon: "request_quote", color: "from-amber-500 to-amber-700", shadow: "shadow-amber-500/30", path: "/kas" },
-          { title: "Hutang Supplier", icon: "outbox", color: "from-red-500 to-red-700", shadow: "shadow-red-500/30", path: "/pembelian" },
-          { title: "Kasbon Karyawan", icon: "person_search", color: "from-orange-500 to-orange-700", shadow: "shadow-orange-500/30", path: "/kasbon" },
-          { title: "Status Gudang", icon: "inventory_2", color: "from-teal-500 to-teal-700", shadow: "shadow-teal-500/30", path: "/master" },
-          { title: "Profil Saya", icon: "account_circle", color: "from-slate-600 to-slate-800", shadow: "shadow-slate-500/30", path: "/profile" },
-        ].map((menu, idx) => (
-          <div 
-            key={idx} 
-            onClick={() => navigate(menu.path)}
-            className={`bg-gradient-to-br ${menu.color} p-5 rounded-[2rem] shadow-lg ${menu.shadow} text-white flex flex-col items-center justify-center gap-3 active:scale-95 transition-all cursor-pointer border border-white/10`}
-          >
-            <span className="material-symbols-rounded text-4xl mb-1 opacity-90">{menu.icon}</span>
-            <span className="font-bold text-xs tracking-wide uppercase text-center leading-tight">{menu.title}</span>
-          </div>
-        ))}
-      </div>
+      {/* ── MOBILE MENU HUB (HANYA MUNCUL DI HP UNTUK OWNER/GM/BOS) ── */}
+      {['bos', 'owner', 'gm'].includes(user?.role) && (
+        <div className="md:hidden grid grid-cols-2 gap-4 pb-6 mt-4">
+          {[
+            { title: "Keuangan", icon: "account_balance_wallet", color: "from-emerald-500 to-emerald-700", shadow: "shadow-emerald-500/30", path: "/laporan" },
+            { title: "Laporan Penjualan", icon: "shopping_cart", color: "from-blue-500 to-blue-700", shadow: "shadow-blue-500/30", path: "/penjualan" },
+            { title: "Laporan Produksi", icon: "precision_manufacturing", color: "from-indigo-500 to-indigo-700", shadow: "shadow-indigo-500/30", path: "/produksi" },
+            { title: "Piutang Klien", icon: "request_quote", color: "from-amber-500 to-amber-700", shadow: "shadow-amber-500/30", path: "/kas" },
+            { title: "Hutang Supplier", icon: "outbox", color: "from-red-500 to-red-700", shadow: "shadow-red-500/30", path: "/pembelian" },
+            { title: "Kasbon Karyawan", icon: "person_search", color: "from-orange-500 to-orange-700", shadow: "shadow-orange-500/30", path: "/kasbon" },
+            { title: "Status Gudang", icon: "inventory_2", color: "from-teal-500 to-teal-700", shadow: "shadow-teal-500/30", path: "/master" },
+            { title: "Profil Saya", icon: "account_circle", color: "from-slate-600 to-slate-800", shadow: "shadow-slate-500/30", path: "/profile" },
+          ].map((menu, idx) => (
+            <div 
+              key={idx} 
+              onClick={() => navigate(menu.path)}
+              className={`bg-gradient-to-br ${menu.color} p-5 rounded-[2rem] shadow-lg ${menu.shadow} text-white flex flex-col items-center justify-center gap-3 active:scale-95 transition-all cursor-pointer border border-white/10`}
+            >
+              <span className="material-symbols-rounded text-4xl mb-1 opacity-90">{menu.icon}</span>
+              <span className="font-bold text-xs tracking-wide uppercase text-center leading-tight">{menu.title}</span>
+            </div>
+          ))}
+        </div>
+      )}
 
       {/* ── DESKTOP DASHBOARD CONTENT (HANYA MUNCUL DI DESKTOP/TABLET) ── */}
       <div className="hidden md:flex flex-col space-y-6">
