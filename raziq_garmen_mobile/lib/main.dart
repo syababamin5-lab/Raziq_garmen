@@ -48,7 +48,7 @@ class _WebPageContainerState extends State<WebPageContainer> {
 
   // Opsi WebView untuk performa dan fungsionalitas maksimal
   final InAppWebViewSettings _settings = InAppWebViewSettings(
-    useShouldOverrideUrlLoading: true,
+    useShouldOverrideUrlLoading: false,
     mediaPlaybackRequiresUserGesture: false,
     javaScriptEnabled: true,
     domStorageEnabled: true, // Crucial agar localStorage login web tetap tersimpan

@@ -1,19 +1,22 @@
 import React, { useState } from 'react'
-import { Outlet } from 'react-router-dom'
+import { Outlet, useLocation, useNavigate } from 'react-router-dom'
 import Sidebar from './Sidebar'
 import Topbar from './Topbar'
 import ChatSystem from '../chat/ChatSystem'
 import AIAssistantHub from '../dashboard/AIAssistantHub'
 import SubscriptionModal from './SubscriptionModal'
-import { getCurrentUser } from '../../api/authApi'
+import { getCurrentUser, logout } from '../../api/authApi'
 import api from '../../api/api'
 
 export default function AppLayout() {
   const user = getCurrentUser();
+  const navigate = useNavigate();
+  const location = useLocation();
   const [isSidebarOpen, setSidebarOpen] = useState(true);
   const [isChatOpen, setChatOpen] = useState(false);
   const [unreadCount, setUnreadCount] = useState(0);
   const [showProfileModal, setShowProfileModal] = useState(false);
+  const [showLogoutConfirm, setShowLogoutConfirm] = useState(false);
   const [showSubscriptionModal, setShowSubscriptionModal] = useState(true);
   const [companyName, setCompanyName] = useState('Ansa-Enterprise');
 
@@ -60,11 +63,11 @@ export default function AppLayout() {
     <div className="min-h-screen flex overflow-hidden">
       <Sidebar isOpen={isSidebarOpen} onOpenProfile={() => setShowProfileModal(true)} />
       <div className={`flex-1 flex flex-col min-h-screen transition-all duration-300 ease-in-out ${isSidebarOpen ? 'ml-64' : 'ml-0 md:ml-20'}`}>
-        <Topbar title={`${companyName}`} onToggleSidebar={() => setSidebarOpen(!isSidebarOpen)} isSidebarOpen={isSidebarOpen} onOpenChat={() => setChatOpen(true)} onOpenProfile={() => setShowProfileModal(true)} unreadCount={unreadCount} />
+        <Topbar title={`${companyName}`} onToggleSidebar={() => setSidebarOpen(!isSidebarOpen)} isSidebarOpen={isSidebarOpen} onOpenChat={() => setChatOpen(true)} onOpenProfile={() => setShowProfileModal(true)} onLogout={() => setShowLogoutConfirm(true)} unreadCount={unreadCount} />
         <ChatSystem isOpen={isChatOpen} onClose={() => setChatOpen(false)} onUnreadUpdate={setUnreadCount} />
         {!isChatOpen && <AIAssistantHub userRole={user?.role} />}
-        <main className="flex-1 mt-14 p-10 overflow-auto"><Outlet /></main>
-        <footer className="px-10 py-6 border-t border-slate-100 bg-white flex flex-col md:flex-row justify-between items-center gap-4">
+        <main className="flex-1 mt-14 p-4 md:p-10 pb-24 md:pb-10 overflow-auto"><Outlet /></main>
+        <footer className="px-6 md:px-10 py-6 pb-24 md:py-6 border-t border-slate-100 bg-white flex flex-col md:flex-row justify-between items-center gap-4">
           <div className="flex items-center gap-3 group">
             <div className="w-8 h-8 rounded-lg bg-slate-50 flex items-center justify-center border border-slate-200 group-hover:bg-emerald-50 transition-colors"><img src="/logo_ansa.png" alt="ANSA Logo" className="h-5 w-5 object-contain" /></div>
             <div className="flex flex-col"><p className="text-slate-400 text-[9px] font-black uppercase tracking-[0.2em] leading-none">Developed by</p><p className="text-slate-900 text-xs font-black tracking-tighter">ANSA <span className="text-emerald-600">ENTERPRISE</span></p></div>
@@ -116,7 +119,7 @@ export default function AppLayout() {
                     </div>
                     <div className="pt-4 grid grid-cols-2 gap-4">
                         <button onClick={() => { setShowProfileModal(false); window.location.href = '/profile'; }} className={`flex items-center justify-center gap-2 py-3.5 rounded-2xl font-black text-[11px] uppercase tracking-widest transition-all active:scale-95 shadow-sm ${theme.id === 'premium' ? 'bg-amber-50 text-amber-700 hover:bg-amber-600 hover:text-white' : 'bg-slate-100 text-slate-600 hover:bg-slate-900 hover:text-white'}`}><span className="material-symbols-rounded text-[18px]">manage_accounts</span>Setting</button>
-                        <button onClick={() => { if (window.confirm("Yakin ingin keluar?")) { localStorage.clear(); window.location.href = '/login'; }}} className="flex items-center justify-center gap-2 py-3.5 bg-red-50 text-red-600 rounded-2xl font-black text-[11px] uppercase tracking-widest hover:bg-red-600 hover:text-white transition-all active:scale-95 shadow-sm"><span className="material-symbols-rounded text-[18px]">logout</span>Logout</button>
+                        <button onClick={() => { setShowProfileModal(false); setShowLogoutConfirm(true); }} className="flex items-center justify-center gap-2 py-3.5 bg-red-50 text-red-600 rounded-2xl font-black text-[11px] uppercase tracking-widest hover:bg-red-600 hover:text-white transition-all active:scale-95 shadow-sm"><span className="material-symbols-rounded text-[18px]">logout</span>Logout</button>
                     </div>
                 </div>
                 <div className="p-6 bg-slate-50 border-t border-slate-100 flex justify-center"><button onClick={() => setShowProfileModal(false)} className="text-[10px] font-black text-slate-400 uppercase tracking-widest hover:text-slate-800 transition-colors">Tutup Jendela Detail</button></div>
@@ -128,6 +131,89 @@ export default function AppLayout() {
         isOpen={showSubscriptionModal} 
         onClose={() => setShowSubscriptionModal(false)} 
       />
+
+      {/* ── MOBILE BOTTOM NAVIGATION BAR ── */}
+      <div className="md:hidden fixed bottom-0 left-0 right-0 bg-white border-t border-slate-100 px-4 py-2 z-50 flex justify-between items-center rounded-t-[2rem] shadow-[0_-10px_35px_rgba(0,0,0,0.05)]">
+        {[
+          { id: 'home', label: 'Home', icon: 'home', path: '/' },
+          { id: 'laporan', label: 'Laporan', icon: 'monitoring', path: '/laporan' },
+          { id: 'produksi', label: 'Produksi', icon: 'factory', path: '/produksi' },
+          { id: 'chat', label: 'Chat', icon: 'chat', action: () => setChatOpen(true) },
+          { id: 'profile', label: 'Profil', icon: 'profile', action: () => setShowProfileModal(true) },
+        ].map((tab) => {
+          const isActive = tab.path 
+            ? location.pathname === tab.path 
+            : (tab.id === 'chat' ? isChatOpen : tab.id === 'profile' ? showProfileModal : false);
+          
+          return (
+            <div 
+              key={tab.id}
+              onClick={() => {
+                if (tab.action) {
+                  tab.action();
+                } else if (tab.path) {
+                  navigate(tab.path);
+                }
+              }}
+              className="flex flex-col items-center justify-center flex-1 cursor-pointer py-1 relative"
+            >
+              {isActive ? (
+                // Active Floating Circle (Notch Style)
+                <div className="flex flex-col items-center -mt-6 transition-all duration-300 animate-fade-in-up">
+                  <div className="w-12 h-12 bg-emerald-500 rounded-full flex items-center justify-center text-white shadow-lg shadow-emerald-500/30 border-4 border-white transform scale-110">
+                    <span className="material-symbols-rounded text-xl font-bold">{tab.icon === 'profile' ? 'person' : tab.icon}</span>
+                  </div>
+                  <span className="text-[9px] font-black text-slate-800 uppercase tracking-widest mt-1">
+                    {tab.label}
+                  </span>
+                </div>
+              ) : (
+                // Inactive Item
+                <div className="flex flex-col items-center text-slate-400 hover:text-slate-600 transition-colors">
+                  <span className="material-symbols-rounded text-[22px]">{tab.icon === 'profile' ? 'person' : tab.icon}</span>
+                  <span className="text-[9px] font-bold mt-1 tracking-wider">
+                    {tab.label}
+                  </span>
+                </div>
+              )}
+            </div>
+          );
+        })}
+      </div>
+
+      {/* ── LOGOUT CONFIRMATION MODAL ── */}
+      {showLogoutConfirm && (
+        <div className="fixed inset-0 z-[110] flex items-center justify-center p-4 bg-slate-900/60 backdrop-blur-md animate-in fade-in duration-300">
+          <div className="bg-white rounded-[2.5rem] shadow-2xl w-full max-w-sm overflow-hidden flex flex-col p-8 animate-in zoom-in-95 slide-in-from-bottom-8 duration-500 border border-slate-100">
+            <div className="flex flex-col items-center text-center">
+              <div className="w-16 h-16 rounded-full bg-red-50 flex items-center justify-center text-red-500 mb-4 shadow-inner animate-pulse">
+                <span className="material-symbols-rounded text-3xl">logout</span>
+              </div>
+              <h3 className="text-xl font-black text-slate-800 tracking-tight mb-2">Konfirmasi Keluar</h3>
+              <p className="text-slate-500 text-xs font-medium leading-relaxed mb-6">
+                Apakah Anda yakin ingin keluar dari akun Anda? Sesi Anda akan berakhir.
+              </p>
+              <div className="flex gap-3 w-full">
+                <button 
+                  onClick={() => setShowLogoutConfirm(false)} 
+                  className="flex-1 py-3.5 bg-slate-100 hover:bg-slate-200 text-slate-600 rounded-2xl font-black text-[11px] uppercase tracking-widest transition-all active:scale-95 shadow-sm"
+                >
+                  Batal
+                </button>
+                <button 
+                  onClick={() => {
+                    setShowLogoutConfirm(false);
+                    logout();
+                  }} 
+                  className="flex-1 py-3.5 bg-red-500 hover:bg-red-600 text-white rounded-2xl font-black text-[11px] uppercase tracking-widest transition-all active:scale-95 shadow-sm"
+                >
+                  Keluar
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   )
 }

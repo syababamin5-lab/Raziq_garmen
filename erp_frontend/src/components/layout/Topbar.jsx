@@ -8,7 +8,7 @@ import api, { getFileUrl } from '../../api/api'
 import PrayerTimesCompact from './PrayerTimesCompact'
 import TransactionNotifications from './TransactionNotifications'
 
-export default function Topbar({ title, onToggleSidebar, isSidebarOpen, onOpenChat, onOpenProfile, unreadCount }) {
+export default function Topbar({ title, onToggleSidebar, isSidebarOpen, onOpenChat, onOpenProfile, onLogout, unreadCount }) {
   const user = getCurrentUser();
 
   return (
@@ -76,7 +76,7 @@ export default function Topbar({ title, onToggleSidebar, isSidebarOpen, onOpenCh
         </div>
         
         <div 
-          onClick={logout}
+          onClick={onLogout || logout}
           className="w-10 h-10 rounded-2xl bg-slate-50 border border-slate-100 flex items-center justify-center text-slate-400 group cursor-pointer hover:bg-red-50 hover:text-red-600 transition-all"
           title="Logout"
         >
