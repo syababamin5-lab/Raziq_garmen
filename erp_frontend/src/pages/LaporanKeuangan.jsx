@@ -349,7 +349,7 @@ export default function LaporanKeuangan() {
         </div>
 
         {/* TABS */}
-        <div className="flex flex-wrap gap-2 p-1.5 bg-white/60 backdrop-blur-md rounded-full w-fit shadow-sm border border-slate-200/50">
+        <div className="flex flex-col sm:flex-row flex-wrap gap-2 p-3 sm:p-1.5 bg-white/60 backdrop-blur-md rounded-3xl sm:rounded-full w-full sm:w-fit shadow-sm border border-slate-200/50">
             {[
                 { id: 'hpp', label: 'HPP', icon: 'inventory' },
                 { id: 'lr', label: 'Laba Rugi', icon: 'finance_mode' },
@@ -362,7 +362,7 @@ export default function LaporanKeuangan() {
                 <button 
                     key={t.id} 
                     onClick={() => setActiveTab(t.id)} 
-                    className={`flex items-center gap-2 px-6 py-3 rounded-full text-xs font-bold transition-all duration-300 ${activeTab === t.id ? 'bg-[#064E3B] text-white shadow-md shadow-emerald-900/20 scale-105' : 'text-slate-500 hover:bg-slate-100 hover:text-slate-700'}`}
+                    className={`flex items-center gap-3 px-6 py-3.5 sm:py-3 rounded-2xl sm:rounded-full text-xs font-bold transition-all duration-300 w-full sm:w-auto ${activeTab === t.id ? 'bg-[#064E3B] text-white shadow-md shadow-emerald-900/20 scale-[1.02] sm:scale-105' : 'text-slate-500 hover:bg-slate-100 hover:text-slate-700'}`}
                 >
                     <span className="material-symbols-rounded text-[1.1rem]">{t.icon}</span>
                     {t.label.toUpperCase()}

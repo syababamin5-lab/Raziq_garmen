@@ -20,7 +20,7 @@ class MyApp extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return MaterialApp(
-      title: 'Raziq Garment ERP',
+      title: 'Ansa ERP',
       debugShowCheckedModeBanner: false,
       theme: ThemeData(
         colorScheme: ColorScheme.fromSeed(seedColor: const Color(0xFF0F172A)), // Slate modern theme
@@ -160,7 +160,7 @@ class _WebPageContainerState extends State<WebPageContainer> {
                         ),
                         const SizedBox(height: 24),
                         Text(
-                          "Memuat Raziq Garment...",
+                          "Memuat Ansa ERP...",
                           style: TextStyle(
                             color: Colors.white.withOpacity(0.8),
                             fontSize: 14,
