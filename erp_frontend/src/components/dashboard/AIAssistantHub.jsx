@@ -82,10 +82,10 @@ const AIAssistantHub = ({ userRole }) => {
     };
 
     return (
-        <div className="fixed bottom-6 right-6 z-[9999] flex flex-col items-end gap-4 font-inter">
+        <div className="fixed bottom-24 md:bottom-6 right-6 z-[9999] flex flex-col items-end gap-4 font-inter">
             {/* Unified AI Window */}
             {isOpen && (
-                <div className="w-[380px] md:w-[480px] h-[650px] bg-white rounded-[2.5rem] shadow-2xl border border-slate-200 overflow-hidden flex flex-col animate-in fade-in slide-in-from-bottom-10 duration-500">
+                <div className="w-[calc(100vw-2rem)] sm:w-[380px] md:w-[480px] h-[70vh] sm:h-[650px] bg-white rounded-[2.5rem] shadow-2xl border border-slate-200 overflow-hidden flex flex-col animate-in fade-in slide-in-from-bottom-10 duration-500">
                     {/* Header with Navigation */}
                     <div className="bg-slate-900 p-6 pb-2">
                         <div className="flex items-center justify-between mb-6">

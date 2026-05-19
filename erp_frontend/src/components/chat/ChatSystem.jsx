@@ -171,11 +171,16 @@ const ChatSystem = ({ isOpen, onClose, onUnreadUpdate }) => {
             <div className="relative w-full max-w-[900px] bg-white h-full shadow-2xl flex overflow-hidden animate-in slide-in-from-right duration-300">
                 
                 {/* User List Sidebar */}
-                <div className="w-[320px] border-r border-slate-100 flex flex-col bg-slate-50">
+                <div className={`w-full md:w-[320px] border-r border-slate-100 flex flex-col bg-slate-50 ${selectedUser ? 'hidden md:flex' : 'flex'}`}>
                     <div className="p-6 border-b border-slate-100 bg-white">
                         <div className="flex items-center justify-between">
                             <h2 className="text-xl font-black text-slate-800 uppercase tracking-tight">Internal Chat</h2>
-                            <div className={`w-2 h-2 rounded-full ${isConnected ? 'bg-emerald-400' : 'bg-red-400 animate-pulse'}`} title={isConnected ? 'Connected' : 'Disconnected'}></div>
+                            <div className="flex items-center gap-3">
+                                <div className={`w-2.5 h-2.5 rounded-full ${isConnected ? 'bg-emerald-400' : 'bg-red-400 animate-pulse'}`} title={isConnected ? 'Connected' : 'Disconnected'}></div>
+                                <button onClick={onClose} className="md:hidden p-2 -mr-2 text-slate-400 hover:text-slate-600 transition-colors" title="Tutup Chat">
+                                    <span className="material-symbols-rounded">close</span>
+                                </button>
+                            </div>
                         </div>
                         <p className="text-[10px] font-bold text-emerald-600 uppercase tracking-widest mt-1">Garmen Connect</p>
                     </div>
@@ -227,11 +232,19 @@ const ChatSystem = ({ isOpen, onClose, onUnreadUpdate }) => {
                 </div>
 
                 {/* Chat Area */}
-                <div className="flex-1 flex flex-col bg-white">
+                <div className={`flex-1 flex flex-col bg-white ${selectedUser ? 'flex' : 'hidden md:flex'}`}>
                     {selectedUser ? (
                         <>
                             <div className="p-4 border-b border-slate-100 flex items-center justify-between">
-                                <div className="flex items-center gap-3">
+                                <div className="flex items-center gap-2">
+                                    {/* Back Button for mobile */}
+                                    <button 
+                                        onClick={() => setSelectedUser(null)} 
+                                        className="md:hidden p-2 -ml-2 text-slate-400 hover:text-slate-600 transition-colors"
+                                        title="Kembali ke Daftar Kontak"
+                                    >
+                                        <span className="material-symbols-rounded">arrow_back</span>
+                                    </button>
                                     <div className="w-10 h-10 rounded-xl bg-slate-100 flex items-center justify-center font-bold text-slate-400 overflow-hidden">
                                         {(selectedUser.foto_base64 || selectedUser.foto_url) ? (
                                             <img 

@@ -8,7 +8,7 @@ import api, { getFileUrl } from '../../api/api'
 import PrayerTimesCompact from './PrayerTimesCompact'
 import TransactionNotifications from './TransactionNotifications'
 
-export default function Topbar({ title, onToggleSidebar, isSidebarOpen, onOpenChat, onOpenProfile, onLogout, unreadCount }) {
+export default function Topbar({ title, onToggleSidebar, isSidebarOpen, onOpenChat, onOpenProfile, onLogout, unreadCount, isMobile }) {
   const user = getCurrentUser();
 
   return (
@@ -17,18 +17,20 @@ export default function Topbar({ title, onToggleSidebar, isSidebarOpen, onOpenCh
       bg-white/80 backdrop-blur-md border-b border-slate-200
       flex items-center justify-between px-6 z-40
       transition-all duration-300 ease-in-out
-    " style={{ left: isSidebarOpen ? '256px' : '80px' }}>
+    " style={{ left: isMobile ? '0px' : (isSidebarOpen ? '256px' : '80px') }}>
       
       <div className="flex items-center gap-4">
         {/* Toggle Button */}
-        <button 
-            onClick={onToggleSidebar}
-            className="w-10 h-10 rounded-xl hover:bg-slate-100 flex items-center justify-center text-slate-400 hover:text-emerald-600 transition-colors"
-        >
-            <span className="material-symbols-rounded">
-                {isSidebarOpen ? 'menu_open' : 'menu'}
-            </span>
-        </button>
+        {!isMobile && (
+          <button 
+              onClick={onToggleSidebar}
+              className="w-10 h-10 rounded-xl hover:bg-slate-100 flex items-center justify-center text-slate-400 hover:text-emerald-600 transition-colors"
+          >
+              <span className="material-symbols-rounded">
+                  {isSidebarOpen ? 'menu_open' : 'menu'}
+              </span>
+          </button>
+        )}
 
         <h2 className="text-slate-800 font-extrabold text-lg tracking-tight uppercase">
           {title}
