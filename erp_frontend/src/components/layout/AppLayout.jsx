@@ -146,7 +146,9 @@ export default function AppLayout() {
         {[
           { id: 'dashboard', label: 'Dashboard', icon: 'dashboard', path: '/' },
           { id: 'laporan', label: 'Laporan', icon: 'monitoring', path: '/laporan' },
-          { id: 'produksi', label: 'Produksi', icon: 'factory', path: '/produksi' },
+          ...((user?.role === 'owner' || user?.role === 'gm') ? [] : [
+            { id: 'produksi', label: 'Produksi', icon: 'factory', path: '/produksi' }
+          ]),
           { id: 'profile', label: 'Profil', icon: 'person', action: () => setShowProfileModal(true) },
         ].map((tab) => {
           const isActive = tab.path 

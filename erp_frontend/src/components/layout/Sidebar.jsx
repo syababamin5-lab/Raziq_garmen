@@ -20,8 +20,9 @@ export default function Sidebar({ isOpen, onOpenProfile }) {
       const filtered = data.filter(m => {
         const isRoleMatch = m.roles?.split(',').includes(user?.role);
         const isNotPanel = m.path !== 'DASHBOARD_PANEL';
-        if (user?.role === 'super_admin') return isRoleMatch && isNotPanel;
-        return m.is_active === 1 && isRoleMatch && isNotPanel;
+        const isNotProduksiForOwnerGM = !(m.path === '/produksi' && (user?.role === 'owner' || user?.role === 'gm'));
+        if (user?.role === 'super_admin') return isRoleMatch && isNotPanel && isNotProduksiForOwnerGM;
+        return m.is_active === 1 && isRoleMatch && isNotPanel && isNotProduksiForOwnerGM;
       });
       setMenus(filtered);
     } catch (err) {
