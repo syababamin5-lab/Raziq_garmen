@@ -53,6 +53,7 @@ class GudangStatus(BaseModel):
 
 class MitraDebtItem(BaseModel):
     """Satu baris untuk daftar hutang/piutang"""
+    mitra_id: int
     nama_mitra: str
     nominal: float
     kategori: str

@@ -135,15 +135,15 @@ def get_dashboard_summary(db: Session = Depends(get_db)):
         # 4. HUTANG & PIUTANG (TOP 5)
         # Piutang Klien (Customer)
         piutang_list = db.query(models.Mitra).filter(models.Mitra.saldo_piutang > 0).order_by(models.Mitra.saldo_piutang.desc()).limit(5).all()
-        top_piutang = [schemas.MitraDebtItem(nama_mitra=m.nama_mitra, nominal=m.saldo_piutang, kategori="PIUTANG KLIEN") for m in piutang_list]
+        top_piutang = [schemas.MitraDebtItem(mitra_id=m.id, nama_mitra=m.nama_mitra, nominal=m.saldo_piutang, kategori="PIUTANG KLIEN") for m in piutang_list]
         
         # Hutang Supplier
         utang_list = db.query(models.Mitra).filter(models.Mitra.saldo_utang > 0).order_by(models.Mitra.saldo_utang.desc()).limit(5).all()
-        top_utang = [schemas.MitraDebtItem(nama_mitra=m.nama_mitra, nominal=m.saldo_utang, kategori="HUTANG SUPPLIER") for m in utang_list]
+        top_utang = [schemas.MitraDebtItem(mitra_id=m.id, nama_mitra=m.nama_mitra, nominal=m.saldo_utang, kategori="HUTANG SUPPLIER") for m in utang_list]
 
         # Kasbon Karyawan
         kasbon_list = db.query(models.Karyawan).filter(models.Karyawan.saldo_kasbon > 0).order_by(models.Karyawan.saldo_kasbon.desc()).limit(5).all()
-        top_kasbon = [schemas.MitraDebtItem(nama_mitra=k.nama_karyawan, nominal=k.saldo_kasbon, kategori="KASBON") for k in kasbon_list]
+        top_kasbon = [schemas.MitraDebtItem(mitra_id=k.id, nama_mitra=k.nama_karyawan, nominal=k.saldo_kasbon, kategori="KASBON") for k in kasbon_list]
 
         # 5. SALES ANALYTICS (NEW)
         try:

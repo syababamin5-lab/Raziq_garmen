@@ -170,3 +170,78 @@ def cetak_semua_saldo(
         import traceback
         print(traceback.format_exc())
         return {"success": False, "message": str(e)}
+
+@router.get("/history")
+def get_mitra_history(
+    type: str, # 'hutang' or 'piutang' or 'kasbon'
+    mitra_id: int,
+    db: Session = Depends(get_db)
+):
+    try:
+        # Tentukan Kode Akun
+        if type == 'hutang':
+            kode_akun = "21110" # Utang Usaha
+        elif type == 'piutang':
+            kode_akun = "11210" # Piutang Usaha
+        else:
+            kode_akun = "11220" # Piutang Karyawan (Kasbon)
+
+        # Ambil Data Mitra
+        if type == 'kasbon':
+            mitra = db.query(Karyawan).filter(Karyawan.id == mitra_id).first()
+            nama_mitra = mitra.nama_karyawan if mitra else "Unknown"
+        else:
+            mitra = db.query(Mitra).filter(Mitra.id == mitra_id).first()
+            nama_mitra = mitra.nama_mitra if mitra else "Unknown"
+        
+        if not mitra:
+            return {"success": False, "message": "Mitra tidak ditemukan."}
+
+        # Cari Jurnal yang mengandung nama mitra
+        from sqlalchemy import or_
+        filters = [JurnalUmum.keterangan.contains(nama_mitra)]
+        
+        if type == 'hutang':
+            po_list = db.query(models.HeaderPembelian.no_po).filter(models.HeaderPembelian.nama_supplier == nama_mitra).all()
+            for p in po_list:
+                filters.append(JurnalUmum.keterangan.contains(p.no_po))
+        elif type == 'piutang':
+            inv_list = db.query(models.HeaderPenjualan.no_invoice).filter(models.HeaderPenjualan.nama_customer == nama_mitra).all()
+            for i in inv_list:
+                filters.append(JurnalUmum.keterangan.contains(i.no_invoice))
+
+        jurnals = db.query(JurnalUmum).filter(
+            JurnalUmum.kode_akun == kode_akun,
+            or_(*filters)
+        ).order_by(JurnalUmum.tanggal.asc()).all()
+
+        # Kalkulasi Saldo Berjalan
+        mutasi = []
+        running_saldo = 0
+        for j in jurnals:
+            if type == 'hutang':
+                running_saldo += (j.kredit - j.debit)
+            else:
+                running_saldo += (j.debit - j.kredit)
+            
+            mutasi.append({
+                "id": j.id,
+                "tanggal": j.tanggal.strftime("%Y-%m-%d") if j.tanggal else "-",
+                "keterangan": j.keterangan,
+                "debit": float(j.debit or 0),
+                "kredit": float(j.kredit or 0),
+                "saldo": float(running_saldo)
+            })
+
+        # Urutkan dengan tanggal terakhir di paling atas (descending)
+        mutasi.sort(key=lambda x: x["tanggal"], reverse=True)
+
+        return {
+            "success": True,
+            "nama_mitra": nama_mitra,
+            "saldo_akhir": float(running_saldo),
+            "kategori": type.upper(),
+            "history": mutasi
+        }
+    except Exception as e:
+        return {"success": False, "message": str(e)}

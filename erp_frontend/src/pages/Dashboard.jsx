@@ -12,6 +12,7 @@ import InvoiceDetailModal from '../components/dashboard/InvoiceDetailModal'
 import PrayerTimes from '../components/dashboard/PrayerTimes'
 import IslamicCalendarCard from '../components/dashboard/IslamicCalendarCard'
 import AIAssistantHub from '../components/dashboard/AIAssistantHub'
+import MitraHistoryModal from '../components/dashboard/MitraHistoryModal'
 
 export default function Dashboard() {
   const navigate = useNavigate();
@@ -19,6 +20,8 @@ export default function Dashboard() {
   const [loading, setLoading] = useState(true)
   const [selectedInvoice, setSelectedInvoice] = useState(null)
   const [isModalOpen, setIsModalOpen] = useState(false)
+  const [selectedPartner, setSelectedPartner] = useState(null)
+  const [isPartnerModalOpen, setIsPartnerModalOpen] = useState(false)
   const user = JSON.parse(localStorage.getItem('user') || '{}');
   const [dashSettings, setDashSettings] = useState({ showProduksi: true, showPenjualan: true, showKeuangan: true });
 
@@ -291,7 +294,14 @@ export default function Dashboard() {
           </div>
           <div className="flex-1 space-y-3">
             {data?.top_piutang?.map((item, idx) => (
-              <div key={idx} className="flex justify-between items-center p-3.5 bg-slate-50 rounded-2xl hover:bg-emerald-50 transition-colors group">
+              <div 
+                key={idx} 
+                onClick={() => {
+                  setSelectedPartner(item);
+                  setIsPartnerModalOpen(true);
+                }}
+                className="flex justify-between items-center p-3.5 bg-slate-50 rounded-2xl hover:bg-emerald-50 transition-colors group cursor-pointer"
+              >
                 <div>
                   <div className="text-xs font-black text-slate-800 uppercase group-hover:text-emerald-700 transition-colors">{item.nama_mitra}</div>
                   <div className="text-[9px] font-bold text-slate-400 uppercase">Customer</div>
@@ -317,7 +327,14 @@ export default function Dashboard() {
           </div>
           <div className="flex-1 space-y-3">
             {data?.top_utang?.map((item, idx) => (
-              <div key={idx} className="flex justify-between items-center p-3.5 bg-slate-50 rounded-2xl hover:bg-red-50 transition-colors group">
+              <div 
+                key={idx} 
+                onClick={() => {
+                  setSelectedPartner(item);
+                  setIsPartnerModalOpen(true);
+                }}
+                className="flex justify-between items-center p-3.5 bg-slate-50 rounded-2xl hover:bg-red-50 transition-colors group cursor-pointer"
+              >
                 <div>
                   <div className="text-xs font-black text-slate-800 uppercase group-hover:text-red-700 transition-colors">{item.nama_mitra}</div>
                   <div className="text-[9px] font-bold text-slate-400 uppercase">Supplier</div>
@@ -343,7 +360,14 @@ export default function Dashboard() {
           </div>
           <div className="flex-1 space-y-3">
             {data?.top_kasbon?.map((item, idx) => (
-              <div key={idx} className="flex justify-between items-center p-3.5 bg-slate-50 rounded-2xl hover:bg-amber-50 transition-colors group">
+              <div 
+                key={idx} 
+                onClick={() => {
+                  setSelectedPartner(item);
+                  setIsPartnerModalOpen(true);
+                }}
+                className="flex justify-between items-center p-3.5 bg-slate-50 rounded-2xl hover:bg-amber-50 transition-colors group cursor-pointer"
+              >
                 <div>
                   <div className="text-xs font-black text-slate-800 uppercase group-hover:text-amber-700 transition-colors">{item.nama_mitra}</div>
                   <div className="text-[9px] font-bold text-slate-400 uppercase">Karyawan</div>
@@ -362,6 +386,15 @@ export default function Dashboard() {
         isOpen={isModalOpen}
         onClose={() => setIsModalOpen(false)}
         invoice={selectedInvoice}
+      />
+
+      <MitraHistoryModal
+        isOpen={isPartnerModalOpen}
+        onClose={() => {
+          setIsPartnerModalOpen(false);
+          setSelectedPartner(null);
+        }}
+        partner={selectedPartner}
       />
     </div>
   )
