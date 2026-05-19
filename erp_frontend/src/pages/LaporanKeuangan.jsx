@@ -59,7 +59,7 @@ export default function LaporanKeuangan() {
           </ul>
           
           <div className="bg-slate-50 p-3 rounded-xl border border-slate-200 text-[10px] italic">
-             *Rumus: Input Biaya (Bahan+Upah) -> Antrean (WIP) -> Stok (Ready) -> HPP (Laku).
+             *Rumus: Input Biaya (Bahan+Upah) &rarr; Antrean (WIP) &rarr; Stok (Ready) &rarr; HPP (Laku).
           </div>
         </div>
       )

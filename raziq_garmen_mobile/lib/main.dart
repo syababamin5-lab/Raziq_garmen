@@ -101,6 +101,24 @@ class _WebPageContainerState extends State<WebPageContainer> {
                     _isLoading = true;
                     _canPop = false; // Reset pop state saat navigasi halaman baru
                   });
+                  // Unregister service worker lama untuk mengatasi blank screen akibat cache loop
+                  controller.evaluateJavascript(source: """
+                    if ('serviceWorker' in navigator) {
+                      navigator.serviceWorker.getRegistrations().then(function(registrations) {
+                        if (registrations.length > 0) {
+                          for(let registration of registrations) {
+                            registration.unregister();
+                          }
+                          caches.keys().then(function(names) {
+                            for (let name of names) {
+                              caches.delete(name);
+                            }
+                          });
+                          window.location.reload();
+                        }
+                      });
+                    }
+                  """);
                 },
                 onLoadStop: (controller, url) async {
                   setState(() {
