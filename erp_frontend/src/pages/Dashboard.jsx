@@ -159,10 +159,10 @@ export default function Dashboard() {
             </div>
 
             <div className="flex flex-col sm:flex-row items-stretch md:items-center gap-4 w-full md:w-auto">
-              {user.role === 'super_admin' && (
+              {['super_admin', 'bos', 'owner', 'gm', 'admin'].includes(user.role) && (
                 <button 
                   onClick={async () => {
-                    if (confirm("Jalankan Rekonsiliasi Data? Ini akan menyamakan semua nama akun di riwayat agar laporan keuangan sinkron.")) {
+                    if (confirm("Jalankan Rekonsiliasi Data? Ini akan menyamakan semua nama akun serta menyinkronkan saldo piutang, hutang, dan kasbon agar sama persis dengan jurnal transaksi Buku Besar.")) {
                       try {
                         setLoading(true);
                         const res = await api.post('/dashboard/reconcile');

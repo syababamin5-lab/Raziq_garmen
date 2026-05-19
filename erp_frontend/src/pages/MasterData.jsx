@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react';
 import api from '../api/api';
 import { formatInputNumber, parseNumber } from '../utils/formatters';
+import MitraHistoryModal from '../components/dashboard/MitraHistoryModal';
 
 export default function MasterData() {
   const [activeTab, setActiveTab] = useState('Kartu Barang Jadi');
@@ -13,6 +14,18 @@ export default function MasterData() {
   });
   
   const [modal, setModal] = useState({ show: false, type: '', item: null });
+  const [selectedPartner, setSelectedPartner] = useState(null);
+  const [isPartnerModalOpen, setIsPartnerModalOpen] = useState(false);
+
+  const openMitraHistory = (m) => {
+    setSelectedPartner({
+      mitra_id: m.id,
+      nama_mitra: m.nama_mitra,
+      kategori: m.kategori === 'Customer / Klien' ? 'PIUTANG KLIEN' : 'HUTANG SUPPLIER',
+      nominal: m.kategori === 'Customer / Klien' ? m.saldo_piutang : m.saldo_utang
+    });
+    setIsPartnerModalOpen(true);
+  };
   const [loading, setLoading] = useState(false);
   const [showHelp, setShowHelp] = useState(false);
   const [helpContext, setHelpContext] = useState('barang');
@@ -516,6 +529,11 @@ export default function MasterData() {
                         {m.saldo_piutang === 0 && m.saldo_utang === 0 && <span className="text-slate-300">Clean</span>}
                       </td>
                       <td className="py-3 px-4 text-right">
+                        {(m.saldo_piutang > 0 || m.saldo_utang > 0) && (
+                          <button onClick={() => openMitraHistory(m)} className="text-blue-500 hover:bg-blue-50 p-2 rounded-lg transition-all mr-1" title="Lihat Riwayat">
+                            <span className="material-symbols-rounded text-[20px]">history</span>
+                          </button>
+                        )}
                         <button onClick={() => openModal('edit_mitra', m)} className="text-emerald-600 hover:bg-emerald-50 p-2 rounded-lg transition-all mr-1">
                            <span className="material-symbols-rounded text-[20px]">edit_square</span>
                         </button>
@@ -1128,6 +1146,12 @@ export default function MasterData() {
             </div>
         </div>
       )}
+
+      <MitraHistoryModal
+        isOpen={isPartnerModalOpen}
+        onClose={() => { setIsPartnerModalOpen(false); setSelectedPartner(null); }}
+        partner={selectedPartner}
+      />
     </div>
   );
 }

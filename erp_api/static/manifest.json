@@ -1,0 +1,24 @@
+{
+  "short_name": "Raziq ERP",
+  "name": "Raziq Garment Cutting",
+  "scope": "/",
+  "icons": [
+    {
+      "src": "/raziq_cutting_app_icon.png",
+      "sizes": "192x192",
+      "type": "image/png",
+      "purpose": "any maskable"
+    },
+    {
+      "src": "/raziq_cutting_app_icon.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "any maskable"
+    }
+  ],
+  "start_url": "/login",
+  "display": "standalone",
+  "theme_color": "#064e3b",
+  "background_color": "#020617",
+  "orientation": "portrait"
+}

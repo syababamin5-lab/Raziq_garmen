@@ -309,10 +309,66 @@ def reconcile_data(db: Session = Depends(get_db)):
             ).update({models.JurnalUmum.nama_akun: acc.nama_akun}, synchronize_session=False)
             sync_count += res
             
+        # 2. Rekonsiliasi Saldo Piutang & Utang Mitra dari Jurnal Umum
+        from sqlalchemy import or_
+        mitras = db.query(models.Mitra).all()
+        mitra_updated = 0
+        for m in mitras:
+            nama_mitra = m.nama_mitra
+            if m.kategori == "Customer / Klien" or "customer" in m.kategori.lower():
+                # Hitung Piutang (Debit - Kredit untuk akun 11210)
+                filters = [models.JurnalUmum.keterangan.contains(nama_mitra)]
+                inv_list = db.query(models.HeaderPenjualan.no_invoice).filter(models.HeaderPenjualan.nama_customer == nama_mitra).all()
+                for inv in inv_list:
+                    filters.append(models.JurnalUmum.keterangan.contains(inv.no_invoice))
+                
+                saldo_jurnal = db.query(func.sum(models.JurnalUmum.debit - models.JurnalUmum.kredit)).filter(
+                    models.JurnalUmum.kode_akun == "11210",
+                    or_(*filters)
+                ).scalar() or 0.0
+                
+                new_val = max(0.0, float(saldo_jurnal))
+                if abs((m.saldo_piutang or 0.0) - new_val) > 0.01:
+                    m.saldo_piutang = new_val
+                    mitra_updated += 1
+            else:
+                # Hitung Utang (Kredit - Debit untuk akun 21110)
+                filters = [models.JurnalUmum.keterangan.contains(nama_mitra)]
+                po_list = db.query(models.HeaderPembelian.no_po).filter(models.HeaderPembelian.nama_supplier == nama_mitra).all()
+                for po in po_list:
+                    filters.append(models.JurnalUmum.keterangan.contains(po.no_po))
+                
+                saldo_jurnal = db.query(func.sum(models.JurnalUmum.kredit - models.JurnalUmum.debit)).filter(
+                    models.JurnalUmum.kode_akun == "21110",
+                    or_(*filters)
+                ).scalar() or 0.0
+                
+                new_val = max(0.0, float(saldo_jurnal))
+                if abs((m.saldo_utang or 0.0) - new_val) > 0.01:
+                    m.saldo_utang = new_val
+                    mitra_updated += 1
+
+        # 3. Rekonsiliasi Saldo Kasbon Karyawan dari Jurnal Umum (11220)
+        karyawans = db.query(models.Karyawan).all()
+        kary_updated = 0
+        for k in karyawans:
+            nama_karyawan = k.nama_karyawan
+            filters = [models.JurnalUmum.keterangan.contains(nama_karyawan)]
+            
+            saldo_jurnal = db.query(func.sum(models.JurnalUmum.debit - models.JurnalUmum.kredit)).filter(
+                models.JurnalUmum.kode_akun == "11220",
+                or_(*filters)
+            ).scalar() or 0.0
+            
+            new_val = max(0.0, float(saldo_jurnal))
+            if abs((k.saldo_kasbon or 0.0) - new_val) > 0.01:
+                k.saldo_kasbon = new_val
+                kary_updated += 1
+        
         db.commit()
         return {
             "success": True, 
-            "message": f"Rekonsiliasi selesai. {sync_count} data nama akun telah diseragamkan."
+            "message": f"Rekonsiliasi selesai. {sync_count} nama akun diseragamkan. {mitra_updated} saldo mitra & {kary_updated} kasbon disinkronkan ke buku besar."
         }
     except Exception as e:
         db.rollback()
