@@ -20,9 +20,18 @@ export default function LaporanKeuangan() {
   const [coa, setCoa] = useState([]);
   const [selectedAkun, setSelectedAkun] = useState('');
   const [filterNama, setFilterNama] = useState('');
-  
-  // ANALOGY MODAL STATE
   const [analogy, setAnalogy] = useState({ open: false, title: '', content: null });
+
+  const handlePrintPdf = (e, path) => {
+    e.preventDefault();
+    const absoluteUrl = `${window.location.origin}${path}`;
+    const isMobileDevice = /Android|iPhone|iPad|iPod/i.test(navigator.userAgent);
+    if (isMobileDevice) {
+      window.location.href = absoluteUrl;
+    } else {
+      window.open(absoluteUrl, '_blank');
+    }
+  };
 
   const analogies = {
     hpp: {
@@ -303,9 +312,8 @@ export default function LaporanKeuangan() {
             <div className="flex flex-wrap items-center justify-start lg:justify-end gap-3 w-full">
                 <a 
                     id="btn-rekap-penjualan"
-                    href={`${import.meta.env.VITE_API_BASE_URL || ''}/api/laporan/export-pdf-penjualan-rekap?bulan=${bulan}&tahun=${tahun}`}
-                    target="_blank"
-                    rel="noreferrer"
+                    href="#"
+                    onClick={(e) => handlePrintPdf(e, `/api/laporan/export-pdf-penjualan-rekap?bulan=${bulan}&tahun=${tahun}`)}
                     className="bg-emerald-50 text-emerald-700 px-4 py-2.5 rounded-[14px] text-[11px] font-black tracking-wider flex items-center gap-2 hover:bg-emerald-600 hover:text-white transition-colors border border-emerald-100 hover:border-emerald-600 shadow-sm"
                 >
                     <span className="material-symbols-rounded text-base">summarize</span>
@@ -313,9 +321,8 @@ export default function LaporanKeuangan() {
                 </a>
                 <a 
                     id="btn-rekap-pembelian"
-                    href={`${import.meta.env.VITE_API_BASE_URL || ''}/api/laporan/export-pdf-pembelian-rekap?bulan=${bulan}&tahun=${tahun}`}
-                    target="_blank"
-                    rel="noreferrer"
+                    href="#"
+                    onClick={(e) => handlePrintPdf(e, `/api/laporan/export-pdf-pembelian-rekap?bulan=${bulan}&tahun=${tahun}`)}
                     className="bg-orange-50 text-orange-700 px-4 py-2.5 rounded-[14px] text-[11px] font-black tracking-wider flex items-center gap-2 hover:bg-orange-500 hover:text-white transition-colors border border-orange-100 hover:border-orange-500 shadow-sm"
                 >
                     <span className="material-symbols-rounded text-base">inventory_2</span>
@@ -323,9 +330,8 @@ export default function LaporanKeuangan() {
                 </a>
                 <a 
                     id="btn-rekap-produksi"
-                    href={`${import.meta.env.VITE_API_BASE_URL || ''}/api/laporan/export-pdf-produksi-rekap?bulan=${bulan}&tahun=${tahun}`}
-                    target="_blank"
-                    rel="noreferrer"
+                    href="#"
+                    onClick={(e) => handlePrintPdf(e, `/api/laporan/export-pdf-produksi-rekap?bulan=${bulan}&tahun=${tahun}`)}
                     className="bg-blue-50 text-blue-700 px-4 py-2.5 rounded-[14px] text-[11px] font-black tracking-wider flex items-center gap-2 hover:bg-blue-600 hover:text-white transition-colors border border-blue-100 hover:border-blue-600 shadow-sm"
                 >
                     <span className="material-symbols-rounded text-base">precision_manufacturing</span>
@@ -333,13 +339,12 @@ export default function LaporanKeuangan() {
                 </a>
                 <div className="w-px h-8 bg-slate-200 hidden sm:block mx-1"></div>
                 <a 
-                    href={
+                    href="#"
+                    onClick={(e) => handlePrintPdf(e, 
                         activeTab === 'ledger' 
-                        ? `${import.meta.env.VITE_API_BASE_URL || ''}/api/laporan/export-pdf-buku-besar?kode_akun=${selectedAkun || 'ALL'}&bulan=${bulan}&tahun=${tahun}&filter_nama=${filterNama}`
-                        : `${import.meta.env.VITE_API_BASE_URL || ''}/api/laporan/export-pdf?tipe=${activeTab === 'hpp' ? 'HPP' : activeTab === 'lr' ? 'LR' : activeTab === 'ekuitas' ? 'EKUITAS' : activeTab === 'aruskas' ? 'ARUSKAS' : 'NERACA'}&bulan=${bulan}&tahun=${tahun}`
-                    }
-                    target="_blank"
-                    rel="noreferrer"
+                        ? `/api/laporan/export-pdf-buku-besar?kode_akun=${selectedAkun || 'ALL'}&bulan=${bulan}&tahun=${tahun}&filter_nama=${filterNama}`
+                        : `/api/laporan/export-pdf?tipe=${activeTab === 'hpp' ? 'HPP' : activeTab === 'lr' ? 'LR' : activeTab === 'ekuitas' ? 'EKUITAS' : activeTab === 'aruskas' ? 'ARUSKAS' : 'NERACA'}&bulan=${bulan}&tahun=${tahun}`
+                    )}
                     className="bg-slate-800 text-white px-6 py-2.5 rounded-[14px] text-[11px] font-black tracking-wider flex items-center gap-2 hover:bg-emerald-600 active:scale-95 transition-all shadow-lg shadow-slate-800/20"
                 >
                     <span className="material-symbols-rounded text-base">print</span>

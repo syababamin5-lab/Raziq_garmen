@@ -6,6 +6,17 @@ export default function PurchaseDetailModal({ isOpen, onClose, po }) {
   const [details, setDetails] = useState([])
   const [loading, setLoading] = useState(false)
 
+  const handlePrintPdf = (e, path) => {
+    e.preventDefault();
+    const absoluteUrl = `${window.location.origin}${path}`;
+    const isMobileDevice = /Android|iPhone|iPad|iPod/i.test(navigator.userAgent);
+    if (isMobileDevice) {
+      window.location.href = absoluteUrl;
+    } else {
+      window.open(absoluteUrl, '_blank');
+    }
+  };
+
   useEffect(() => {
     if (isOpen && po?.no_po) {
       setLoading(true)
@@ -154,9 +165,8 @@ export default function PurchaseDetailModal({ isOpen, onClose, po }) {
             Tutup
           </button>
           <a 
-            href={`${import.meta.env.VITE_API_BASE_URL || ''}/api/pembelian/print/${po?.no_po}`}
-            target="_blank"
-            rel="noreferrer"
+            href="#"
+            onClick={(e) => handlePrintPdf(e, `/api/pembelian/print/${po?.no_po}`)}
             className="flex-1 py-4 bg-emerald-600 text-white rounded-2xl font-black shadow-lg shadow-emerald-200 hover:bg-emerald-700 hover:scale-[1.02] active:scale-[0.98] transition-all flex items-center justify-center gap-2"
           >
             <span className="material-symbols-rounded text-xl">print</span>

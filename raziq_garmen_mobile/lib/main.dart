@@ -101,7 +101,11 @@ class _WebPageContainerState extends State<WebPageContainer> {
                   var uri = navigationAction.request.url;
                   if (uri != null) {
                     String urlStr = uri.toString();
-                    if (urlStr.contains('export-pdf') || urlStr.contains('export-pdf-buku-besar') || urlStr.endsWith('.pdf') || urlStr.contains('/download')) {
+                    if (urlStr.contains('export-pdf') || 
+                        urlStr.contains('export-pdf-buku-besar') || 
+                        urlStr.contains('/print/') || 
+                        urlStr.endsWith('.pdf') || 
+                        urlStr.contains('/download')) {
                       if (await canLaunchUrl(uri)) {
                         await launchUrl(uri, mode: LaunchMode.externalApplication);
                         return NavigationActionPolicy.CANCEL;
