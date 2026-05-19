@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_inappwebview/flutter_inappwebview.dart';
+import 'package:url_launcher/url_launcher.dart';
 
 void main() {
   WidgetsFlutterBinding.ensureInitialized();
@@ -48,7 +49,7 @@ class _WebPageContainerState extends State<WebPageContainer> {
 
   // Opsi WebView untuk performa dan fungsionalitas maksimal
   final InAppWebViewSettings _settings = InAppWebViewSettings(
-    useShouldOverrideUrlLoading: false,
+    useShouldOverrideUrlLoading: true,
     mediaPlaybackRequiresUserGesture: false,
     javaScriptEnabled: true,
     domStorageEnabled: true, // Crucial agar localStorage login web tetap tersimpan
@@ -95,6 +96,25 @@ class _WebPageContainerState extends State<WebPageContainer> {
                 initialSettings: _settings,
                 onWebViewCreated: (controller) {
                   _webViewController = controller;
+                },
+                shouldOverrideUrlLoading: (controller, navigationAction) async {
+                  var uri = navigationAction.request.url;
+                  if (uri != null) {
+                    String urlStr = uri.toString();
+                    if (urlStr.contains('export-pdf') || urlStr.contains('export-pdf-buku-besar') || urlStr.endsWith('.pdf') || urlStr.contains('/download')) {
+                      if (await canLaunchUrl(uri)) {
+                        await launchUrl(uri, mode: LaunchMode.externalApplication);
+                        return NavigationActionPolicy.CANCEL;
+                      }
+                    }
+                  }
+                  return NavigationActionPolicy.ALLOW;
+                },
+                onDownloadStartRequest: (controller, downloadStartRequest) async {
+                  var uri = downloadStartRequest.url;
+                  if (await canLaunchUrl(uri)) {
+                    await launchUrl(uri, mode: LaunchMode.externalApplication);
+                  }
                 },
                 onLoadStart: (controller, url) {
                   setState(() {
