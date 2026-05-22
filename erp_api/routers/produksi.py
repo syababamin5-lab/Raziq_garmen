@@ -325,7 +325,42 @@ def submit_jahit(payload: JahitRequest, db: Session = Depends(get_db)):
         else:
             hpp_per_pcs = produk.harga_modal or 0.0
 
+        # ── VALIDASI PENGAMAN: Cegah Jahit Melebihi Cutting ──────────────
+        # Hitung total pcs yang SUDAH pernah dijahit untuk SKU ini
+        from sqlalchemy import func as sa_func
+        sudah_dijahit = db.query(sa_func.coalesce(sa_func.sum(models.ProductionLog.qty_hasil), 0)).filter(
+            models.ProductionLog.divisi == "Jahit",
+            models.ProductionLog.kode_sku == produk.kode_sku
+        ).scalar() or 0
+
+        sisa_bisa_dijahit = total_pcs_potong - sudah_dijahit
+        if total_pcs > sisa_bisa_dijahit:
+            return APIResponse(
+                success=False, 
+                message=(
+                    f"Gagal! Jumlah jahit ({total_pcs} pcs) melebihi sisa potong yang tersedia. "
+                    f"Total dipotong: {total_pcs_potong} pcs, sudah dijahit: {sudah_dijahit} pcs, "
+                    f"sisa bisa dijahit: {sisa_bisa_dijahit} pcs."
+                )
+            )
+
+        # Validasi saldo WIP agar tidak minus
+        saldo_wip = db.query(
+            sa_func.coalesce(sa_func.sum(models.JurnalUmum.debit), 0) - 
+            sa_func.coalesce(sa_func.sum(models.JurnalUmum.kredit), 0)
+        ).filter(models.JurnalUmum.kode_akun == "12130").scalar() or 0
+
         nilai_masuk = total_pcs * hpp_per_pcs
+
+        if nilai_masuk > saldo_wip and saldo_wip >= 0:
+            return APIResponse(
+                success=False,
+                message=(
+                    f"Gagal! Nilai HPP ({nilai_masuk:,.0f}) melebihi saldo WIP yang tersedia "
+                    f"(Rp {saldo_wip:,.0f}). Pastikan data cutting sudah diinput terlebih dahulu."
+                )
+            )
+        # ─────────────────────────────────────────────────────────────────
 
         # Proporsi nilai yang diambil dari WIP Awal vs Produksi Reguler
         # Jika total_pcs_potong > 0, kita ambil proporsional dari modal_wip_awal
