@@ -345,11 +345,11 @@ export default function SuperAdmin() {
               <span className="text-[10px] font-black uppercase">Mitra</span>
             </button>
             <button 
-              onClick={() => handleResetMaster('all', 'Semuanya')}
-              className="p-3 bg-red-600 hover:bg-red-700 text-white rounded-2xl shadow-lg shadow-red-100 transition-all flex flex-col items-center gap-1"
+              onClick={() => setShowResetPGModal(true)}
+              className="p-3 bg-red-600 hover:bg-red-700 text-white rounded-2xl shadow-lg shadow-red-100 transition-all flex flex-col items-center justify-center gap-1 border-2 border-red-500 animate-pulse"
             >
-              <span className="material-symbols-rounded text-xl">factory</span>
-              <span className="text-[10px] font-black uppercase">Reset Total</span>
+              <span className="material-symbols-rounded text-xl">crisis_alert</span>
+              <span className="text-[10px] font-black uppercase text-center leading-tight">Hard Reset<br/>PostgreSQL</span>
             </button>
           </div>
 
@@ -690,20 +690,7 @@ export default function SuperAdmin() {
 
       </div>
 
-      {/* Floating Button Reset PG */}
-      <button
-        onClick={() => setShowResetPGModal(true)}
-        className="fixed bottom-8 left-8 w-16 h-16 bg-red-600 hover:bg-red-700 text-white rounded-full shadow-[0_0_20px_rgba(220,38,38,0.5)] flex items-center justify-center transition-all hover:scale-110 z-50 group"
-        title="Reset Total PostgreSQL"
-      >
-        <span className="material-symbols-rounded text-3xl group-hover:animate-spin">warning</span>
-        {/* Tooltip */}
-        <div className="absolute -top-12 left-0 bg-slate-900 text-white text-xs font-black px-4 py-2 rounded-xl opacity-0 group-hover:opacity-100 transition-opacity whitespace-nowrap pointer-events-none">
-          RESET FULL POSTGRESQL
-        </div>
-      </button>
-
-      {/* Reset PG Modal */}
+      {/* Reset PG Modal (Pop-up Mengambang) */}
       {showResetPGModal && (
         <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-slate-950/90 backdrop-blur-md animate-in fade-in duration-300">
           <div className="bg-white w-full max-w-md rounded-[2.5rem] shadow-2xl overflow-hidden animate-in zoom-in-95 duration-300">
