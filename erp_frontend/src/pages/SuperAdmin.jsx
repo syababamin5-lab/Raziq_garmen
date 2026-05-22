@@ -146,11 +146,8 @@ export default function SuperAdmin() {
   const handleRestore = async () => {
     if (!restoreFile) return;
     
-    const pass = window.prompt(`PERINGATAN BAHAYA!\nProses ini akan MENGHAPUS SEMUA DATA di sistem dan menggantinya dengan data dari file backup.\nMasukkan PIN Akses (229308) untuk melanjutkan:`);
-    if (pass !== "229308") {
-      alert("PIN Salah! Proses dibatalkan.");
-      return;
-    }
+    const konfirmasi = window.confirm("Yakin ingin merestore database dari file backup ini? Data lama akan tertimpa.");
+    if (!konfirmasi) return;
 
     setIsRestoring(true);
     const formData = new FormData();
