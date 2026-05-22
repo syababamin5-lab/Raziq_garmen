@@ -87,7 +87,7 @@ export default function PersediaanModal({ isOpen, onClose }) {
                         <div className="flex items-center gap-2">
                           <h3 className="text-lg font-black text-slate-800 uppercase tracking-tight">{modelGroup.model_code}</h3>
                           <span className="bg-slate-100 text-slate-500 text-[9px] font-bold px-2 py-0.5 rounded-full uppercase tracking-widest border border-slate-200">
-                            {modelGroup.items.length} SKU
+                            {modelGroup.items.length} Warna
                           </span>
                         </div>
                         <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest mt-0.5">Daftar Model Code</p>
