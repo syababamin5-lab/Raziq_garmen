@@ -1,10 +1,13 @@
-import React from 'react'
+import React, { useState } from 'react'
+import PersediaanModal from './PersediaanModal'
 
 /**
  * GudangCards.jsx — Seksi "Status Gudang Akhir"
  * Desain Full Gradient, 20% Lebih Besar & Bold
  */
 export default function GudangCards({ gudang, loading = false, onSetTarget }) {
+  const [isPersediaanModalOpen, setIsPersediaanModalOpen] = useState(false);
+
   if (loading || !gudang) {
     return (
       <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
@@ -19,6 +22,7 @@ export default function GudangCards({ gudang, loading = false, onSetTarget }) {
   const isTargetAchieved = cuttingPct >= 100
 
   return (
+    <>
     <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
 
       {/* ── Kartu 1: Cutting (DARK EMERALD) ─────────── */}
@@ -71,11 +75,13 @@ export default function GudangCards({ gudang, loading = false, onSetTarget }) {
       </div>
 
       {/* ── Kartu 2: Baju Jadi (DARK BLUE) ─────────── */}
-      <div className="
+      <div 
+        onClick={() => setIsPersediaanModalOpen(true)}
+        className="
         relative rounded-[1.5rem] p-7 overflow-hidden min-h-[160px]
         bg-gradient-to-br from-[#1E3A8A] to-[#1E40AF] text-white shadow-xl
         border border-blue-800/50 group transition-all duration-300
-        hover:scale-[1.02]
+        hover:scale-[1.02] cursor-pointer
       ">
         <span className="absolute -bottom-4 -right-4 text-8xl opacity-10 select-none material-symbols-rounded group-hover:scale-110 transition-transform duration-500">
           checkroom
@@ -141,6 +147,11 @@ export default function GudangCards({ gudang, loading = false, onSetTarget }) {
       </div>
 
     </div>
+      <PersediaanModal 
+        isOpen={isPersediaanModalOpen} 
+        onClose={() => setIsPersediaanModalOpen(false)} 
+      />
+    </>
   )
 }
 

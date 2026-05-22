@@ -292,6 +292,52 @@ def update_target(data: dict, db: Session = Depends(get_db)):
         db.rollback()
         return {"success": False, "message": str(e)}
 
+@router.get("/detail-persediaan")
+def get_detail_persediaan(db: Session = Depends(get_db)):
+    """Detail persediaan baju jadi, dikelompokkan per model_code"""
+    try:
+        barang_jadi = db.query(models.Barang).filter(
+            models.Barang.kategori.ilike("%Barang Jadi%"),
+            models.Barang.is_active == 1
+        ).order_by(models.Barang.model_code, models.Barang.nama_barang).all()
+
+        grouped = {}
+        for b in barang_jadi:
+            code = b.model_code or "TANPA KODE"
+            if code not in grouped:
+                grouped[code] = {"model_code": code, "items": [], "total_stok_pcs": 0, "total_nilai": 0}
+            
+            stok = b.stok_saat_ini or 0
+            nilai = stok * (b.harga_modal or 0)
+            grouped[code]["items"].append({
+                "id": b.id,
+                "kode_sku": b.kode_sku,
+                "nama_barang": b.nama_barang,
+                "stok_pcs": stok,
+                "stok_lusin": round(stok / 12, 2),
+                "harga_modal": b.harga_modal or 0,
+                "harga_jual": b.harga_jual or 0,
+                "nilai_persediaan": nilai
+            })
+            grouped[code]["total_stok_pcs"] += stok
+            grouped[code]["total_nilai"] += nilai
+
+        result = sorted(grouped.values(), key=lambda x: x["total_stok_pcs"], reverse=True)
+        grand_total_pcs = sum(g["total_stok_pcs"] for g in result)
+        grand_total_nilai = sum(g["total_nilai"] for g in result)
+
+        return {
+            "success": True,
+            "data": result,
+            "grand_total_pcs": grand_total_pcs,
+            "grand_total_lusin": round(grand_total_pcs / 12, 2),
+            "grand_total_nilai": grand_total_nilai
+        }
+    except Exception as e:
+        import traceback
+        print(traceback.format_exc())
+        return {"success": False, "message": str(e)}
+
 @router.post("/reconcile")
 def reconcile_data(db: Session = Depends(get_db)):
     """Fitur Darurat untuk memperbaiki konsistensi data jurnal"""

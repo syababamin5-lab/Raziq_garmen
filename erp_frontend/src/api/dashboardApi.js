@@ -13,3 +13,6 @@ export const getDashboardSummary = () =>
 
 export const updateTarget = (newTarget) =>
   api.post('/dashboard/update-target', { target: newTarget }).then((res) => res.data)
+
+export const getDetailPersediaan = () =>
+  api.get('/dashboard/detail-persediaan').then((res) => res.data)
