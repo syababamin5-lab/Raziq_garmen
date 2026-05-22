@@ -72,14 +72,7 @@ export default function PembelianBiaya() {
       ]);
       setSuppliers(resSupp.filter(m => m.kategori === 'Supplier Bahan Baku'));
       setInventory(resInv.filter(b => b.kategori !== 'Barang Jadi (Baju)'));
-      // Tampilkan akun Beban, HPP/Biaya Produksi, dan Kewajiban (untuk bayar utang/gaji)
-      setCoa(resCoa.filter(a => 
-        a.kode_akun.startsWith('5') || 
-        a.kode_akun.startsWith('6') || 
-        a.kode_akun.startsWith('2') || 
-        a.kategori === 'Beban' || 
-        a.kategori === 'Kewajiban'
-      ));
+      setCoa(resCoa.filter(a => a.kategori === 'Beban'));
       if (resAset.success) {
         setAsetSummary(resAset.data.summary);
         setSusutStatus(resAset.data.status_susut || { sudah_susut: false, jumlah_susut: 0, bulan: '' });
