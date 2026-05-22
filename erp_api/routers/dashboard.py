@@ -194,23 +194,20 @@ def get_dashboard_summary(db: Session = Depends(get_db)):
             def get_total_produksi_jahit(start, end):
                 buffer_h = 7
                 start_utc = start - datetime.timedelta(hours=buffer_h)
-                end_utc = end - datetime.timedelta(hours=buffer_h)
                 return db.query(func.sum(models.ProductionLog.qty_hasil))\
-                    .filter(models.ProductionLog.divisi == "Jahit", models.ProductionLog.tanggal >= start_utc, models.ProductionLog.tanggal <= end_utc).scalar() or 0
+                    .filter(models.ProductionLog.divisi == "Jahit", models.ProductionLog.tanggal >= start_utc).scalar() or 0
                     
             prod_pcs_month = get_total_produksi_jahit(first_day, now)
             prod_pcs_week = get_total_produksi_jahit(start_of_week, now)
             
             first_day_utc = first_day - datetime.timedelta(hours=7)
-            now_utc = now - datetime.timedelta(hours=7)
 
             prod_detail_raw = db.query(
                 models.ProductionLog.nama_barang, 
                 func.sum(models.ProductionLog.qty_hasil).label("total_pcs")
             ).filter(
                 models.ProductionLog.divisi == "Jahit", 
-                models.ProductionLog.tanggal >= first_day_utc, 
-                models.ProductionLog.tanggal <= now_utc
+                models.ProductionLog.tanggal >= first_day_utc
             ).group_by(models.ProductionLog.nama_barang).all()
             
             detail_prod = [{"nama_barang": r.nama_barang, "qty_lusin": r.total_pcs / 12} for r in prod_detail_raw]
