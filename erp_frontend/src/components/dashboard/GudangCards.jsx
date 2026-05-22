@@ -1,5 +1,6 @@
 import React, { useState } from 'react'
 import PersediaanModal from './PersediaanModal'
+import SisaKainModal from './SisaKainModal'
 
 /**
  * GudangCards.jsx — Seksi "Status Gudang Akhir"
@@ -7,6 +8,7 @@ import PersediaanModal from './PersediaanModal'
  */
 export default function GudangCards({ gudang, loading = false, onSetTarget }) {
   const [isPersediaanModalOpen, setIsPersediaanModalOpen] = useState(false);
+  const [isSisaKainModalOpen, setIsSisaKainModalOpen] = useState(false);
 
   if (loading || !gudang) {
     return (
@@ -113,11 +115,13 @@ export default function GudangCards({ gudang, loading = false, onSetTarget }) {
       </div>
 
       {/* ── Kartu 3: Sisa Kain (DARK AMBER/ORANGE) ─────────── */}
-      <div className="
+      <div 
+        onClick={() => setIsSisaKainModalOpen(true)}
+        className="
         relative rounded-[1.5rem] p-7 overflow-hidden min-h-[160px]
         bg-gradient-to-br from-[#92400E] to-[#B45309] text-white shadow-xl
         border border-amber-800/50 group transition-all duration-300
-        hover:scale-[1.02]
+        hover:scale-[1.02] cursor-pointer
       ">
         <span className="absolute -bottom-4 -right-4 text-8xl opacity-10 select-none material-symbols-rounded group-hover:scale-110 transition-transform duration-500">
           texture
@@ -150,6 +154,10 @@ export default function GudangCards({ gudang, loading = false, onSetTarget }) {
       <PersediaanModal 
         isOpen={isPersediaanModalOpen} 
         onClose={() => setIsPersediaanModalOpen(false)} 
+      />
+      <SisaKainModal 
+        isOpen={isSisaKainModalOpen} 
+        onClose={() => setIsSisaKainModalOpen(false)} 
       />
     </>
   )

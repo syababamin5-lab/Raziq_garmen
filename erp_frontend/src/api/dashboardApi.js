@@ -16,3 +16,6 @@ export const updateTarget = (newTarget) =>
 
 export const getDetailPersediaan = () =>
   api.get('/dashboard/detail-persediaan').then((res) => res.data)
+
+export const getDetailKain = () =>
+  api.get('/dashboard/detail-kain').then((res) => res.data)
