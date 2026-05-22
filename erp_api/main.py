@@ -1430,6 +1430,39 @@ def reset_master_data(target: str, db: Session = Depends(get_db)):
         db.rollback()
         return {"status": "error", "message": str(e)}
 
+from pydantic import BaseModel
+class ResetPgRequest(BaseModel):
+    pin: str
+
+@app.post("/api/admin/database/reset-full-pg")
+def reset_full_pg(payload: ResetPgRequest, db: Session = Depends(get_db)):
+    """Reset seluruh tabel transaksi & master (Kecuali COA, Users, Config) dan reset ID ke 1."""
+    if payload.pin != "229308":
+        return {"status": "error", "message": "PIN Salah!"}
+        
+    try:
+        query = text("""
+            TRUNCATE TABLE 
+                barang,
+                mitra,
+                karyawan,
+                header_penjualan,
+                detail_penjualan,
+                header_pembelian,
+                detail_pembelian,
+                production_logs,
+                wip_saldo_awal,
+                jurnal_umum,
+                user_logs
+            RESTART IDENTITY CASCADE;
+        """)
+        db.execute(query)
+        db.commit()
+        return {"status": "success", "message": "Database telah dikosongkan secara total dan Auto-Increment di-reset!"}
+    except Exception as e:
+        db.rollback()
+        return {"status": "error", "message": str(e)}
+
 @app.get("/api/admin/database/export-all")
 def export_full_database(db: Session = Depends(get_db)):
     """Ekspor SELURUH database ke Excel Multi-Sheet."""

@@ -6,6 +6,8 @@ export default function SuperAdmin() {
   const [backupRange, setBackupRange] = useState({ start: '', end: '' });
   const [showBackupModal, setShowBackupModal] = useState(false);
   const [showPruneModal, setShowPruneModal] = useState(false);
+  const [showResetPGModal, setShowResetPGModal] = useState(false);
+  const [resetPGPin, setResetPGPin] = useState('');
   const [loading, setLoading] = useState(false);
   const [understood, setUnderstood] = useState(false);
   
@@ -231,6 +233,27 @@ export default function SuperAdmin() {
       }
     } catch (err) {
       alert("Error: " + err.message);
+    }
+    setLoading(false);
+  };
+
+  const handleResetPG = async () => {
+    if (!resetPGPin) {
+      alert("Masukkan PIN!");
+      return;
+    }
+    setLoading(true);
+    try {
+      const res = await api.post('/admin/database/reset-full-pg', { pin: resetPGPin });
+      if (res.data.status === 'success') {
+        alert("✅ " + res.data.message);
+        setShowResetPGModal(false);
+        setResetPGPin('');
+      } else {
+        alert("❌ Gagal: " + res.data.message);
+      }
+    } catch (err) {
+      alert("Error: " + (err.response?.data?.message || err.message));
     }
     setLoading(false);
   };
@@ -666,6 +689,82 @@ export default function SuperAdmin() {
       </div>
 
       </div>
+
+      {/* Floating Button Reset PG */}
+      <button
+        onClick={() => setShowResetPGModal(true)}
+        className="fixed bottom-8 right-8 w-16 h-16 bg-red-600 hover:bg-red-700 text-white rounded-full shadow-[0_0_20px_rgba(220,38,38,0.5)] flex items-center justify-center transition-all hover:scale-110 z-50 group"
+        title="Reset Total PostgreSQL"
+      >
+        <span className="material-symbols-rounded text-3xl group-hover:animate-spin">warning</span>
+        {/* Tooltip */}
+        <div className="absolute -top-12 right-0 bg-slate-900 text-white text-xs font-black px-4 py-2 rounded-xl opacity-0 group-hover:opacity-100 transition-opacity whitespace-nowrap pointer-events-none">
+          RESET FULL POSTGRESQL
+        </div>
+      </button>
+
+      {/* Reset PG Modal */}
+      {showResetPGModal && (
+        <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-slate-950/90 backdrop-blur-md animate-in fade-in duration-300">
+          <div className="bg-white w-full max-w-md rounded-[2.5rem] shadow-2xl overflow-hidden animate-in zoom-in-95 duration-300">
+            <div className="bg-red-600 p-8 text-white text-center relative overflow-hidden">
+               <div className="absolute top-0 right-0 -mt-8 -mr-8 w-24 h-24 bg-white/10 rounded-full"></div>
+              <span className="material-symbols-rounded text-6xl mb-2 animate-pulse">crisis_alert</span>
+              <h3 className="text-2xl font-black tracking-tight">DANGER ZONE</h3>
+              <p className="text-red-100 text-sm mt-1 font-medium">Reset Total Database PostgreSQL (TRUNCATE)</p>
+            </div>
+            <div className="p-8 space-y-6">
+              <div className="p-4 bg-red-50 rounded-2xl border border-red-100 flex gap-4 items-start">
+                <span className="material-symbols-rounded text-red-600 shrink-0">error</span>
+                <p className="text-xs text-red-900 leading-relaxed font-bold">
+                  Tindakan ini akan mengosongkan SELURUH TABEL TRANSAKSI & MASTER (Kecuali COA, Config, dan User) dan MENGEMBALIKAN NOMOR TRANSAKSI (ID) KEMBALI KE 1.
+                </p>
+              </div>
+
+              <div className="space-y-2">
+                <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1">Masukkan PIN Otorisasi</label>
+                <div className="relative">
+                  <input 
+                    type="password" 
+                    placeholder="*** ***"
+                    className="w-full p-4 pl-12 bg-slate-50 border border-slate-200 rounded-2xl text-lg font-black tracking-widest focus:ring-2 focus:ring-red-500/20 focus:border-red-500 outline-none transition-all text-center"
+                    value={resetPGPin}
+                    onChange={e => setResetPGPin(e.target.value)}
+                  />
+                  <span className="material-symbols-rounded absolute left-4 top-1/2 -translate-y-1/2 text-slate-400">lock</span>
+                </div>
+              </div>
+
+              <div className="flex gap-3 pt-4">
+                <button 
+                  onClick={() => {
+                    setShowResetPGModal(false);
+                    setResetPGPin('');
+                  }}
+                  className="flex-1 py-4 font-black text-slate-400 hover:text-slate-900 transition-all uppercase tracking-widest text-xs bg-slate-100 hover:bg-slate-200 rounded-2xl"
+                >
+                  Batal
+                </button>
+                <button 
+                  disabled={loading}
+                  onClick={handleResetPG}
+                  className={`flex-[2] py-4 font-black rounded-2xl shadow-xl transition-all uppercase tracking-widest text-xs flex items-center justify-center gap-2 ${
+                    !loading 
+                      ? 'bg-red-600 text-white hover:bg-red-700 shadow-red-200 hover:-translate-y-1' 
+                      : 'bg-slate-100 text-slate-300 cursor-not-allowed shadow-none'
+                  }`}
+                >
+                  {loading ? (
+                    <><span className="material-symbols-rounded animate-spin text-sm">sync</span> Memproses...</>
+                  ) : (
+                    <><span className="material-symbols-rounded text-sm">bomb</span> EKSEKUSI RESET</>
+                  )}
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
 
       {/* Prune Modal */}
       {showPruneModal && (
