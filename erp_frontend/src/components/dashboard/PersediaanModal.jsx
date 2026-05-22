@@ -103,7 +103,7 @@ export default function PersediaanModal({ isOpen, onClose }) {
                   </div>
 
                   {/* Detail SKU (Expanded) */}
-                  <div className={`transition-all duration-500 ease-in-out overflow-hidden ${expandedModel === idx ? 'max-h-[1000px] opacity-100 border-t border-slate-100' : 'max-h-0 opacity-0'}`}>
+                  <div className={`transition-all duration-500 ease-in-out overflow-hidden ${expandedModel === idx ? 'max-h-[5000px] opacity-100 border-t border-slate-100' : 'max-h-0 opacity-0'}`}>
                     <div className="p-5 bg-slate-50/50">
                       <table className="w-full text-left">
                         <thead className="text-[10px] font-black text-slate-400 uppercase tracking-widest border-b border-slate-200">
