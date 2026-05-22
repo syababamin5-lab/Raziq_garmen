@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { getFinancialReport, getBukuBesar, getWipCutting } from '../api/laporanApi';
+import { getFinancialReport, getBukuBesar, getGrafikPenjualan } from '../api/laporanApi';
 
 const formatRp = (val) => {
   if (val < 0) return `(${new Intl.NumberFormat('id-ID', { style: 'currency', currency: 'IDR', minimumFractionDigits: 0 }).format(Math.abs(val))})`;
@@ -14,7 +14,8 @@ export default function LaporanKeuangan() {
   
   const [reportData, setReportData] = useState(null);
   const [ledgerData, setLedgerData] = useState([]);
-  const [wipData, setWipData] = useState([]);
+  const [grafikData, setGrafikData] = useState([]);
+  const [filterGrafik, setFilterGrafik] = useState('mingguan'); // 'mingguan' atau 'harian'
 
   // LEDGER FILTERS
   const [coa, setCoa] = useState([]);
@@ -205,19 +206,18 @@ export default function LaporanKeuangan() {
       } catch (err) { console.error(err); }
   };
 
-  const fetchWip = async () => {
+  const fetchGrafik = async () => {
       try {
-          const res = await getWipCutting();
-          // API mengembalikan res.data sebagai object { data: [...], total_potong: ... }
-          if (res.success) setWipData(res.data.data || []);
+          const res = await getGrafikPenjualan(bulan, tahun, filterGrafik);
+          if (res.success) setGrafikData(res.data);
       } catch (err) { console.error(err); }
   };
 
   useEffect(() => {
     fetchBaseData();
     fetchReports();
-    fetchWip();
-  }, [bulan, tahun]);
+    fetchGrafik();
+  }, [bulan, tahun, filterGrafik]);
 
   const renderTable = (judul, data, total, isNeg = false) => {
       if (!data || Object.keys(data).length === 0) return null;
@@ -362,7 +362,7 @@ export default function LaporanKeuangan() {
                 { id: 'aruskas', label: 'Arus Kas', icon: 'account_balance_wallet' },
                 { id: 'ekuitas', label: 'Ekuitas', icon: 'finance_chip' },
                 { id: 'ledger', label: 'Buku Besar', icon: 'analytics' },
-                { id: 'wip', label: 'WIP Cutting', icon: 'content_cut' }
+                { id: 'grafik', label: 'Grafik Penjualan', icon: 'insights' }
             ].map(t => (
                 <button 
                     key={t.id} 
@@ -387,7 +387,7 @@ export default function LaporanKeuangan() {
                                  activeTab === 'neraca' ? 'Posisi Keuangan (Neraca)' :
                                  activeTab === 'aruskas' ? 'Laporan Arus Kas' :
                                  activeTab === 'ekuitas' ? 'Perubahan Modal' :
-                                 activeTab === 'ledger' ? 'Buku Besar Akun' : 'WIP Tracking'}
+                                 activeTab === 'ledger' ? 'Buku Besar Akun' : 'Grafik Penjualan'}
                             </h2>
                             {analogies[activeTab] && (
                                 <button 
@@ -607,39 +607,77 @@ export default function LaporanKeuangan() {
                         </div>
                     )}
 
-                    {activeTab === 'wip' && (
+                    {activeTab === 'grafik' && (
                         <div className="animate-in fade-in slide-in-from-bottom-2 space-y-8">
-                             <div className="bg-blue-50 p-6 rounded-3xl border border-blue-100 flex items-center gap-4 text-blue-800">
-                                <span className="material-symbols-rounded text-4xl">inventory_2</span>
-                                <div>
-                                    <h3 className="font-black text-lg">Work-In-Progress (WIP) Tracking</h3>
-                                    <p className="text-sm font-medium opacity-80">Menghitung sisa antrean produksi Jahit berdasarkan hasil selisih laporan Cutting harian.</p>
+                             <div className="flex flex-col md:flex-row justify-between items-center gap-4 bg-emerald-50 p-6 rounded-3xl border border-emerald-100">
+                                <div className="flex items-center gap-4 text-emerald-800">
+                                    <span className="material-symbols-rounded text-4xl">monitoring</span>
+                                    <div>
+                                        <h3 className="font-black text-lg">Grafik Penjualan</h3>
+                                        <p className="text-sm font-medium opacity-80">Visualisasi tren pendapatan kotor (termasuk diskon) selama periode {bulan}/{tahun}.</p>
+                                    </div>
+                                </div>
+                                <div className="flex gap-2">
+                                    <button onClick={() => setFilterGrafik('mingguan')} className={`px-5 py-2.5 rounded-full text-xs font-bold transition-all ${filterGrafik === 'mingguan' ? 'bg-emerald-600 text-white shadow-md' : 'bg-white text-emerald-700 border border-emerald-200 hover:bg-emerald-100'}`}>Mingguan</button>
+                                    <button onClick={() => setFilterGrafik('harian')} className={`px-5 py-2.5 rounded-full text-xs font-bold transition-all ${filterGrafik === 'harian' ? 'bg-emerald-600 text-white shadow-md' : 'bg-white text-emerald-700 border border-emerald-200 hover:bg-emerald-100'}`}>Harian</button>
                                 </div>
                              </div>
 
-                             <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
-                                {wipData.map(item => (
-                                    <div key={item.kode_sku} className="bg-white p-6 rounded-3xl border border-slate-100 shadow-sm relative overflow-hidden group">
-                                        <div className={`absolute top-0 right-0 w-2 h-full ${item.sisa_wip > 0 ? 'bg-amber-400' : 'bg-emerald-500'}`}></div>
-                                        <p className="text-[10px] font-black text-slate-400 mb-1">{item.kode_sku}</p>
-                                        <h4 className="font-black text-slate-800 mb-4 h-10 overflow-hidden">{item.nama_barang}</h4>
-                                        <div className="space-y-2">
-                                            <div className="flex justify-between text-[11px] font-bold">
-                                                <span className="text-slate-400">Potong</span>
-                                                <span className="text-slate-800">{item.total_potong} Pcs</span>
+                             <div className="bg-white p-8 rounded-3xl border border-slate-100 shadow-sm relative overflow-hidden">
+                                {grafikData.length > 0 ? (() => {
+                                    const maxVal = Math.max(...grafikData.map(d => d.value));
+                                    const totalPenjualan = grafikData.reduce((sum, d) => sum + d.value, 0);
+                                    
+                                    return (
+                                        <>
+                                            <div className="flex justify-between items-end mb-10">
+                                                <div>
+                                                    <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-1">TOTAL PENJUALAN KOTOR</p>
+                                                    <h3 className="text-3xl font-black text-slate-800 font-outfit">{formatRp(totalPenjualan)}</h3>
+                                                </div>
+                                                <div className="text-right hidden sm:block">
+                                                    <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-1">DATA TERTINGGI</p>
+                                                    <h3 className="text-lg font-bold text-emerald-600">{formatRp(maxVal)}</h3>
+                                                </div>
                                             </div>
-                                            <div className="flex justify-between text-[11px] font-bold">
-                                                <span className="text-slate-400">Masuk Jahit</span>
-                                                <span className="text-emerald-600">{item.total_jahit} Pcs</span>
+                                            
+                                            <div className="relative h-64 sm:h-80 w-full flex items-end gap-2 sm:gap-4 pb-8 pt-4">
+                                                {/* Garis Horizontal Latar */}
+                                                <div className="absolute inset-0 flex flex-col justify-between pb-8 z-0">
+                                                    <div className="border-b border-slate-100 border-dashed w-full h-0"></div>
+                                                    <div className="border-b border-slate-100 border-dashed w-full h-0"></div>
+                                                    <div className="border-b border-slate-100 border-dashed w-full h-0"></div>
+                                                    <div className="border-b border-slate-200 w-full h-0"></div>
+                                                </div>
+                                                
+                                                {/* Bars */}
+                                                {grafikData.map((d, i) => {
+                                                    const heightPct = maxVal > 0 ? (d.value / maxVal) * 100 : 0;
+                                                    return (
+                                                        <div key={i} className="relative flex flex-col justify-end items-center flex-1 h-full z-10 group">
+                                                            {/* Tooltip Hover */}
+                                                            <div className="absolute -top-12 opacity-0 group-hover:opacity-100 transition-opacity bg-slate-800 text-white text-[10px] font-bold px-3 py-1.5 rounded-lg whitespace-nowrap pointer-events-none mb-2 z-20">
+                                                                {formatRp(d.value)}
+                                                                <div className="absolute -bottom-1 left-1/2 -translate-x-1/2 border-4 border-transparent border-t-slate-800"></div>
+                                                            </div>
+                                                            
+                                                            {/* Bar Chart */}
+                                                            <div 
+                                                                className={`w-full max-w-[40px] rounded-t-xl transition-all duration-700 ${heightPct > 0 ? 'bg-gradient-to-t from-emerald-600 to-emerald-400 hover:from-emerald-700 hover:to-emerald-500' : 'bg-slate-100'}`}
+                                                                style={{ height: `${heightPct}%`, minHeight: heightPct > 0 ? '4px' : '0' }}
+                                                            ></div>
+                                                            
+                                                            {/* Label Bawah */}
+                                                            <span className="absolute -bottom-8 text-[9px] sm:text-[11px] font-bold text-slate-500 whitespace-nowrap transform -rotate-45 sm:rotate-0 origin-top-left sm:origin-center mt-2">{d.label}</span>
+                                                        </div>
+                                                    );
+                                                })}
                                             </div>
-                                            <div className="pt-2 border-t mt-2 flex justify-between items-end">
-                                                <span className="text-[10px] font-black text-slate-400 tracking-widest">SISA WIP</span>
-                                                <span className={`text-xl font-black ${item.sisa_wip > 0 ? 'text-amber-500' : 'text-emerald-500'}`}>{item.sisa_wip} Pcs</span>
-                                            </div>
-                                        </div>
-                                    </div>
-                                ))}
-                                {wipData.length === 0 && <div className="col-span-4 py-20 text-center text-slate-300 italic">Belum ada data produksi tercatat.</div>}
+                                        </>
+                                    );
+                                })() : (
+                                    <div className="py-20 text-center text-slate-400 font-medium">Belum ada data penjualan pada periode ini.</div>
+                                )}
                              </div>
                         </div>
                     )}

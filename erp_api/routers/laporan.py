@@ -801,6 +801,49 @@ def audit_investigasi_kas(db: Session = Depends(get_db)):
     except Exception as e:
         return {"status": "error", "message": str(e)}
 
+@router.get("/grafik-penjualan")
+def get_grafik_penjualan(bulan: int, tahun: int, filter_tipe: str = "mingguan", db: Session = Depends(get_db)):
+    try:
+        start_date = datetime.datetime(tahun, bulan, 1)
+        if bulan == 12: end_date = datetime.datetime(tahun+1, 1, 1)
+        else: end_date = datetime.datetime(tahun, bulan+1, 1)
+        
+        sales = db.query(models.HeaderPenjualan).filter(
+            models.HeaderPenjualan.tanggal >= start_date,
+            models.HeaderPenjualan.tanggal < end_date
+        ).all()
+
+        data = []
+        if filter_tipe == "harian":
+            daily_data = {}
+            for s in sales:
+                tgl_str = s.tanggal.strftime("%d %b")
+                if tgl_str not in daily_data:
+                    daily_data[tgl_str] = 0
+                daily_data[tgl_str] += s.total_tagihan + (s.diskon or 0)
+            
+            sorted_keys = sorted(daily_data.keys(), key=lambda x: datetime.datetime.strptime(f"{x} {tahun}", "%d %b %Y"))
+            data = [{"label": k, "value": daily_data[k]} for k in sorted_keys]
+            
+        elif filter_tipe == "mingguan":
+            weekly_data = {"Minggu 1": 0, "Minggu 2": 0, "Minggu 3": 0, "Minggu 4": 0, "Minggu 5": 0}
+            for s in sales:
+                day = s.tanggal.day
+                if day <= 7: weekly_data["Minggu 1"] += s.total_tagihan + (s.diskon or 0)
+                elif day <= 14: weekly_data["Minggu 2"] += s.total_tagihan + (s.diskon or 0)
+                elif day <= 21: weekly_data["Minggu 3"] += s.total_tagihan + (s.diskon or 0)
+                elif day <= 28: weekly_data["Minggu 4"] += s.total_tagihan + (s.diskon or 0)
+                else: weekly_data["Minggu 5"] += s.total_tagihan + (s.diskon or 0)
+            
+            data = [{"label": k, "value": v} for k, v in weekly_data.items()]
+            
+        return {"success": True, "data": data}
+    except Exception as e:
+        import traceback
+        print(traceback.format_exc())
+        return {"success": False, "message": str(e)}
+
+
 @router.get("/kartu-stok/{kode_sku}")
 def get_kartu_stok(kode_sku: str, db: Session = Depends(get_db)):
     """Mengambil riwayat mutasi stok untuk satu SKU (Kartu Stok)"""
