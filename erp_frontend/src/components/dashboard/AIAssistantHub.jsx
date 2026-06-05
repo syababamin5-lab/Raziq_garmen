@@ -144,9 +144,13 @@ const AIAssistantHub = ({ userRole }) => {
                                                 <div className={`p-4 rounded-[1.5rem] text-sm leading-relaxed shadow-sm ${
                                                     msg.role === 'user' 
                                                     ? 'bg-emerald-600 text-white rounded-tr-none' 
-                                                    : 'bg-white text-slate-700 border border-slate-100 rounded-tl-none'
+                                                    : 'bg-white text-slate-700 border border-slate-100 rounded-tl-none prose prose-sm max-w-none prose-p:leading-relaxed prose-p:my-1 prose-strong:text-emerald-700'
                                                 }`}>
-                                                    {msg.text}
+                                                    {msg.role === 'assistant' ? (
+                                                        <ReactMarkdown>{msg.text}</ReactMarkdown>
+                                                    ) : (
+                                                        msg.text
+                                                    )}
                                                 </div>
                                                 
                                                 {msg.table && msg.table.length > 0 && (

@@ -15,6 +15,66 @@ export default function SuperAdmin() {
   const [restoreFile, setRestoreFile] = useState(null);
   const [isRestoring, setIsRestoring] = useState(false);
   
+  const [loadingMenus, setLoadingMenus] = useState(false);
+  const [selectedRole, setSelectedRole] = useState('staff');
+
+  // AI Configuration State
+  const [aiConfig, setAiConfig] = useState({ provider: 'gemini', api_key: '', model_name: '', masked_key: '', is_set: false });
+  const [loadingAi, setLoadingAi] = useState(false);
+
+  const fetchAiConfig = async () => {
+    try {
+      const { data } = await api.get('/ai/config');
+      if (data.status === 'success') {
+        setAiConfig({
+          provider: data.provider || 'gemini',
+          api_key: '', // Jangan tampilkan key asli di state
+          model_name: data.model_name || '',
+          masked_key: data.api_key_masked || '',
+          is_set: data.api_key_set
+        });
+      }
+    } catch (err) {
+      console.error("Gagal mengambil konfigurasi AI:", err);
+    }
+  };
+
+  const handleSaveAiConfig = async () => {
+    setLoadingAi(true);
+    try {
+      const { data } = await api.post('/ai/config', {
+        provider: aiConfig.provider,
+        api_key: aiConfig.api_key, // Ini akan dikirim ke backend
+        model_name: aiConfig.model_name
+      });
+      if (data.status === 'success') {
+        alert("✅ " + data.message);
+        setAiConfig(prev => ({...prev, api_key: ''})); // Kosongkan field input setelah simpan
+        fetchAiConfig(); // Refresh state
+      } else {
+        alert("❌ " + data.message);
+      }
+    } catch (err) {
+      alert("Error menyimpan konfigurasi AI.");
+    }
+    setLoadingAi(false);
+  };
+
+  const handleTestAi = async () => {
+    setLoadingAi(true);
+    try {
+      const { data } = await api.post('/ai/test');
+      if (data.status === 'success') {
+        alert(`✅ Test Berhasil!\nRespons AI: ${data.response}`);
+      } else {
+        alert(`❌ Test Gagal:\n${data.message}`);
+      }
+    } catch (err) {
+      alert("Koneksi ke AI gagal. Pastikan API Key valid.");
+    }
+    setLoadingAi(false);
+  };
+
   // User Logs State
   const [logs, setLogs] = useState([]);
   const [loadingLogs, setLoadingLogs] = useState(false);
@@ -34,6 +94,8 @@ export default function SuperAdmin() {
 
   useEffect(() => {
     fetchLogs();
+    fetchMenus();
+    fetchAiConfig();
     // Auto refresh tiap 30 detik
     const interval = setInterval(fetchLogs, 30000);
     return () => clearInterval(interval);
@@ -91,9 +153,7 @@ export default function SuperAdmin() {
     }
   };
 
-  useEffect(() => {
-    fetchMenus();
-  }, []);
+  // Menu Registry dipindah ke atas efeknya digabung
 
   // Export Wizard State
   const [exportWizard, setExportWizard] = useState({
@@ -429,6 +489,90 @@ export default function SuperAdmin() {
             <span className="material-symbols-rounded">check_circle</span>
             TERAPKAN KE SISTEM
           </button>
+        </div>
+
+        {/* ── AI ENGINE CONFIGURATION CARD ── */}
+        <div className="lg:col-span-1 bg-white p-8 rounded-[2rem] shadow-sm border border-slate-100 flex flex-col group hover:shadow-xl hover:shadow-emerald-500/5 transition-all duration-300">
+          <div className="flex items-center justify-between mb-6">
+            <div className="flex items-center gap-3">
+              <div className="p-3 bg-emerald-50 rounded-xl">
+                <span className="material-symbols-rounded text-emerald-600">psychology</span>
+              </div>
+              <h2 className="text-xl font-black text-slate-900 tracking-tight">Konfigurasi Engine AI</h2>
+            </div>
+            {aiConfig.is_set ? (
+              <span className="bg-emerald-100 text-emerald-700 text-[10px] font-black uppercase px-2 py-1 rounded-lg flex items-center gap-1"><span className="w-1.5 h-1.5 rounded-full bg-emerald-500"></span> ACTIVE</span>
+            ) : (
+              <span className="bg-amber-100 text-amber-700 text-[10px] font-black uppercase px-2 py-1 rounded-lg flex items-center gap-1"><span className="w-1.5 h-1.5 rounded-full bg-amber-500"></span> NO API KEY</span>
+            )}
+          </div>
+          
+          <p className="text-[11px] font-medium text-slate-400 leading-relaxed mb-6">
+            Pilih penyedia LLM (Large Language Model) untuk asisten bisnis Anda. Fitur chat eksekutif membutuhkan akses ke API resmi penyedia AI.
+          </p>
+
+          <div className="space-y-4 mb-6 flex-1">
+            <div className="space-y-1">
+              <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1">Penyedia AI</label>
+              <select 
+                value={aiConfig.provider}
+                onChange={e => setAiConfig({...aiConfig, provider: e.target.value})}
+                className="w-full p-3 bg-slate-50 border border-slate-100 rounded-xl text-sm focus:ring-2 focus:ring-emerald-500/20 focus:border-emerald-500 outline-none transition-all font-bold text-slate-700"
+              >
+                <option value="gemini">Google Gemini (Disarankan - Cepat & Gratis)</option>
+                <option value="openai">OpenAI (ChatGPT)</option>
+                <option value="groq">Groq (Ultra-Fast Llama3)</option>
+              </select>
+            </div>
+
+            <div className="space-y-1">
+              <div className="flex justify-between items-end mb-1">
+                <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1">API Key</label>
+                {aiConfig.is_set && <span className="text-[9px] text-slate-400 font-bold">Terpasang: {aiConfig.masked_key}</span>}
+              </div>
+              <div className="relative">
+                <input 
+                  type="password" 
+                  value={aiConfig.api_key}
+                  onChange={e => setAiConfig({...aiConfig, api_key: e.target.value})}
+                  placeholder={aiConfig.is_set ? "Ketik API Key baru untuk mengganti..." : "Paste API Key rahasia Anda di sini..."}
+                  className="w-full p-3 pl-10 bg-slate-50 border border-slate-100 rounded-xl text-sm focus:ring-2 focus:ring-emerald-500/20 focus:border-emerald-500 outline-none transition-all"
+                />
+                <span className="material-symbols-rounded absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 text-[18px]">key</span>
+              </div>
+            </div>
+
+            <div className="space-y-1">
+              <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1">Spesifikasi Model (Opsional)</label>
+              <input 
+                type="text" 
+                value={aiConfig.model_name}
+                onChange={e => setAiConfig({...aiConfig, model_name: e.target.value})}
+                placeholder="cth: gemini-1.5-flash atau gpt-4o"
+                className="w-full p-3 bg-slate-50 border border-slate-100 rounded-xl text-sm focus:ring-2 focus:ring-emerald-500/20 focus:border-emerald-500 outline-none transition-all"
+              />
+              <p className="text-[9px] text-slate-400 px-1 mt-1">Kosongkan untuk menggunakan model cerdas bawaan.</p>
+            </div>
+          </div>
+
+          <div className="flex gap-2 mt-auto">
+            <button 
+              onClick={handleTestAi}
+              disabled={loadingAi || (!aiConfig.is_set && !aiConfig.api_key)}
+              className="flex-1 py-3 bg-slate-100 text-slate-600 font-bold rounded-xl hover:bg-slate-200 transition-all duration-300 text-xs flex items-center justify-center gap-2 disabled:opacity-50"
+            >
+              <span className="material-symbols-rounded text-[18px]">bug_report</span>
+              Test
+            </button>
+            <button 
+              onClick={handleSaveAiConfig}
+              disabled={loadingAi || (!aiConfig.api_key && !aiConfig.is_set)}
+              className="flex-[2] py-3 bg-emerald-600 text-white font-black rounded-xl hover:bg-emerald-700 transition-all duration-300 text-xs flex items-center justify-center gap-2 shadow-lg shadow-emerald-100 disabled:opacity-50"
+            >
+              {loadingAi ? <span className="material-symbols-rounded animate-spin text-[18px]">sync</span> : <span className="material-symbols-rounded text-[18px]">save</span>}
+              SIMPAN AI
+            </button>
+          </div>
         </div>
 
         {/* ── REDESIGNED BACKUP & EXPORT WIZARD ── */}

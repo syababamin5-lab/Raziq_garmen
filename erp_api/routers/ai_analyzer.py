@@ -5,7 +5,6 @@ from sqlalchemy.orm import Session
 from sqlalchemy import func, or_
 from models import get_db
 import models
-import google.generativeai as genai
 
 from pydantic import BaseModel
 
@@ -14,10 +13,130 @@ router = APIRouter(prefix="/api/ai", tags=["AI Assistant"])
 class AskRequest(BaseModel):
     prompt: str
 
-# Konfigurasi AI (Pastikan API Key ada di environment)
-GEMINI_API_KEY = os.environ.get("GOOGLE_API_KEY", "").strip()
-if GEMINI_API_KEY:
-    genai.configure(api_key=GEMINI_API_KEY)
+class AIConfigRequest(BaseModel):
+    provider: str  # "gemini" | "openai" | "groq"
+    api_key: str
+    model_name: str = ""
+
+
+def get_ai_config(db: Session):
+    """Ambil konfigurasi AI dari database (CompanyConfig)."""
+    config = db.query(models.CompanyConfig).first()
+    provider = getattr(config, 'ai_provider', None) or os.environ.get("AI_PROVIDER", "gemini")
+    api_key = getattr(config, 'ai_api_key', None) or os.environ.get("GOOGLE_API_KEY", "").strip()
+    model_name = getattr(config, 'ai_model_name', None) or ""
+    return {
+        "provider": provider,
+        "api_key": api_key,
+        "model_name": model_name,
+    }
+
+
+def call_llm(prompt: str, db: Session) -> str:
+    """Memanggil LLM yang aktif berdasarkan konfigurasi di database."""
+    cfg = get_ai_config(db)
+    provider = cfg["provider"]
+    api_key = cfg["api_key"]
+    model_name = cfg["model_name"]
+
+    if not api_key:
+        raise ValueError("API Key belum di-set. Silakan konfigurasi di Super Admin → AI Engine Settings.")
+
+    if provider == "openai":
+        # OpenAI / OpenAI-compatible (OpenRouter, Groq, dst)
+        import requests
+        base_url = "https://api.openai.com/v1"
+        chosen_model = model_name or "gpt-4o-mini"
+        resp = requests.post(
+            f"{base_url}/chat/completions",
+            headers={"Authorization": f"Bearer {api_key}", "Content-Type": "application/json"},
+            json={"model": chosen_model, "messages": [{"role": "user", "content": prompt}], "max_tokens": 2048},
+            timeout=60
+        )
+        resp.raise_for_status()
+        return resp.json()["choices"][0]["message"]["content"]
+
+    elif provider == "groq":
+        import requests
+        chosen_model = model_name or "llama3-8b-8192"
+        resp = requests.post(
+            "https://api.groq.com/openai/v1/chat/completions",
+            headers={"Authorization": f"Bearer {api_key}", "Content-Type": "application/json"},
+            json={"model": chosen_model, "messages": [{"role": "user", "content": prompt}], "max_tokens": 2048},
+            timeout=60
+        )
+        resp.raise_for_status()
+        return resp.json()["choices"][0]["message"]["content"]
+
+    else:
+        # Default: Google Gemini
+        import google.generativeai as genai
+        genai.configure(api_key=api_key)
+        try:
+            available_models = [m.name for m in genai.list_models() if 'generateContent' in m.supported_generation_methods]
+            if model_name and any(model_name in m for m in available_models):
+                chosen = next((m for m in available_models if model_name in m), available_models[0])
+            else:
+                chosen = next((m for m in available_models if 'flash' in m), available_models[0] if available_models else 'models/gemini-1.5-flash')
+            model = genai.GenerativeModel(chosen)
+        except Exception:
+            model = genai.GenerativeModel(model_name or 'gemini-1.5-flash')
+        response = model.generate_content(prompt)
+        return response.text
+
+
+# ============================================================
+# ENDPOINT KONFIGURASI AI
+# ============================================================
+
+@router.get("/config")
+def get_config(db: Session = Depends(get_db)):
+    """Ambil konfigurasi AI aktif dari database."""
+    cfg = get_ai_config(db)
+    # Sembunyikan API key untuk keamanan — hanya tunjukkan apakah sudah diisi
+    masked = ""
+    if cfg["api_key"]:
+        key = cfg["api_key"]
+        masked = key[:6] + ("*" * (len(key) - 10)) + key[-4:] if len(key) > 10 else "****"
+    return {
+        "status": "success",
+        "provider": cfg["provider"],
+        "api_key_masked": masked,
+        "api_key_set": bool(cfg["api_key"]),
+        "model_name": cfg["model_name"],
+    }
+
+@router.post("/config")
+def save_config(req: AIConfigRequest, db: Session = Depends(get_db)):
+    """Simpan konfigurasi AI ke database."""
+    try:
+        config = db.query(models.CompanyConfig).first()
+        if not config:
+            config = models.CompanyConfig()
+            db.add(config)
+        
+        if hasattr(config, 'ai_provider'):
+            config.ai_provider = req.provider
+            config.ai_api_key = req.api_key
+            config.ai_model_name = req.model_name
+        else:
+            # Jika kolom belum ada, simpan sementara di env (fallback)
+            os.environ["AI_PROVIDER"] = req.provider
+            os.environ["GOOGLE_API_KEY"] = req.api_key
+        
+        db.commit()
+        return {"status": "success", "message": f"Konfigurasi AI ({req.provider}) berhasil disimpan!"}
+    except Exception as e:
+        return {"status": "error", "message": str(e)}
+
+@router.post("/test")
+def test_connection(db: Session = Depends(get_db)):
+    """Test koneksi AI provider yang aktif."""
+    try:
+        result = call_llm("Balas hanya dengan: 'OK'", db)
+        return {"status": "success", "message": "Koneksi AI berhasil!", "response": result.strip()}
+    except Exception as e:
+        return {"status": "error", "message": str(e)}
 
 @router.get("/financial-health")
 def get_ai_financial_analysis(db: Session = Depends(get_db)):
@@ -135,25 +254,14 @@ def get_ai_financial_analysis(db: Session = Depends(get_db)):
             }
         }
 
-        if not GEMINI_API_KEY:
+        if not get_ai_config(db)["api_key"]:
             return {
                 "status": "warning",
-                "message": "API Key tidak ditemukan. Silakan tambahkan GOOGLE_API_KEY di environment.",
+                "message": "API Key belum di-set. Silakan konfigurasi di Super Admin → AI Engine Settings.",
                 "raw_data": financial_data
             }
 
         # Panggil AI (System Prompt sesuai permintaan)
-        # Mencari model yang tersedia secara dinamis agar tidak 404
-        try:
-            available_models = [m.name for m in genai.list_models() if 'generateContent' in m.supported_generation_methods]
-            # Prioritaskan flash terbaru agar cepat dan hemat
-            target_model = next((m for m in available_models if 'flash' in m), 
-                               available_models[0] if available_models else 'models/gemini-1.5-flash')
-            model = genai.GenerativeModel(target_model)
-        except Exception as e:
-            # Fallback jika list_models gagal (beberapa environment membatasi ini)
-            model = genai.GenerativeModel('gemini-1.5-flash')
-        
         system_prompt = (
             "Kamu adalah seorang Chief Financial Officer (CFO) dan Analis Keuangan Senior di industri garmen/konveksi. "
             "Tugasmu adalah membaca, menganalisis, dan mengekstrak wawasan dari data keuangan perusahaan berikut ini. "
@@ -168,11 +276,11 @@ def get_ai_financial_analysis(db: Session = Depends(get_db)):
             "Bersikaplah objektif dan bersandar penuh pada data."
         )
 
-        response = model.generate_content(system_prompt)
+        response_text = call_llm(system_prompt, db)
         
         return {
             "status": "success",
-            "analysis": response.text,
+            "analysis": response_text,
             "data_snapshot": financial_data
         }
     except Exception as e:
@@ -224,21 +332,11 @@ INSTRUKSI PENTING UNTUK QUERY:
 @router.post("/tanya")
 def ai_executive_assistant(req: AskRequest, db: Session = Depends(get_db)):
     """Agent Text-to-SQL: Menerjemahkan bahasa natural ke Query Database secara dinamis"""
-    if not GEMINI_API_KEY:
-        return {"status": "error", "message": "API Key Gemini belum di-set!"}
-
     try:
         from sqlalchemy import text
         import json
         
-        # 1. INITIALIZE GEMINI DYNAMICALLY
-        try:
-            available_models = [m.name for m in genai.list_models() if 'generateContent' in m.supported_generation_methods]
-            target_model = next((m for m in available_models if 'flash' in m), 
-                               available_models[0] if available_models else 'models/gemini-1.5-flash')
-            model = genai.GenerativeModel(target_model)
-        except Exception:
-            model = genai.GenerativeModel('gemini-1.5-flash')
+        # 1. INITIALIZE TIME
         now = datetime.datetime.now()
         
         # 2. DETECT DATABASE TYPE
@@ -254,7 +352,7 @@ def ai_executive_assistant(req: AskRequest, db: Session = Depends(get_db)):
             f"Query SQL {db_type} (SELECT ONLY):"
         )
         
-        sql_response = model.generate_content(sql_prompt).text.strip()
+        sql_response = call_llm(sql_prompt, db).strip()
         # Clean up potential markdown formatting
         sql_query = sql_response.replace('```sql', '').replace('```', '').strip()
         
@@ -292,7 +390,7 @@ def ai_executive_assistant(req: AskRequest, db: Session = Depends(get_db)):
             "3. Jika data kosong, katakan dengan sopan bahwa data tidak ditemukan."
         )
         
-        summary_response = model.generate_content(summary_prompt).text.strip()
+        summary_response = call_llm(summary_prompt, db).strip()
 
         # 5. FORMAT DATA TABLE FOR UI
         # Kita ambil maksimal 10-15 baris agar tidak kepenuhan di UI

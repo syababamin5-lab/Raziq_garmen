@@ -183,7 +183,10 @@ async def startup_event():
             ("ttd_po_nama", "VARCHAR DEFAULT 'Yana Taryana'"),
             ("ttd_po_jabatan", "VARCHAR DEFAULT 'General Manager'"),
             ("ttd_laporan_nama", "VARCHAR DEFAULT 'Yana Taryana'"),
-            ("ttd_laporan_jabatan", "VARCHAR DEFAULT 'Direktur Operasional'")
+            ("ttd_laporan_jabatan", "VARCHAR DEFAULT 'Direktur Operasional'"),
+            ("ai_provider", "VARCHAR DEFAULT 'gemini'"),
+            ("ai_api_key", "VARCHAR"),
+            ("ai_model_name", "VARCHAR")
         ]
         
         for col_name, col_type in columns_to_add:
