@@ -344,17 +344,30 @@ def ai_executive_assistant(req: AskRequest, db: Session = Depends(get_db)):
         db_type = "PostgreSQL" if SQLALCHEMY_DATABASE_URL.startswith("postgresql") else "SQLite"
         
         # 3. GENERATE SQL QUERY
+        # 3. GENERATE SQL QUERY
         sql_prompt = (
             f"{SCHEMA_CONTEXT.replace('{now_placeholder}', now.strftime('%Y-%m-%d %H:%M:%S'))}\n\n"
             f"DIALECT: {db_type}\n"
             f"Waktu Sekarang: {now.strftime('%Y-%m-%d %H:%M:%S')}\n"
             f"Pertanyaan Bos: {req.prompt}\n\n"
-            f"Query SQL {db_type} (SELECT ONLY):"
+            f"TUGAS: Buat Query SQL {db_type} (HANYA SELECT) untuk menjawab pertanyaan di atas.\n"
+            f"ATURAN MUTLAK: JANGAN MEMBERIKAN PENJELASAN APAPUN! KELUARKAN HANYA KODE SQL MURNI ATAU KATA 'CLARIFY' JIKA PERTANYAAN TIDAK TERKAIT DATA."
         )
         
         sql_response = call_llm(sql_prompt, db).strip()
-        # Clean up potential markdown formatting
-        sql_query = sql_response.replace('```sql', '').replace('```', '').strip()
+        
+        # Ekstrak SQL dari code block markdown jika LLM masih membandel
+        import re
+        match = re.search(r'```(?:sql)?\n?(.*?)\n?```', sql_response, re.DOTALL | re.IGNORECASE)
+        if match:
+            sql_query = match.group(1).strip()
+        else:
+            sql_query = sql_response.replace('```sql', '').replace('```', '').strip()
+            
+        # Jika LLM menjawab panjang lebar tanpa markdown, deteksi jika bukan SQL
+        if not sql_query.upper().startswith(("SELECT", "WITH", "CLARIFY")):
+            # Fallback ke mode percakapan natural
+            sql_query = "CLARIFY"
         
         # 4. HANDLE CLARIFICATION OR INVALID SQL
         if "CLARIFY" in sql_query.upper() or len(sql_query.split()) < 3:
@@ -378,9 +391,23 @@ def ai_executive_assistant(req: AskRequest, db: Session = Depends(get_db)):
             return {"status": "error", "message": "Permintaan ditolak demi keamanan."}
 
         # 5. EXECUTE SQL (READ-ONLY)
-        result_proxy = db.execute(text(sql_query))
-        rows = result_proxy.fetchall()
-        columns = result_proxy.keys()
+        try:
+            result_proxy = db.execute(text(sql_query))
+            rows = result_proxy.fetchall()
+            columns = result_proxy.keys()
+        except Exception as e:
+            # Jika SQL gagal, fallback ke chat asisten agar tidak memunculkan error horor
+            conversational_prompt = (
+                "Kamu adalah Asisten Eksekutif AI yang ramah. "
+                f"Bos Anda baru saja bertanya: '{req.prompt}'.\n"
+                "Sistem gagal menarik data tersebut karena kueri kompleks. "
+                "Berikan jawaban ramah layaknya konsultan bahwa pertanyaan tersebut butuh rincian lebih lanjut atau datanya belum tersedia, tanpa bahasa pemrograman."
+            )
+            return {
+                "status": "success",
+                "jawaban_teks": call_llm(conversational_prompt, db).strip(),
+                "data_tabel": []
+            }
         
         # Convert result to list of dicts for processing
         data_raw = []
