@@ -14,9 +14,6 @@ export default function SuperAdmin() {
   // Restore State
   const [restoreFile, setRestoreFile] = useState(null);
   const [isRestoring, setIsRestoring] = useState(false);
-  
-  const [loadingMenus, setLoadingMenus] = useState(false);
-  const [selectedRole, setSelectedRole] = useState('staff');
 
   // AI Configuration State
   const [aiConfig, setAiConfig] = useState({ provider: 'gemini', api_key: '', model_name: '', masked_key: '', is_set: false });
