@@ -358,9 +358,17 @@ def ai_executive_assistant(req: AskRequest, db: Session = Depends(get_db)):
         
         # 4. HANDLE CLARIFICATION OR INVALID SQL
         if "CLARIFY" in sql_query.upper() or len(sql_query.split()) < 3:
+            # Jika pertanyaan hanya sapaan ("halo") atau tidak spesifik, biarkan AI menjawab secara natural.
+            conversational_prompt = (
+                "Kamu adalah Asisten Eksekutif AI yang cerdas untuk Raziq Garment. "
+                f"Bos Anda (Super Admin) baru saja mengirim pesan: '{req.prompt}'\n\n"
+                "Balaslah dengan ramah, natural, dan interaktif layaknya manusia. Jangan kaku. "
+                "Jika disapa, sapa balik dengan hangat. Tawarkan bantuan untuk mengecek data pabrik (omzet, stok, produksi, dll)."
+            )
+            chat_response = call_llm(conversational_prompt, db).strip()
             return {
                 "status": "success",
-                "jawaban_teks": "Pertanyaan Anda kurang spesifik nih, Bos. Bisa diperjelas ingin cek apa? (Contoh: 'Berapa omset hari ini?' atau 'Tampilkan stok barang yang menipis')",
+                "jawaban_teks": chat_response,
                 "data_tabel": []
             }
 
