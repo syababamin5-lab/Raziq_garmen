@@ -360,7 +360,7 @@ def ai_executive_assistant(req: AskRequest, db: Session = Depends(get_db)):
         if "CLARIFY" in sql_query.upper() or len(sql_query.split()) < 3:
             return {
                 "status": "success",
-                "jawaban_teks": "Pertanyaan Anda kurang spesifik nih, Bos. Bisa diperjelas ingin cek apa di Soundtrax? (Contoh: 'Cek omset dari Soundtrax' atau 'Cek hutang ke Soundtrax')",
+                "jawaban_teks": "Pertanyaan Anda kurang spesifik nih, Bos. Bisa diperjelas ingin cek apa? (Contoh: 'Berapa omset hari ini?' atau 'Tampilkan stok barang yang menipis')",
                 "data_tabel": []
             }
 
